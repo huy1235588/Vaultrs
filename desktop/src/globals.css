@@ -1,60 +1,339 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-    :root {
-        --background: 0 0% 100%;
-        --foreground: 0 0% 3.6%;
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 3.6%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 3.6%;
-        --muted: 0 0% 96.1%;
-        --muted-foreground: 0 0% 45.1%;
-        --accent: 0 84.2% 60.2%;
-        --accent-foreground: 0 0% 100%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 100%;
-        --border: 0 0% 89.8%;
-        --input: 0 0% 89.8%;
-        --primary: 0 0% 0%;
-        --primary-foreground: 0 0% 100%;
-        --secondary: 0 0% 96.1%;
-        --secondary-foreground: 0 0% 0%;
-        --ring: 0 0% 0%;
-        --radius: 0.5rem;
-    }
+@plugin "tailwindcss-animate";
 
-    .dark {
-        --background: 0 0% 3.6%;
-        --foreground: 0 0% 98.2%;
-        --card: 0 0% 3.6%;
-        --card-foreground: 0 0% 98.2%;
-        --popover: 0 0% 3.6%;
-        --popover-foreground: 0 0% 98.2%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 84.2% 60.2%;
-        --accent-foreground: 0 0% 0%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 0%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --primary: 0 0% 100%;
-        --primary-foreground: 0 0% 0%;
-        --secondary: 0 0% 14.9%;
-        --secondary-foreground: 0 0% 100%;
-        --ring: 0 0% 98.2%;
-    }
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    /* Tối ưu Radius cho Data-Dense Desktop UI */
+    --radius-sm: 0.25rem; /* 4px - cho các element nhỏ (badges, tags) */
+    --radius-md: 0.375rem; /* 6px - cho buttons, inputs */
+    --radius-lg: 0.5rem; /* 8px - cho cards */
+    --radius-xl: 0.75rem; /* 12px - cho modals, popovers */
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    /* Status Colors - Thêm màu cho trạng thái */
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+
+    /* Chart Colors - Tối ưu cho data visualization */
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-chart-6: var(--chart-6);
+
+    /* Sidebar */
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+
+    /* Fonts - Tối ưu cho hiển thị data */
+    --font-sans: "Inter", "Open Sans", -apple-system, BlinkMacSystemFont,
+        sans-serif;
+    --font-mono: "JetBrains Mono", "Fira Code", "Menlo", monospace;
+    --font-serif: Georgia, serif;
+
+    --radius: 0.5rem; /* 8px - Default radius cho desktop */
+
+    /* Typography Tracking */
+    --tracking-tighter: -0.05em;
+    --tracking-tight: -0.025em;
+    --tracking-normal: 0em;
+    --tracking-wide: 0.025em;
+    --tracking-wider: 0.05em;
+    --tracking-widest: 0.1em;
+
+    /* Shadows - Tinh chỉnh cho depth perception */
+    --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-xs: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-sm: 0 2px 4px -1px rgb(0 0 0 / 0.1),
+        0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 6px 10px -2px rgb(0 0 0 / 0.1),
+        0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+        0 6px 10px -5px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+        0 10px 15px -7px rgb(0 0 0 / 0.1);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+    --spacing: 0.25rem;
 }
+
+/* ============================================================================
+   THEME: VAULT TITANIUM PRO
+   
+   Concept: High-performance media vault with military-grade aesthetics
+   Primary: Tech Blue (#3B82F6) - Professional, trustworthy
+   Accent: Cyan (#06B6D4) - High-tech, energetic
+   Neutral: Slate - Clean, data-focused
+   ============================================================================ */
+
+:root {
+    /* ===== LIGHT MODE: Clean Professional ===== */
+
+    /* Base Colors */
+    --background: oklch(0.99 0 0); /* Almost white, soft on eyes */
+    --foreground: oklch(0.2 0.013 250); /* Slate 900 - sharp contrast */
+
+    /* Surface Colors */
+    --card: oklch(1 0 0); /* Pure white cards for separation */
+    --card-foreground: oklch(0.2 0.013 250);
+
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.2 0.013 250);
+
+    /* Brand Colors - Professional Tech Blue */
+    --primary: oklch(0.55 0.22 260); /* Blue 600 - Tech professional */
+    --primary-foreground: oklch(1 0 0);
+
+    --secondary: oklch(0.96 0.006 250); /* Slate 100 - Subtle */
+    --secondary-foreground: oklch(0.2 0.013 250);
+
+    /* Utility Colors */
+    --muted: oklch(0.96 0.006 250); /* Slate 100 */
+    --muted-foreground: oklch(0.52 0.015 250); /* Slate 500 */
+
+    --accent: oklch(0.94 0.017 250); /* Slate 100 with hint of blue */
+    --accent-foreground: oklch(0.45 0.2 260); /* Blue 700 */
+
+    /* Status Colors */
+    --destructive: oklch(0.55 0.22 25); /* Red 600 */
+    --destructive-foreground: oklch(1 0 0);
+
+    --success: oklch(0.55 0.16 145); /* Green 600 */
+    --success-foreground: oklch(1 0 0);
+
+    --warning: oklch(0.65 0.2 65); /* Amber 500 */
+    --warning-foreground: oklch(0.15 0 0);
+
+    --info: oklch(0.6 0.18 230); /* Sky 500 */
+    --info-foreground: oklch(1 0 0);
+
+    /* Borders & Inputs */
+    --border: oklch(0.9 0.005 250); /* Slate 200 - subtle */
+    --input: oklch(0.9 0.005 250);
+    --ring: oklch(0.55 0.22 260); /* Primary blue */
+
+    /* Data Visualization - Optimized for charts */
+    --chart-1: oklch(0.55 0.22 260); /* Blue - Primary data */
+    --chart-2: oklch(0.6 0.18 195); /* Cyan - Secondary */
+    --chart-3: oklch(0.55 0.16 145); /* Green - Positive */
+    --chart-4: oklch(0.65 0.2 65); /* Amber - Warning */
+    --chart-5: oklch(0.55 0.22 25); /* Red - Negative */
+    --chart-6: oklch(0.5 0.18 290); /* Purple - Additional */
+
+    /* Sidebar - Slightly darker than main */
+    --sidebar: oklch(0.98 0.003 250);
+    --sidebar-foreground: oklch(0.2 0.013 250);
+    --sidebar-primary: oklch(0.55 0.22 260);
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.94 0.017 250);
+    --sidebar-accent-foreground: oklch(0.45 0.2 260);
+    --sidebar-border: oklch(0.92 0.005 250);
+    --sidebar-ring: oklch(0.55 0.22 260);
+
+    /* Shadow Color */
+    --shadow-color: 250 10% 10%;
+}
+
+.dark {
+    /* ===== DARK MODE: Deep Space Professional ===== */
+
+    /* Base Colors - True dark for OLED displays */
+    --background: oklch(0.15 0.005 250); /* Deep slate, not pure black */
+    --foreground: oklch(0.95 0.005 250); /* Slightly warm white */
+
+    /* Surface Colors */
+    --card: oklch(0.18 0.008 250); /* Elevated surface */
+    --card-foreground: oklch(0.95 0.005 250);
+
+    --popover: oklch(0.16 0.006 250);
+    --popover-foreground: oklch(0.95 0.005 250);
+
+    /* Brand Colors - Brighter in dark mode */
+    --primary: oklch(0.6 0.24 260); /* Blue 500 - More vibrant */
+    --primary-foreground: oklch(0.98 0 0);
+
+    --secondary: oklch(0.25 0.01 250); /* Slate 800 */
+    --secondary-foreground: oklch(0.95 0.005 250);
+
+    /* Utility Colors */
+    --muted: oklch(0.22 0.008 250); /* Slate 800 */
+    --muted-foreground: oklch(0.6 0.012 250); /* Slate 400 */
+
+    --accent: oklch(0.25 0.015 250); /* Slate with blue tint */
+    --accent-foreground: oklch(0.65 0.22 260); /* Blue 400 */
+
+    /* Status Colors - Adjusted for dark backgrounds */
+    --destructive: oklch(0.58 0.24 25); /* Red 500 - Slightly brighter */
+    --destructive-foreground: oklch(0.98 0 0);
+
+    --success: oklch(0.58 0.18 145); /* Green 500 */
+    --success-foreground: oklch(0.98 0 0);
+
+    --warning: oklch(0.68 0.22 65); /* Amber 400 */
+    --warning-foreground: oklch(0.15 0 0);
+
+    --info: oklch(0.65 0.2 230); /* Sky 400 */
+    --info-foreground: oklch(0.98 0 0);
+
+    /* Borders & Inputs */
+    --border: oklch(0.28 0.01 250); /* Slate 700 - visible but subtle */
+    --input: oklch(0.22 0.008 250);
+    --ring: oklch(0.6 0.24 260); /* Primary blue */
+
+    /* Data Visualization - Enhanced for dark backgrounds */
+    --chart-1: oklch(0.6 0.24 260); /* Blue - Brighter */
+    --chart-2: oklch(0.65 0.2 195); /* Cyan */
+    --chart-3: oklch(0.6 0.18 145); /* Green */
+    --chart-4: oklch(0.7 0.22 65); /* Amber */
+    --chart-5: oklch(0.6 0.24 25); /* Red */
+    --chart-6: oklch(0.55 0.2 290); /* Purple */
+
+    /* Sidebar - Darker than main */
+    --sidebar: oklch(0.13 0.005 250);
+    --sidebar-foreground: oklch(0.95 0.005 250);
+    --sidebar-primary: oklch(0.6 0.24 260);
+    --sidebar-primary-foreground: oklch(0.98 0 0);
+    --sidebar-accent: oklch(0.22 0.012 250);
+    --sidebar-accent-foreground: oklch(0.65 0.22 260);
+    --sidebar-border: oklch(0.25 0.01 250);
+    --sidebar-ring: oklch(0.6 0.24 260);
+
+    /* Shadow Color - Deeper in dark mode */
+    --shadow-color: 0 0% 0%;
+}
+
+/* ============================================================================
+   BASE STYLES
+   ============================================================================ */
 
 @layer base {
     * {
-        border-color: hsl(var(--border));
+        @apply border-border outline-ring/50;
     }
+
     body {
-        background-color: hsl(var(--background));
-        color: hsl(var(--foreground));
+        @apply bg-background text-foreground;
+        font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+        letter-spacing: var(--tracking-normal);
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Typography Enhancements */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        letter-spacing: var(--tracking-tight);
+        font-weight: 600;
+    }
+
+    code,
+    pre {
+        font-family: var(--font-mono);
+        font-feature-settings: "liga" 0, "calt" 0;
+    }
+
+    /* Table Optimization for Virtual Scrolling */
+    table {
+        font-feature-settings: "tnum" 1; /* Tabular numbers */
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-muted;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-muted-foreground/30 rounded-md;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-muted-foreground/50;
+    }
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+@layer utilities {
+    /* Data Table Optimizations */
+    .table-dense {
+        @apply text-sm leading-tight;
+    }
+
+    .table-cell-compact {
+        @apply px-2 py-1.5;
+    }
+
+    /* Performance Indicators */
+    .status-success {
+        @apply bg-success/10 text-success border-success/20;
+    }
+
+    .status-warning {
+        @apply bg-warning/10 text-warning border-warning/20;
+    }
+
+    .status-error {
+        @apply bg-destructive/10 text-destructive border-destructive/20;
+    }
+
+    .status-info {
+        @apply bg-info/10 text-info border-info/20;
+    }
+
+    /* Glass Morphism Effect (optional premium feel) */
+    .glass {
+        background: oklch(from var(--background) l c h / 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Data Focus State */
+    .focus-data {
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
     }
 }

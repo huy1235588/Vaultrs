@@ -31,7 +31,7 @@
 
 ## 📖 Overview
 
-Vaultrs is a planned native desktop application for managing large-scale personal media collections (movies, books, TV shows, etc.). The goal is to build a system that can handle **10+ million records** smoothly without requiring servers, Docker containers, or complex infrastructure.
+Vaultrs is a planned native desktop application for managing large-scale collections of any type (for example: media, books, photographs, scientific records, inventory, etc.). The goal is to build a system that can handle **10+ million records** smoothly without requiring servers, Docker containers, or complex infrastructure.
 
 ### Design Goals
 
