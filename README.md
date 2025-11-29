@@ -87,39 +87,6 @@ All documentation represents the **planned architecture** and design:
 - **[User Guide](.docs/USER_GUIDE.md)** - End-user documentation (planned)
 - **[Troubleshooting](.docs/TROUBLESHOOTING.md)** - Common issues and solutions (planned)
 
-## 📋 Roadmap
-
-### Phase 1: Foundation (Planning)
-- [x] Define project scope and requirements
-- [x] Design system architecture
-- [x] Document database schema
-- [x] Plan API structure
-- [ ] Finalize tech stack decisions
-- [ ] Create development environment
-
-### Phase 2: Core Development (Not Started)
-- [ ] Setup Tauri + React project structure
-- [ ] Implement database layer (SQLite + SeaORM)
-- [ ] Create basic CRUD operations
-- [ ] Build virtual scrolling UI
-- [ ] Implement collection management
-- [ ] Add attribute system
-
-### Phase 3: Advanced Features (Not Started)
-- [ ] Background crawler service
-- [ ] Full-text search
-- [ ] Import/Export functionality
-- [ ] Settings and configuration
-- [ ] Performance optimization
-
-### Phase 4: Polish (Not Started)
-- [ ] UI/UX refinement
-- [ ] Comprehensive testing
-- [ ] Documentation completion
-- [ ] First release preparation
-
-**Note:** Timeline and priorities subject to change as this is a personal project.
-
 ## 🎯 Why This Project?
 
 **Personal Learning Goals:**
