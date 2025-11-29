@@ -1,0 +1,30 @@
+{
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/.git": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/logs": true,
+        "**/coverage": true,
+        "**/.cache": true,
+        "**/.idea": true,
+        "desktop/src-tauri/gen": true,
+        "desktop/src-tauri/target": true,
+    },
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/.git": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/logs": true,
+        "**/coverage": true,
+        "**/.cache": true,
+        "**.svg": true,
+        "**/package-lock.json": true,
+        "**/yarn.lock": true,
+        "**/pnpm-lock.yaml": true,
+        "desktop/src-tauri/Cargo.lock": true,
+        "desktop/src-tauri/gen": true,
+        "desktop/src-tauri/target": true
+    }
+}

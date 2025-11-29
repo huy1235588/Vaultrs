@@ -1,0 +1,262 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Rust backend checks
+  rust-checks:
+    name: Rust Checks
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        rust: [stable]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev \
+            build-essential \
+            curl \
+            wget \
+            libssl-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+        working-directory: src-tauri
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: src-tauri
+
+      - name: Run tests
+        run: cargo test --all-features
+        working-directory: src-tauri
+
+      - name: Build
+        run: cargo build --release
+        working-directory: src-tauri
+
+  # Frontend checks
+  frontend-checks:
+    name: Frontend Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: src-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: src-ui
+
+      - name: Run linter
+        run: npm run lint
+        working-directory: src-ui
+
+      - name: Type check
+        run: npm run type-check
+        working-directory: src-ui
+
+      - name: Run tests
+        run: npm run test
+        working-directory: src-ui
+
+      - name: Build
+        run: npm run build
+        working-directory: src-ui
+
+  # Security audit
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Run cargo audit
+        run: cargo audit
+        working-directory: src-tauri
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        working-directory: src-ui
+        continue-on-error: true
+
+  # Code coverage
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev \
+            build-essential \
+            libssl-dev \
+            libgtk-3-dev
+
+      - name: Install tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Generate coverage
+        run: cargo tarpaulin --out Xml --all-features
+        working-directory: src-tauri
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./src-tauri/cobertura.xml
+          fail_ci_if_error: false
+
+  # Integration tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev \
+            build-essential \
+            libssl-dev \
+            libgtk-3-dev
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: src-ui
+
+      - name: Run integration tests
+        run: cargo test --test '*' --all-features
+        working-directory: src-tauri
+
+  # Check dependencies are up to date
+  check-deps:
+    name: Check Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-outdated
+        run: cargo install cargo-outdated
+
+      - name: Check for outdated dependencies
+        run: cargo outdated --exit-code 1
+        working-directory: src-tauri
+        continue-on-error: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Check npm dependencies
+        run: npm outdated
+        working-directory: src-ui
+        continue-on-error: true
+
+  # Summary job
+  ci-success:
+    name: CI Success
+    needs: [rust-checks, frontend-checks, security-audit, integration-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Check all jobs
+        run: |
+          if [[ "${{ needs.rust-checks.result }}" != "success" ]] || \
+             [[ "${{ needs.frontend-checks.result }}" != "success" ]] || \
+             [[ "${{ needs.security-audit.result }}" != "success" ]] || \
+             [[ "${{ needs.integration-tests.result }}" != "success" ]]; then
+            echo "One or more CI jobs failed"
+            exit 1
+          fi
+          echo "All CI jobs passed successfully!"
