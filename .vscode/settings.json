@@ -26,5 +26,8 @@
         "desktop/src-tauri/Cargo.lock": true,
         "desktop/src-tauri/gen": true,
         "desktop/src-tauri/target": true
-    }
+    },
+    "rust-analyzer.linkedProjects": [
+        "./desktop/src-tauri/Cargo.toml"
+    ]
 }
