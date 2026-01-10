@@ -32,10 +32,10 @@
 
 ## 4. Entry Metadata Validation
 
-- [ ] **4.1** Add metadata validation in `EntryService::create` against field definitions
-- [ ] **4.2** Add metadata validation in `EntryService::update`
-- [ ] **4.3** Implement type coercion/validation for each field type
-- [ ] **4.4** Update entry tests with metadata validation scenarios
+- [~] **4.1** Add metadata validation in `EntryService::create` against field definitions - Deferred
+- [~] **4.2** Add metadata validation in `EntryService::update` - Deferred
+- [~] **4.3** Implement type coercion/validation for each field type - Deferred
+- [~] **4.4** Update entry tests with metadata validation scenarios - Deferred
 
 **Validation**: Run `cargo test entry` - all tests pass ✅
 
@@ -106,7 +106,7 @@
 - [x] **11.2** Test edge cases: required fields, validation errors, field type changes
 - [x] **11.3** Add loading states and error handling throughout
 - [x] **11.4** Ensure smooth transitions and animations
-- [ ] **11.5** Update project documentation
+- [x] **11.5** Update project documentation
 
 **Validation**: Full workflow works end-to-end ✅
 
