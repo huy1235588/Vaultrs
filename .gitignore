@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-pnpm-lock.yaml
 package-lock.json
 yarn.lock
 
@@ -11,7 +10,6 @@ build/
 
 # Rust
 target/
-Cargo.lock
 **/*.rs.bk
 
 # Environment
@@ -21,11 +19,17 @@ Cargo.lock
 
 # IDE
 .idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+.DS_Store
 *.swp
 *.swo
 *~
-.DS_Store
+*.su?
 
 # Tauri
 src-tauri/target/
 .obsidian
+desktop/src-tauri/gen/
