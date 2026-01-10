@@ -9,6 +9,7 @@ import { Loader2, Save } from 'lucide-react';
 import type { Entry, FieldDefinition, EntryMetadata } from '../../types';
 import { useEntryStore } from '../../stores';
 import { CustomFieldInput } from '../field/CustomFieldInput';
+import { CoverImageDisplay, CoverImageUploader } from './';
 
 interface EditEntryFormProps {
     entry: Entry;
@@ -189,6 +190,19 @@ export function EditEntryForm({
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Add a description..."
                     rows={3}
+                />
+            </div>
+
+            {/* Cover Image */}
+            <div className="space-y-4">
+                <Label>Cover Image</Label>
+                <CoverImageDisplay entry={entry} showRemoveButton={true} />
+                <CoverImageUploader 
+                    entryId={entry.id}
+                    onSuccess={() => {
+                        // Refresh entry data after upload
+                        window.location.reload();
+                    }}
                 />
             </div>
 

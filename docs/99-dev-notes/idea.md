@@ -191,14 +191,46 @@
 
 ---
 
+## [IN_PROGRESS] Entry Cover Image
+
+-   **Ngày tạo:** 2026-01-10
+-   **Vấn đề:** Entries thiếu visual representation, khó browse và identify nhanh trong large collections
+-   **Trade-off:** ~1 tuần dev, cần implement image storage và thumbnail generation
+-   **Loại:** Core
+-   **Ưu tiên:** Cao
+-   **Trạng thái:** IN_PROGRESS
+
+**Chi tiết:**
+
+-   Mỗi entry có 1 cover image
+-   Nguồn ảnh: Upload từ local file system hoặc paste URL từ internet
+-   Lưu ảnh trong app data folder (file system) - tốt cho large images
+-   Hiển thị thumbnail trong entry list (lazy loading)
+-   Mục đích: chỉ lưu dữ liệu, enhance browsability
+
+**Future enhancements (out of scope for v1):**
+
+-   Support multiple attachments (images/videos/files) per entry
+-   Layout options: portrait vs square vs landscape display modes
+-   Image editing: crop, rotate, resize
+-   Bulk operations: upload covers for multiple entries
+-   Auto-fetch covers from metadata APIs (TMDB, Open Library, etc.)
+
+**Proposal:**
+
+-   OpenSpec change: `add-entry-cover-image`
+-   Status: Proposal created, pending approval
+
+---
+
 ## 📊 Thống kê
 
--   **Tổng ý tưởng:** 9
+-   **Tổng ý tưởng:** 10
 -   **TODO:** 8
--   **IN_PROGRESS:** 0
+-   **IN_PROGRESS:** 1
 -   **DONE:** 0
 -   **ARCHIVED:** 1
 
 ---
 
-_Cập nhật lần cuối: 2025-12-21_
+_Cập nhật lần cuối: 2026-01-10_

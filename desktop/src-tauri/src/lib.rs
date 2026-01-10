@@ -6,6 +6,7 @@ mod db;
 mod entities;
 mod entry;
 mod field;
+mod image;
 mod vault;
 
 use sea_orm::DatabaseConnection;
@@ -14,9 +15,10 @@ use tauri::Manager;
 
 use crate::commands::{
     count_entries, create_entry, create_field_definition, create_vault, delete_entry,
-    delete_field_definition, delete_vault, get_entry, get_field_definition, get_vault,
-    list_entries, list_field_definitions, list_vaults, reorder_field_definitions, search_entries,
-    update_entry, update_field_definition, update_vault,
+    delete_field_definition, delete_vault, get_entry, get_entry_thumbnail, get_field_definition,
+    get_vault, list_entries, list_field_definitions, list_vaults, remove_entry_cover,
+    reorder_field_definitions, search_entries, set_entry_cover_url, update_entry,
+    update_field_definition, update_vault, upload_entry_cover_image,
 };
 use crate::db::{run_migrations, Database};
 
@@ -40,6 +42,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let app_data_dir = app
                 .path()
@@ -75,6 +78,11 @@ pub fn run() {
             update_entry,
             delete_entry,
             search_entries,
+            // Image commands
+            upload_entry_cover_image,
+            set_entry_cover_url,
+            get_entry_thumbnail,
+            remove_entry_cover,
             // Field Definition commands
             create_field_definition,
             get_field_definition,

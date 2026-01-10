@@ -7,3 +7,5 @@ export * from './EntryDetailDialog';
 export * from './EditEntryForm';
 export * from './SearchInput';
 export * from './HighlightText';
+export * from './CoverImageUploader';
+export * from './CoverImageDisplay';

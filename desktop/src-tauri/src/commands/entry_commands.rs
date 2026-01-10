@@ -7,6 +7,7 @@ use crate::core::AppError;
 use crate::entry::{
     CreateEntryDto, EntryDto, EntryService, PaginatedEntries, SearchResult, UpdateEntryDto,
 };
+use crate::image::ImageStorage;
 
 /// Creates a new entry in a vault.
 #[tauri::command]
@@ -71,10 +72,15 @@ pub async fn update_entry(
     EntryService::update(&db, id, dto).await
 }
 
-/// Deletes an entry.
+/// Deletes an entry and its cover image.
 #[tauri::command]
-pub async fn delete_entry(db: State<'_, DatabaseConnection>, id: i32) -> Result<(), AppError> {
-    EntryService::delete(&db, id).await
+pub async fn delete_entry(
+    db: State<'_, DatabaseConnection>,
+    id: i32,
+    app_data_dir: String,
+) -> Result<(), AppError> {
+    let image_storage = ImageStorage::new(std::path::Path::new(&app_data_dir));
+    EntryService::delete(&db, id, Some(&image_storage)).await
 }
 
 /// Searches entries in a vault using full-text search.

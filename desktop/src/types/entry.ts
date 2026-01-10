@@ -6,6 +6,7 @@ export interface Entry {
     title: string;
     description: string | null;
     metadata: string | null;
+    cover_image_path: string | null;
     created_at: string;
     updated_at: string;
 }

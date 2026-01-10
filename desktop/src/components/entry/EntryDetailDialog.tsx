@@ -24,6 +24,7 @@ import type { Entry } from '../../types';
 import { useEntryStore, useFieldStore } from '../../stores';
 import { EditEntryForm } from './EditEntryForm';
 import { CustomFieldsSection } from '../field/CustomFieldsSection';
+import { CoverImageDisplay } from './';
 
 interface EntryDetailDialogProps {
     entry: Entry | null;
@@ -163,6 +164,17 @@ export function EntryDetailDialog({
                         />
                     ) : (
                         <div className="space-y-6 py-4">
+                            {/* Cover Image */}
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-medium text-muted-foreground">
+                                    Cover Image
+                                </h4>
+                                <CoverImageDisplay
+                                    entry={entry}
+                                    showRemoveButton={false}
+                                />
+                            </div>
+
                             {/* Description */}
                             {entry.description && (
                                 <div className="space-y-2">

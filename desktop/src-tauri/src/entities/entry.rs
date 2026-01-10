@@ -12,6 +12,7 @@ pub struct Model {
     pub title: String,
     pub description: Option<String>,
     pub metadata: Option<String>,
+    pub cover_image_path: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }

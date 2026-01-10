@@ -27,6 +27,7 @@ pub struct EntryDto {
     pub title: String,
     pub description: Option<String>,
     pub metadata: Option<String>,
+    pub cover_image_path: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -39,6 +40,7 @@ impl From<crate::entities::entry::Model> for EntryDto {
             title: model.title,
             description: model.description,
             metadata: model.metadata,
+            cover_image_path: model.cover_image_path,
             created_at: model.created_at,
             updated_at: model.updated_at,
         }

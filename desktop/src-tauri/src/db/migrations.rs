@@ -107,6 +107,16 @@ const MIGRATIONS: &[(&str, &str)] = &[
         WHERE id NOT IN (SELECT rowid FROM entries_fts);
         "#,
     ),
+    (
+        "007_add_entry_cover_image",
+        r#"
+        -- Add cover_image_path column to entries table
+        ALTER TABLE entries ADD COLUMN cover_image_path TEXT;
+        
+        -- Create index for querying entries with/without cover images
+        CREATE INDEX IF NOT EXISTS idx_entries_cover_image ON entries(cover_image_path);
+        "#,
+    ),
 ];
 
 /// Runs all pending migrations.

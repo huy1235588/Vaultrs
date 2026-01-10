@@ -29,5 +29,8 @@
     },
     "rust-analyzer.linkedProjects": [
         "./desktop/src-tauri/Cargo.toml"
-    ]
+    ],
+    "chat.tools.terminal.autoApprove": {
+        "npx openspec": true
+    }
 }

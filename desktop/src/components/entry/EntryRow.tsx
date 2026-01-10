@@ -1,8 +1,9 @@
 // Entry row component
 
-import { FileText, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import type { Entry } from '../../types';
 import { HighlightText } from './HighlightText';
+import { CoverImageDisplay } from './CoverImageDisplay';
 
 interface EntryRowProps {
     entry: Entry;
@@ -31,9 +32,9 @@ export function EntryRow({ entry, onClick, onDelete, searchQuery = '' }: EntryRo
                 }
             }}
         >
-            {/* Icon */}
-            <div className="flex-shrink-0 w-10 h-10 rounded-md bg-muted flex items-center justify-center">
-                <FileText className="h-5 w-5 text-muted-foreground" />
+            {/* Cover Image Thumbnail */}
+            <div className="flex-shrink-0">
+                <CoverImageDisplay entry={entry} thumbnail={true} />
             </div>
 
             {/* Content */}
