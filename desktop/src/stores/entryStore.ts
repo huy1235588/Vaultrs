@@ -15,6 +15,12 @@ interface EntryState {
     isLoadingMore: boolean;
     error: string | null;
 
+    // Search state
+    searchQuery: string;
+    searchResults: Entry[];
+    searchTotal: number;
+    isSearching: boolean;
+
     // Actions
     fetchEntries: (vaultId: number, reset?: boolean) => Promise<void>;
     loadMoreEntries: (vaultId: number) => Promise<void>;
@@ -23,6 +29,10 @@ interface EntryState {
     deleteEntry: (id: number) => Promise<void>;
     resetEntries: () => void;
     clearError: () => void;
+
+    // Search actions
+    searchEntries: (vaultId: number, query: string) => Promise<void>;
+    clearSearch: () => void;
 }
 
 const DEFAULT_LIMIT = 100;
@@ -38,10 +48,26 @@ export const useEntryStore = create<EntryState>((set, get) => ({
     isLoadingMore: false,
     error: null,
 
+    // Search initial state
+    searchQuery: '',
+    searchResults: [],
+    searchTotal: 0,
+    isSearching: false,
+
     // Actions
     fetchEntries: async (vaultId, reset = true) => {
         if (reset) {
-            set({ isLoading: true, error: null, entries: [], page: 0 });
+            // Clear search state when switching vaults
+            set({
+                isLoading: true,
+                error: null,
+                entries: [],
+                page: 0,
+                searchQuery: '',
+                searchResults: [],
+                searchTotal: 0,
+                isSearching: false,
+            });
         }
 
         try {
@@ -60,8 +86,10 @@ export const useEntryStore = create<EntryState>((set, get) => ({
     },
 
     loadMoreEntries: async (vaultId) => {
-        const { page, hasMore, isLoadingMore } = get();
+        const { page, hasMore, isLoadingMore, searchQuery } = get();
 
+        // Don't load more if searching
+        if (searchQuery) return;
         if (!hasMore || isLoadingMore) return;
 
         set({ isLoadingMore: true, error: null });
@@ -103,6 +131,8 @@ export const useEntryStore = create<EntryState>((set, get) => ({
             const updated = await entryApi.update(id, params);
             set((state) => ({
                 entries: state.entries.map((e) => (e.id === id ? updated : e)),
+                // Also update search results if present
+                searchResults: state.searchResults.map((e) => (e.id === id ? updated : e)),
             }));
             return updated;
         } catch (err) {
@@ -118,6 +148,11 @@ export const useEntryStore = create<EntryState>((set, get) => ({
             set((state) => ({
                 entries: state.entries.filter((e) => e.id !== id),
                 total: state.total - 1,
+                // Also remove from search results if present
+                searchResults: state.searchResults.filter((e) => e.id !== id),
+                searchTotal: state.searchResults.some((e) => e.id === id)
+                    ? state.searchTotal - 1
+                    : state.searchTotal,
             }));
         } catch (err) {
             set({ error: String(err) });
@@ -134,10 +169,54 @@ export const useEntryStore = create<EntryState>((set, get) => ({
             isLoading: false,
             isLoadingMore: false,
             error: null,
+            // Also reset search
+            searchQuery: '',
+            searchResults: [],
+            searchTotal: 0,
+            isSearching: false,
         });
     },
 
     clearError: () => {
         set({ error: null });
+    },
+
+    // Search actions
+    searchEntries: async (vaultId, query) => {
+        const trimmedQuery = query.trim();
+
+        // Clear search if query is empty
+        if (!trimmedQuery) {
+            set({
+                searchQuery: '',
+                searchResults: [],
+                searchTotal: 0,
+                isSearching: false,
+            });
+            return;
+        }
+
+        set({ searchQuery: trimmedQuery, isSearching: true, error: null });
+
+        try {
+            const result = await entryApi.search(vaultId, trimmedQuery, 0, DEFAULT_LIMIT);
+            set({
+                searchResults: result.entries,
+                searchTotal: result.total,
+                isSearching: false,
+            });
+        } catch (err) {
+            set({ error: String(err), isSearching: false });
+            throw err;
+        }
+    },
+
+    clearSearch: () => {
+        set({
+            searchQuery: '',
+            searchResults: [],
+            searchTotal: 0,
+            isSearching: false,
+        });
     },
 }));

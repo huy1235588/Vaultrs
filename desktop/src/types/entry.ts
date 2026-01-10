@@ -30,3 +30,12 @@ export interface PaginatedEntries {
     limit: number;
     has_more: boolean;
 }
+
+export interface SearchResult {
+    entries: Entry[];
+    total: number;
+    query: string;
+    page: number;
+    limit: number;
+    has_more: boolean;
+}

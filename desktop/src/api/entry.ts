@@ -1,7 +1,7 @@
 // Entry API - Type-safe Tauri command wrappers
 
 import { invoke } from '@tauri-apps/api/core';
-import type { Entry, CreateEntryParams, UpdateEntryParams, PaginatedEntries } from '../types';
+import type { Entry, CreateEntryParams, UpdateEntryParams, PaginatedEntries, SearchResult } from '../types';
 
 export const entryApi = {
     /**
@@ -58,5 +58,17 @@ export const entryApi = {
      */
     async delete(id: number): Promise<void> {
         return invoke<void>('delete_entry', { id });
+    },
+
+    /**
+     * Searches entries in a vault using full-text search.
+     */
+    async search(vaultId: number, query: string, page: number = 0, limit: number = 100): Promise<SearchResult> {
+        return invoke<SearchResult>('search_entries', {
+            vaultId,
+            query,
+            page,
+            limit,
+        });
     },
 };

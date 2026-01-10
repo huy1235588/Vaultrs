@@ -9,7 +9,7 @@ use crate::core::{AppError, AppResult};
 use crate::entities::entry::{self, ActiveModel, Entity as Entry};
 use crate::entities::vault::Entity as Vault;
 
-use super::{CreateEntryDto, EntryDto, PaginatedEntries, UpdateEntryDto};
+use super::{CreateEntryDto, EntryDto, PaginatedEntries, SearchResult, UpdateEntryDto};
 
 /// Service for entry CRUD operations.
 pub struct EntryService;
@@ -153,6 +153,125 @@ impl EntryService {
         Entry::delete_by_id(id).exec(conn).await?;
 
         Ok(())
+    }
+
+    /// Searches entries in a vault using full-text search.
+    pub async fn search(
+        conn: &DatabaseConnection,
+        vault_id: i32,
+        query: &str,
+        page: u64,
+        limit: u64,
+    ) -> AppResult<SearchResult> {
+        // Verify vault exists
+        Vault::find_by_id(vault_id)
+            .one(conn)
+            .await?
+            .ok_or(AppError::VaultNotFound(vault_id))?;
+
+        let query = query.trim();
+
+        // Return empty result for empty query
+        if query.is_empty() {
+            return Ok(SearchResult {
+                entries: vec![],
+                total: 0,
+                query: String::new(),
+                page,
+                limit,
+                has_more: false,
+            });
+        }
+
+        // Escape special FTS5 characters and add prefix matching
+        let search_query = Self::build_fts_query(query);
+        let offset = page * limit;
+
+        // Count total matching entries
+        let count_sql = format!(
+            r#"
+            SELECT COUNT(*) as count FROM entries e
+            INNER JOIN entries_fts fts ON e.id = fts.rowid
+            WHERE e.vault_id = {} AND entries_fts MATCH '{}'
+            "#,
+            vault_id, search_query
+        );
+
+        let count_result = sea_orm::ConnectionTrait::query_one(
+            conn,
+            sea_orm::Statement::from_string(sea_orm::DatabaseBackend::Sqlite, count_sql),
+        )
+        .await?;
+
+        let total: i64 = count_result
+            .and_then(|row| row.try_get_by_index::<i32>(0).ok())
+            .unwrap_or(0) as i64;
+
+        // Get matching entries with pagination
+        let search_sql = format!(
+            r#"
+            SELECT e.id, e.vault_id, e.title, e.description, e.metadata, e.created_at, e.updated_at
+            FROM entries e
+            INNER JOIN entries_fts fts ON e.id = fts.rowid
+            WHERE e.vault_id = {} AND entries_fts MATCH '{}'
+            ORDER BY e.created_at DESC
+            LIMIT {} OFFSET {}
+            "#,
+            vault_id, search_query, limit, offset
+        );
+
+        let rows = sea_orm::ConnectionTrait::query_all(
+            conn,
+            sea_orm::Statement::from_string(sea_orm::DatabaseBackend::Sqlite, search_sql),
+        )
+        .await?;
+
+        let entries: Vec<EntryDto> = rows
+            .into_iter()
+            .filter_map(|row| {
+                Some(EntryDto {
+                    id: row.try_get_by_index::<i32>(0).ok()?,
+                    vault_id: row.try_get_by_index::<i32>(1).ok()?,
+                    title: row.try_get_by_index::<String>(2).ok()?,
+                    description: row.try_get_by_index::<Option<String>>(3).ok()?,
+                    metadata: row.try_get_by_index::<Option<String>>(4).ok()?,
+                    created_at: row.try_get_by_index::<String>(5).ok()?,
+                    updated_at: row.try_get_by_index::<String>(6).ok()?,
+                })
+            })
+            .collect();
+
+        let has_more = ((page + 1) * limit) < total as u64;
+
+        log::debug!(
+            "Search '{}' in vault {} found {} results",
+            query,
+            vault_id,
+            total
+        );
+
+        Ok(SearchResult {
+            entries,
+            total,
+            query: query.to_string(),
+            page,
+            limit,
+            has_more,
+        })
+    }
+
+    /// Builds FTS5 query with prefix matching.
+    /// Escapes special characters and adds * for prefix matching.
+    fn build_fts_query(query: &str) -> String {
+        // Escape double quotes and wrap each word for prefix matching
+        query
+            .split_whitespace()
+            .map(|word| {
+                let escaped = word.replace('"', "\"\"");
+                format!("\"{}\"*", escaped)
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
     }
 }
 
@@ -355,5 +474,264 @@ mod tests {
 
         let result = EntryService::get(&conn, created.id).await;
         assert!(result.is_err());
+    }
+
+    /// Setup test database with FTS5 support for search tests
+    async fn setup_test_db_with_fts() -> DatabaseConnection {
+        let conn = Database::connect("sqlite::memory:").await.unwrap();
+
+        sea_orm::ConnectionTrait::execute_unprepared(
+            &conn,
+            r#"
+            CREATE TABLE vaults (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT,
+                icon TEXT,
+                color TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            
+            CREATE TABLE entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vault_id INTEGER NOT NULL REFERENCES vaults(id) ON DELETE CASCADE,
+                title TEXT NOT NULL,
+                description TEXT,
+                metadata TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            
+            CREATE VIRTUAL TABLE entries_fts USING fts5(
+                title,
+                description,
+                content='entries',
+                content_rowid='id'
+            );
+            
+            CREATE TRIGGER entries_fts_insert AFTER INSERT ON entries BEGIN
+                INSERT INTO entries_fts(rowid, title, description)
+                VALUES (new.id, new.title, COALESCE(new.description, ''));
+            END;
+            
+            CREATE TRIGGER entries_fts_delete AFTER DELETE ON entries BEGIN
+                INSERT INTO entries_fts(entries_fts, rowid, title, description)
+                VALUES ('delete', old.id, old.title, COALESCE(old.description, ''));
+            END;
+            
+            CREATE TRIGGER entries_fts_update AFTER UPDATE ON entries BEGIN
+                INSERT INTO entries_fts(entries_fts, rowid, title, description)
+                VALUES ('delete', old.id, old.title, COALESCE(old.description, ''));
+                INSERT INTO entries_fts(rowid, title, description)
+                VALUES (new.id, new.title, COALESCE(new.description, ''));
+            END;
+            
+            INSERT INTO vaults (name, created_at, updated_at) VALUES ('Test Vault', datetime('now'), datetime('now'));
+            "#,
+        )
+        .await
+        .unwrap();
+
+        conn
+    }
+
+    #[tokio::test]
+    async fn test_search_entries_finds_matching() {
+        let conn = setup_test_db_with_fts().await;
+
+        // Create test entries
+        EntryService::create(
+            &conn,
+            CreateEntryDto {
+                vault_id: 1,
+                title: "My Movie Collection".to_string(),
+                description: Some("All my favorite films".to_string()),
+                metadata: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        EntryService::create(
+            &conn,
+            CreateEntryDto {
+                vault_id: 1,
+                title: "Book Notes".to_string(),
+                description: Some("Notes from reading".to_string()),
+                metadata: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        EntryService::create(
+            &conn,
+            CreateEntryDto {
+                vault_id: 1,
+                title: "Travel Photos".to_string(),
+                description: Some("Photos from trips".to_string()),
+                metadata: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        // Search for "movie"
+        let result = EntryService::search(&conn, 1, "movie", 0, 10)
+            .await
+            .unwrap();
+
+        assert_eq!(result.total, 1);
+        assert_eq!(result.entries.len(), 1);
+        assert_eq!(result.entries[0].title, "My Movie Collection");
+        assert_eq!(result.query, "movie");
+    }
+
+    #[tokio::test]
+    async fn test_search_entries_no_results() {
+        let conn = setup_test_db_with_fts().await;
+
+        EntryService::create(
+            &conn,
+            CreateEntryDto {
+                vault_id: 1,
+                title: "Test Entry".to_string(),
+                description: None,
+                metadata: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        let result = EntryService::search(&conn, 1, "xyz123nonexistent", 0, 10)
+            .await
+            .unwrap();
+
+        assert_eq!(result.total, 0);
+        assert_eq!(result.entries.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_search_entries_prefix_matching() {
+        let conn = setup_test_db_with_fts().await;
+
+        EntryService::create(
+            &conn,
+            CreateEntryDto {
+                vault_id: 1,
+                title: "Application Settings".to_string(),
+                description: None,
+                metadata: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        EntryService::create(
+            &conn,
+            CreateEntryDto {
+                vault_id: 1,
+                title: "Apple Products".to_string(),
+                description: None,
+                metadata: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        EntryService::create(
+            &conn,
+            CreateEntryDto {
+                vault_id: 1,
+                title: "Banana Recipes".to_string(),
+                description: None,
+                metadata: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        // Search for "app" should match "Application" and "Apple" but not "Banana"
+        let result = EntryService::search(&conn, 1, "app", 0, 10).await.unwrap();
+
+        assert_eq!(result.total, 2);
+        assert!(result
+            .entries
+            .iter()
+            .any(|e| e.title == "Application Settings"));
+        assert!(result.entries.iter().any(|e| e.title == "Apple Products"));
+    }
+
+    #[tokio::test]
+    async fn test_search_entries_case_insensitive() {
+        let conn = setup_test_db_with_fts().await;
+
+        EntryService::create(
+            &conn,
+            CreateEntryDto {
+                vault_id: 1,
+                title: "JavaScript Tutorial".to_string(),
+                description: None,
+                metadata: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        // Search with lowercase should find entry with mixed case
+        let result = EntryService::search(&conn, 1, "javascript", 0, 10)
+            .await
+            .unwrap();
+
+        assert_eq!(result.total, 1);
+        assert_eq!(result.entries[0].title, "JavaScript Tutorial");
+    }
+
+    #[tokio::test]
+    async fn test_search_entries_empty_query() {
+        let conn = setup_test_db_with_fts().await;
+
+        EntryService::create(
+            &conn,
+            CreateEntryDto {
+                vault_id: 1,
+                title: "Test Entry".to_string(),
+                description: None,
+                metadata: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        let result = EntryService::search(&conn, 1, "", 0, 10).await.unwrap();
+
+        assert_eq!(result.total, 0);
+        assert_eq!(result.entries.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_search_entries_searches_description() {
+        let conn = setup_test_db_with_fts().await;
+
+        EntryService::create(
+            &conn,
+            CreateEntryDto {
+                vault_id: 1,
+                title: "Random Title".to_string(),
+                description: Some("Contains special keyword here".to_string()),
+                metadata: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        // Search should find entry by description content
+        let result = EntryService::search(&conn, 1, "keyword", 0, 10)
+            .await
+            .unwrap();
+
+        assert_eq!(result.total, 1);
+        assert_eq!(result.entries[0].title, "Random Title");
     }
 }

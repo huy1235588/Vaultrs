@@ -2,14 +2,16 @@
 
 import { FileText, Trash2 } from 'lucide-react';
 import type { Entry } from '../../types';
+import { HighlightText } from './HighlightText';
 
 interface EntryRowProps {
     entry: Entry;
     onClick?: () => void;
     onDelete?: () => void;
+    searchQuery?: string;
 }
 
-export function EntryRow({ entry, onClick, onDelete }: EntryRowProps) {
+export function EntryRow({ entry, onClick, onDelete, searchQuery = '' }: EntryRowProps) {
     const createdDate = new Date(entry.created_at).toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'short',
@@ -36,10 +38,20 @@ export function EntryRow({ entry, onClick, onDelete }: EntryRowProps) {
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-sm truncate">{entry.title}</h3>
+                <h3 className="font-medium text-sm truncate">
+                    {searchQuery ? (
+                        <HighlightText text={entry.title} highlight={searchQuery} />
+                    ) : (
+                        entry.title
+                    )}
+                </h3>
                 {entry.description ? (
                     <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        {entry.description}
+                        {searchQuery ? (
+                            <HighlightText text={entry.description} highlight={searchQuery} />
+                        ) : (
+                            entry.description
+                        )}
                     </p>
                 ) : (
                     <p className="text-xs text-muted-foreground/50 italic mt-0.5">

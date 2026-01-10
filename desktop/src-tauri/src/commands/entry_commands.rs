@@ -4,7 +4,9 @@ use sea_orm::DatabaseConnection;
 use tauri::State;
 
 use crate::core::AppError;
-use crate::entry::{CreateEntryDto, EntryDto, EntryService, PaginatedEntries, UpdateEntryDto};
+use crate::entry::{
+    CreateEntryDto, EntryDto, EntryService, PaginatedEntries, SearchResult, UpdateEntryDto,
+};
 
 /// Creates a new entry in a vault.
 #[tauri::command]
@@ -73,4 +75,16 @@ pub async fn update_entry(
 #[tauri::command]
 pub async fn delete_entry(db: State<'_, DatabaseConnection>, id: i32) -> Result<(), AppError> {
     EntryService::delete(&db, id).await
+}
+
+/// Searches entries in a vault using full-text search.
+#[tauri::command]
+pub async fn search_entries(
+    db: State<'_, DatabaseConnection>,
+    vault_id: i32,
+    query: String,
+    page: u64,
+    limit: u64,
+) -> Result<SearchResult, AppError> {
+    EntryService::search(&db, vault_id, &query, page, limit).await
 }

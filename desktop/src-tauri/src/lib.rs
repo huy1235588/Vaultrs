@@ -15,8 +15,8 @@ use tauri::Manager;
 use crate::commands::{
     count_entries, create_entry, create_field_definition, create_vault, delete_entry,
     delete_field_definition, delete_vault, get_entry, get_field_definition, get_vault,
-    list_entries, list_field_definitions, list_vaults, reorder_field_definitions, update_entry,
-    update_field_definition, update_vault,
+    list_entries, list_field_definitions, list_vaults, reorder_field_definitions, search_entries,
+    update_entry, update_field_definition, update_vault,
 };
 use crate::db::{run_migrations, Database};
 
@@ -74,6 +74,7 @@ pub fn run() {
             count_entries,
             update_entry,
             delete_entry,
+            search_entries,
             // Field Definition commands
             create_field_definition,
             get_field_definition,

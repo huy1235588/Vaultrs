@@ -169,6 +169,28 @@
 
 ---
 
+## [TODO] Search Custom Field Values
+
+-   **Ngày tạo:** 2026-01-10
+-   **Vấn đề:** User muốn search entries dựa trên giá trị của custom fields (vd: search theo rating, author, tags)
+-   **Trade-off:** ~2 ngày dev, cần extend FTS5 index hoặc JSON search
+-   **Loại:** Core
+-   **Ưu tiên:** Trung bình
+-   **Trạng thái:** TODO
+
+**Chi tiết:**
+
+-   Extend current FTS5 search để include custom field values
+-   Support search theo field type (text, select values, etc.)
+-   Có thể filter theo specific field (vd: `author:Tolkien`)
+-   Performance consideration: JSON parsing có thể chậm với large datasets
+
+**Phụ thuộc:**
+
+-   Cần hoàn thành `add-vault-entry-search` (basic search on title/description) trước
+
+---
+
 ## 📊 Thống kê
 
 -   **Tổng ý tưởng:** 9

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { FileText } from 'lucide-react';
+import { FileText, SearchX } from 'lucide-react';
 import { useEntryStore } from '../../stores';
 import { EntryRow } from './EntryRow';
 import { EntryRowSkeleton } from './EntryRowSkeleton';
@@ -30,7 +30,17 @@ export function EntryList({ vaultId }: EntryListProps) {
         fetchEntries,
         loadMoreEntries,
         deleteEntry,
+        // Search state
+        searchQuery,
+        searchResults,
+        searchTotal,
+        isSearching,
     } = useEntryStore();
+
+    // Determine which entries to display
+    const isSearchActive = searchQuery.length > 0;
+    const displayEntries = isSearchActive ? searchResults : entries;
+    const displayTotal = isSearchActive ? searchTotal : total;
 
     // Fetch entries when vault changes
     useEffect(() => {
@@ -39,14 +49,16 @@ export function EntryList({ vaultId }: EntryListProps) {
 
     // Virtual list setup
     const virtualizer = useVirtualizer({
-        count: entries.length,
+        count: displayEntries.length,
         getScrollElement: () => parentRef.current,
         estimateSize: () => ROW_HEIGHT,
         overscan: OVERSCAN,
     });
 
-    // Handle scroll to load more
+    // Handle scroll to load more (only when not searching)
     const handleScroll = useCallback(() => {
+        if (isSearchActive) return; // Don't load more while searching
+
         const scrollElement = parentRef.current;
         if (!scrollElement || isLoadingMore || !hasMore) return;
 
@@ -57,7 +69,7 @@ export function EntryList({ vaultId }: EntryListProps) {
         if (scrollBottom < 200) {
             loadMoreEntries(vaultId);
         }
-    }, [vaultId, isLoadingMore, hasMore, loadMoreEntries]);
+    }, [vaultId, isLoadingMore, hasMore, loadMoreEntries, isSearchActive]);
 
     // Attach scroll listener
     useEffect(() => {
@@ -90,7 +102,34 @@ export function EntryList({ vaultId }: EntryListProps) {
         );
     }
 
-    // Empty state
+    // Search loading state
+    if (isSearching) {
+        return (
+            <div className="flex-1 p-4 space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <EntryRowSkeleton key={i} />
+                ))}
+            </div>
+        );
+    }
+
+    // No search results state
+    if (isSearchActive && displayEntries.length === 0) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center p-8">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <SearchX className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium mb-1">No results found</h3>
+                <p className="text-sm text-muted-foreground text-center max-w-sm">
+                    No entries match "<span className="font-medium">{searchQuery}</span>".
+                    Try a different search term.
+                </p>
+            </div>
+        );
+    }
+
+    // Empty state (no entries at all)
     if (entries.length === 0) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-8">
@@ -119,7 +158,7 @@ export function EntryList({ vaultId }: EntryListProps) {
                     style={{ height: virtualizer.getTotalSize() }}
                 >
                     {virtualItems.map((virtualRow) => {
-                        const entry = entries[virtualRow.index];
+                        const entry = displayEntries[virtualRow.index];
                         return (
                             <div
                                 key={entry.id}
@@ -133,14 +172,15 @@ export function EntryList({ vaultId }: EntryListProps) {
                                     entry={entry}
                                     onClick={() => handleEntryClick(entry)}
                                     onDelete={() => deleteEntry(entry.id)}
+                                    searchQuery={searchQuery}
                                 />
                             </div>
                         );
                     })}
                 </div>
 
-                {/* Load more indicator */}
-                {isLoadingMore && (
+                {/* Load more indicator (only when not searching) */}
+                {!isSearchActive && isLoadingMore && (
                     <div className="flex items-center justify-center py-4">
                         <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
                         <span className="ml-2 text-sm text-muted-foreground">
@@ -149,10 +189,17 @@ export function EntryList({ vaultId }: EntryListProps) {
                     </div>
                 )}
 
-                {/* End of list */}
-                {!hasMore && entries.length > 0 && (
+                {/* End of list indicator */}
+                {!isSearchActive && !hasMore && entries.length > 0 && (
                     <div className="text-center py-4 text-sm text-muted-foreground">
                         Showing all {total.toLocaleString()} entries
+                    </div>
+                )}
+
+                {/* Search results count */}
+                {isSearchActive && displayEntries.length > 0 && (
+                    <div className="text-center py-4 text-sm text-muted-foreground">
+                        Showing {displayTotal.toLocaleString()} {displayTotal === 1 ? 'result' : 'results'} for "{searchQuery}"
                     </div>
                 )}
             </div>

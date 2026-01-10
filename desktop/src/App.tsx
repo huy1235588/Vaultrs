@@ -1,6 +1,6 @@
 // Main App component
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Archive } from 'lucide-react';
 import { MainLayout } from './components/layout';
 import { CreateVaultDialog, VaultHeader } from './components/vault';
@@ -15,7 +15,14 @@ function App() {
     const [showFieldManager, setShowFieldManager] = useState(false);
 
     const { activeVaultId, vaults, deleteVault } = useVaultStore();
-    const { total } = useEntryStore();
+    const {
+        total,
+        searchQuery,
+        searchTotal,
+        isSearching,
+        searchEntries,
+        clearSearch
+    } = useEntryStore();
 
     const activeVault = vaults.find((v) => v.id === activeVaultId) ?? null;
 
@@ -31,6 +38,16 @@ function App() {
         }
     };
 
+    // Search handlers
+    const handleSearch = useCallback((query: string) => {
+        if (!activeVault) return;
+        searchEntries(activeVault.id, query);
+    }, [activeVault, searchEntries]);
+
+    const handleClearSearch = useCallback(() => {
+        clearSearch();
+    }, [clearSearch]);
+
     return (
         <>
             <MainLayout onCreateVault={() => setShowCreateVault(true)}>
@@ -42,6 +59,12 @@ function App() {
                             onCreateEntry={() => setShowCreateEntry(true)}
                             onManageFields={() => setShowFieldManager(true)}
                             onDeleteVault={handleDeleteVault}
+                            // Search props
+                            onSearch={handleSearch}
+                            onClearSearch={handleClearSearch}
+                            isSearching={isSearching}
+                            searchQuery={searchQuery}
+                            searchResultCount={searchTotal}
                         />
                         <EntryList vaultId={activeVault.id} />
                     </>

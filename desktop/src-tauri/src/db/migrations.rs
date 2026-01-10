@@ -66,6 +66,47 @@ const MIGRATIONS: &[(&str, &str)] = &[
         CREATE INDEX IF NOT EXISTS idx_field_definitions_vault ON field_definitions(vault_id);
         "#,
     ),
+    (
+        "005_create_entries_fts",
+        r#"
+        -- FTS5 virtual table for full-text search on entries
+        CREATE VIRTUAL TABLE IF NOT EXISTS entries_fts USING fts5(
+            title,
+            description,
+            content='entries',
+            content_rowid='id'
+        );
+        
+        -- Trigger to insert into FTS when entry is created
+        CREATE TRIGGER IF NOT EXISTS entries_fts_insert AFTER INSERT ON entries BEGIN
+            INSERT INTO entries_fts(rowid, title, description)
+            VALUES (new.id, new.title, COALESCE(new.description, ''));
+        END;
+        
+        -- Trigger to delete from FTS when entry is deleted
+        CREATE TRIGGER IF NOT EXISTS entries_fts_delete AFTER DELETE ON entries BEGIN
+            INSERT INTO entries_fts(entries_fts, rowid, title, description)
+            VALUES ('delete', old.id, old.title, COALESCE(old.description, ''));
+        END;
+        
+        -- Trigger to update FTS when entry is updated
+        CREATE TRIGGER IF NOT EXISTS entries_fts_update AFTER UPDATE ON entries BEGIN
+            INSERT INTO entries_fts(entries_fts, rowid, title, description)
+            VALUES ('delete', old.id, old.title, COALESCE(old.description, ''));
+            INSERT INTO entries_fts(rowid, title, description)
+            VALUES (new.id, new.title, COALESCE(new.description, ''));
+        END;
+        "#,
+    ),
+    (
+        "006_populate_entries_fts",
+        r#"
+        -- Populate FTS index from existing entries
+        INSERT INTO entries_fts(rowid, title, description)
+        SELECT id, title, COALESCE(description, '') FROM entries
+        WHERE id NOT IN (SELECT rowid FROM entries_fts);
+        "#,
+    ),
 ];
 
 /// Runs all pending migrations.

@@ -54,3 +54,14 @@ pub struct PaginatedEntries {
     pub limit: u64,
     pub has_more: bool,
 }
+
+/// Search result response for full-text search.
+#[derive(Debug, Serialize)]
+pub struct SearchResult {
+    pub entries: Vec<EntryDto>,
+    pub total: i64,
+    pub query: String,
+    pub page: u64,
+    pub limit: u64,
+    pub has_more: bool,
+}
