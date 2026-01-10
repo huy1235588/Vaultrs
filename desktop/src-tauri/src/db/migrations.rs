@@ -47,6 +47,25 @@ const MIGRATIONS: &[(&str, &str)] = &[
         );
         "#,
     ),
+    (
+        "004_create_field_definitions",
+        r#"
+        CREATE TABLE IF NOT EXISTS field_definitions (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            vault_id    INTEGER NOT NULL REFERENCES vaults(id) ON DELETE CASCADE,
+            name        TEXT NOT NULL,
+            field_type  TEXT NOT NULL CHECK (field_type IN ('text', 'number', 'date', 'url', 'boolean', 'select')),
+            options     TEXT,
+            position    INTEGER NOT NULL DEFAULT 0,
+            required    INTEGER NOT NULL DEFAULT 0,
+            created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(vault_id, name)
+        );
+        
+        CREATE INDEX IF NOT EXISTS idx_field_definitions_vault ON field_definitions(vault_id);
+        "#,
+    ),
 ];
 
 /// Runs all pending migrations.

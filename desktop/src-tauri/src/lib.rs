@@ -5,6 +5,7 @@ mod core;
 mod db;
 mod entities;
 mod entry;
+mod field;
 mod vault;
 
 use sea_orm::DatabaseConnection;
@@ -12,8 +13,10 @@ use std::path::PathBuf;
 use tauri::Manager;
 
 use crate::commands::{
-    count_entries, create_entry, create_vault, delete_entry, delete_vault, get_entry, get_vault,
-    list_entries, list_vaults, update_entry, update_vault,
+    count_entries, create_entry, create_field_definition, create_vault, delete_entry,
+    delete_field_definition, delete_vault, get_entry, get_field_definition, get_vault,
+    list_entries, list_field_definitions, list_vaults, reorder_field_definitions, update_entry,
+    update_field_definition, update_vault,
 };
 use crate::db::{run_migrations, Database};
 
@@ -23,7 +26,9 @@ pub struct AppState {
 }
 
 /// Initializes the database and returns the connection.
-async fn init_database(app_data_dir: PathBuf) -> Result<DatabaseConnection, Box<dyn std::error::Error>> {
+async fn init_database(
+    app_data_dir: PathBuf,
+) -> Result<DatabaseConnection, Box<dyn std::error::Error>> {
     let conn = Database::connect(&app_data_dir).await?;
     run_migrations(&conn).await?;
     Ok(conn)
@@ -69,6 +74,13 @@ pub fn run() {
             count_entries,
             update_entry,
             delete_entry,
+            // Field Definition commands
+            create_field_definition,
+            get_field_definition,
+            list_field_definitions,
+            update_field_definition,
+            delete_field_definition,
+            reorder_field_definitions,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

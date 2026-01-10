@@ -14,6 +14,9 @@ pub enum AppError {
     #[error("Entry not found: {0}")]
     EntryNotFound(i32),
 
+    #[error("Field definition not found: {0}")]
+    FieldNotFound(i32),
+
     #[error("Validation error: {0}")]
     Validation(String),
 
@@ -34,6 +37,7 @@ impl From<AppError> for IpcError {
             AppError::Database(_) => "DATABASE_ERROR",
             AppError::VaultNotFound(_) => "VAULT_NOT_FOUND",
             AppError::EntryNotFound(_) => "ENTRY_NOT_FOUND",
+            AppError::FieldNotFound(_) => "FIELD_NOT_FOUND",
             AppError::Validation(_) => "VALIDATION_ERROR",
             AppError::Internal(_) => "INTERNAL_ERROR",
         };
@@ -62,6 +66,7 @@ impl Clone for AppError {
             AppError::Database(e) => AppError::Internal(e.to_string()),
             AppError::VaultNotFound(id) => AppError::VaultNotFound(*id),
             AppError::EntryNotFound(id) => AppError::EntryNotFound(*id),
+            AppError::FieldNotFound(id) => AppError::FieldNotFound(*id),
             AppError::Validation(msg) => AppError::Validation(msg.clone()),
             AppError::Internal(msg) => AppError::Internal(msg.clone()),
         }

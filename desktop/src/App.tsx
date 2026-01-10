@@ -5,12 +5,14 @@ import { Archive } from 'lucide-react';
 import { MainLayout } from './components/layout';
 import { CreateVaultDialog, VaultHeader } from './components/vault';
 import { EntryList, CreateEntryDialog } from './components/entry';
+import { FieldDefinitionManager } from './components/field';
 import { useVaultStore, useEntryStore } from './stores';
 import './App.css';
 
 function App() {
     const [showCreateVault, setShowCreateVault] = useState(false);
     const [showCreateEntry, setShowCreateEntry] = useState(false);
+    const [showFieldManager, setShowFieldManager] = useState(false);
 
     const { activeVaultId, vaults, deleteVault } = useVaultStore();
     const { total } = useEntryStore();
@@ -38,6 +40,7 @@ function App() {
                             vault={activeVault}
                             entryCount={total}
                             onCreateEntry={() => setShowCreateEntry(true)}
+                            onManageFields={() => setShowFieldManager(true)}
                             onDeleteVault={handleDeleteVault}
                         />
                         <EntryList vaultId={activeVault.id} />
@@ -69,11 +72,19 @@ function App() {
             />
 
             {activeVault && (
-                <CreateEntryDialog
-                    open={showCreateEntry}
-                    vaultId={activeVault.id}
-                    onClose={() => setShowCreateEntry(false)}
-                />
+                <>
+                    <CreateEntryDialog
+                        open={showCreateEntry}
+                        vaultId={activeVault.id}
+                        onClose={() => setShowCreateEntry(false)}
+                    />
+                    <FieldDefinitionManager
+                        vaultId={activeVault.id}
+                        vaultName={activeVault.name}
+                        isOpen={showFieldManager}
+                        onClose={() => setShowFieldManager(false)}
+                    />
+                </>
             )}
         </>
     );

@@ -1,6 +1,6 @@
 // Vault header component
 
-import { Folder, Plus, Trash2 } from 'lucide-react';
+import { Folder, Plus, Settings2, Trash2 } from 'lucide-react';
 import type { Vault } from '../../types';
 import { Button } from '../ui/button';
 
@@ -8,6 +8,7 @@ interface VaultHeaderProps {
     vault: Vault;
     entryCount: number;
     onCreateEntry?: () => void;
+    onManageFields?: () => void;
     onDeleteVault?: () => void;
 }
 
@@ -15,6 +16,7 @@ export function VaultHeader({
     vault,
     entryCount,
     onCreateEntry,
+    onManageFields,
     onDeleteVault,
 }: VaultHeaderProps) {
     return (
@@ -45,6 +47,14 @@ export function VaultHeader({
                 <Button onClick={onCreateEntry}>
                     <Plus className="h-4 w-4 mr-1" />
                     Add Entry
+                </Button>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={onManageFields}
+                    title="Manage custom fields"
+                >
+                    <Settings2 className="h-4 w-4" />
                 </Button>
                 <Button
                     variant="ghost"
