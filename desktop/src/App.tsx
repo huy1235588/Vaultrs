@@ -3,10 +3,11 @@
 import { useState, useCallback } from 'react';
 import { Archive } from 'lucide-react';
 import { MainLayout } from './components/layout';
-import { CreateVaultDialog, VaultHeader } from './components/vault';
-import { EntryList, CreateEntryDialog } from './components/entry';
-import { FieldDefinitionManager } from './components/field';
-import { useVaultStore, useEntryStore } from './stores';
+import { CreateVaultDialog, VaultHeader } from '@/modules/vault';
+import { EntryList, CreateEntryDialog } from '@/modules/entry';
+import { FieldDefinitionManager } from '@/modules/field';
+import { useVaultStore } from '@/modules/vault';
+import { useEntryStore } from '@/modules/entry';
 import './App.css';
 
 function App() {

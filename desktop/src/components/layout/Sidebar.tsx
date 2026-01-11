@@ -2,9 +2,8 @@
 
 import { useEffect } from 'react';
 import { Plus, Archive } from 'lucide-react';
-import { useVaultStore } from '../../stores';
-import { VaultListItem } from '../vault/VaultListItem';
-import { Button } from '../ui/button';
+import { useVaultStore, VaultListItem } from '@/modules/vault';
+import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
     onCreateVault?: () => void;

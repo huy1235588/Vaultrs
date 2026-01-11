@@ -1,11 +1,7 @@
-// Entry exports
-export * from './EntryList';
-export * from './EntryRow';
-export * from './EntryRowSkeleton';
-export * from './CreateEntryDialog';
-export * from './EntryDetailDialog';
-export * from './EditEntryForm';
-export * from './SearchInput';
-export * from './HighlightText';
-export * from './CoverImageUploader';
-export * from './CoverImageDisplay';
+// Entry component exports - Re-exports from new module structure for backward compatibility
+//
+// NOTE: These exports are maintained for backward compatibility.
+// New code should import directly from the modules:
+//   import { EntryList, CreateEntryDialog } from '@/modules/entry';
+
+export * from '@/modules/entry/components';

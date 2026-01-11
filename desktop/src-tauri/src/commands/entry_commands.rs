@@ -5,7 +5,8 @@ use tauri::State;
 
 use crate::core::AppError;
 use crate::entry::{
-    CreateEntryDto, EntryDto, EntryService, PaginatedEntries, SearchResult, UpdateEntryDto,
+    CreateEntryDto, EntryDto, EntrySearchService, EntryService, PaginatedEntries, SearchResult,
+    UpdateEntryDto,
 };
 use crate::image::ImageStorage;
 
@@ -92,5 +93,5 @@ pub async fn search_entries(
     page: u64,
     limit: u64,
 ) -> Result<SearchResult, AppError> {
-    EntryService::search(&db, vault_id, &query, page, limit).await
+    EntrySearchService::search(&db, vault_id, &query, page, limit).await
 }

@@ -4,7 +4,7 @@ use sea_orm::DatabaseConnection;
 use tauri::State;
 
 use crate::core::AppResult;
-use crate::entry::{EntryDto, EntryService};
+use crate::entry::{EntryDto, EntryImageService, EntryService};
 use crate::image::{ImageProcessor, ImageStorage};
 
 /// Uploads an entry cover image from a local file.
@@ -23,7 +23,7 @@ pub async fn upload_entry_cover_image(
 
     let image_storage = ImageStorage::new(std::path::Path::new(&app_data_dir));
 
-    EntryService::set_cover_from_file(&db, entry_id, &file_path, &image_storage).await
+    EntryImageService::set_cover_from_file(&db, entry_id, &file_path, &image_storage).await
 }
 
 /// Sets an entry cover image from a URL.
@@ -42,7 +42,7 @@ pub async fn set_entry_cover_url(
 
     let image_storage = ImageStorage::new(std::path::Path::new(&app_data_dir));
 
-    EntryService::set_cover_from_url(&db, entry_id, &url, &image_storage).await
+    EntryImageService::set_cover_from_url(&db, entry_id, &url, &image_storage).await
 }
 
 /// Gets the thumbnail for an entry's cover image as a base64-encoded data URL.
@@ -60,7 +60,7 @@ pub async fn get_entry_thumbnail(
     let entry = EntryService::get(&db, entry_id).await?;
 
     // Generate thumbnail
-    let thumbnail_bytes = EntryService::get_thumbnail(&entry, &image_storage)?;
+    let thumbnail_bytes = EntryImageService::get_thumbnail(&entry, &image_storage)?;
 
     // Convert to data URL for frontend
     Ok(ImageProcessor::to_data_url(&thumbnail_bytes))
@@ -77,5 +77,5 @@ pub async fn remove_entry_cover(
 
     let image_storage = ImageStorage::new(std::path::Path::new(&app_data_dir));
 
-    EntryService::remove_cover(&db, entry_id, &image_storage).await
+    EntryImageService::remove_cover(&db, entry_id, &image_storage).await
 }
