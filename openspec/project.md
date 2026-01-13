@@ -6,50 +6,50 @@
 
 ### Goals
 
-- 🚀 **Native Performance**: Direct system access via Tauri, no browser overhead
-- 💾 **Embedded Database**: SQLite with WAL mode - zero configuration needed
-- ⚡ **Virtual Scrolling**: Handle millions of rows without UI lag
-- 🔄 **Auto-Crawling**: Automated metadata fetching with background workers
-- 🎨 **Dynamic Schema**: Flexible EAV + JSON architecture for custom fields
-- 🔒 **Privacy-First**: All data stored locally, complete offline capability
+-   🚀 **Native Performance**: Direct system access via Tauri, no browser overhead
+-   💾 **Embedded Database**: SQLite with WAL mode - zero configuration needed
+-   ⚡ **Virtual Scrolling**: Handle millions of rows without UI lag
+-   🔄 **Auto-Crawling**: Automated metadata fetching with background workers
+-   🎨 **Dynamic Schema**: Flexible EAV + JSON architecture for custom fields
+-   🔒 **Privacy-First**: All data stored locally, complete offline capability
 
 ### Personal Learning Goals
 
-- Master Rust systems programming
-- Explore Tauri for desktop app development
-- Learn advanced React patterns (virtual scrolling, etc.)
-- Practice database optimization at scale
-- Build a real-world application from scratch
+-   Master Rust systems programming
+-   Explore Tauri for desktop app development
+-   Learn advanced React patterns (virtual scrolling, etc.)
+-   Practice database optimization at scale
+-   Build a real-world application from scratch
 
 ## Tech Stack
 
 ### Frontend
 
-- **React 19** + **TypeScript** + **Vite 7** - UI framework and bundler
-- **Tailwind CSS 4** - Utility-first CSS framework
-- **Shadcn UI** + **Radix UI** - Component library
-- **TanStack Table** - Data grid management
-- **TanStack Virtual** - Virtual scrolling for 10M+ records
-- **Zustand** - State management
-- **Lucide React** - Icon library
+-   **React 19** + **TypeScript** + **Vite 7** - UI framework and bundler
+-   **Tailwind CSS 4** - Utility-first CSS framework
+-   **Shadcn UI** + **Radix UI** - Component library
+-   **TanStack Table** - Data grid management
+-   **TanStack Virtual** - Virtual scrolling for 10M+ records
+-   **Zustand** - State management
+-   **Lucide React** - Icon library
 
 ### Backend
 
-- **Rust 1.70+** + **Tauri v2** - Desktop framework
-- **Tokio** - Async runtime
-- **SeaORM 1.x** + **SQLx 0.8** - Database ORM and driver
-- **SQLite (WAL Mode)** - Embedded database
-- **Reqwest 0.12** - HTTP client for crawling
-- **Serde** / **Serde JSON** - Serialization
-- **thiserror** - Error handling
-- **log** + **env_logger** - Logging
+-   **Rust 1.70+** + **Tauri v2** - Desktop framework
+-   **Tokio** - Async runtime
+-   **SeaORM 1.x** + **SQLx 0.8** - Database ORM and driver
+-   **SQLite (WAL Mode)** - Embedded database
+-   **Reqwest 0.12** - HTTP client for crawling
+-   **Serde** / **Serde JSON** - Serialization
+-   **thiserror** - Error handling
+-   **log** + **env_logger** - Logging
 
 ### Development Tools
 
-- **pnpm** - Package manager (frontend)
-- **Cargo** - Package manager (backend)
-- **ESLint** - TypeScript/React linting
-- **TypeScript 5.9** - Type checking
+-   **pnpm** - Package manager (frontend)
+-   **Cargo** - Package manager (backend)
+-   **ESLint** - TypeScript/React linting
+-   **TypeScript 5.9** - Type checking
 
 ## Project Conventions
 
@@ -57,14 +57,14 @@
 
 #### Rust (Backend)
 
-| Element        | Convention              | Example                                   |
-| -------------- | ----------------------- | ----------------------------------------- |
-| Module         | `snake_case`            | `vault_manager`, `crypto_utils`           |
-| Struct/Enum    | `PascalCase`            | `VaultEntry`, `EncryptionAlgorithm`       |
-| Function       | `snake_case`            | `encrypt_password()`, `get_vault_entries()` |
-| Constant       | `SCREAMING_SNAKE_CASE`  | `MAX_PASSWORD_LENGTH`, `DEFAULT_ITERATIONS` |
-| Variable       | `snake_case`            | `master_password`, `vault_data`           |
-| File           | `snake_case.rs`         | `vault_manager.rs`, `crypto_utils.rs`     |
+| Element     | Convention             | Example                                     |
+| ----------- | ---------------------- | ------------------------------------------- |
+| Module      | `snake_case`           | `vault_manager`, `crypto_utils`             |
+| Struct/Enum | `PascalCase`           | `VaultEntry`, `EncryptionAlgorithm`         |
+| Function    | `snake_case`           | `encrypt_password()`, `get_vault_entries()` |
+| Constant    | `SCREAMING_SNAKE_CASE` | `MAX_PASSWORD_LENGTH`, `DEFAULT_ITERATIONS` |
+| Variable    | `snake_case`           | `master_password`, `vault_data`             |
+| File        | `snake_case.rs`        | `vault_manager.rs`, `crypto_utils.rs`       |
 
 ```rust
 // Use descriptive names
@@ -83,16 +83,16 @@ let item = fetch_item()?;
 
 #### TypeScript/React (Frontend)
 
-| Element        | Convention                     | Example                           |
-| -------------- | ------------------------------ | --------------------------------- |
-| Component      | `PascalCase`                   | `PasswordList`, `VaultHeader`     |
-| Hook           | `camelCase` with `use` prefix  | `useVault()`, `useEncryption()`   |
-| Function       | `camelCase`                    | `handleSubmit()`, `validatePassword()` |
-| Variable       | `camelCase`                    | `masterPassword`, `vaultEntries`  |
-| Constant       | `SCREAMING_SNAKE_CASE`         | `API_BASE_URL`, `MAX_RETRIES`     |
-| Interface/Type | `PascalCase`                   | `VaultEntry`, `EncryptionConfig`  |
-| Component file | `PascalCase.tsx`               | `PasswordList.tsx`                |
-| Hook file      | `camelCase.ts`                 | `useVault.ts`                     |
+| Element        | Convention                    | Example                                |
+| -------------- | ----------------------------- | -------------------------------------- |
+| Component      | `PascalCase`                  | `PasswordList`, `VaultHeader`          |
+| Hook           | `camelCase` with `use` prefix | `useVault()`, `useEncryption()`        |
+| Function       | `camelCase`                   | `handleSubmit()`, `validatePassword()` |
+| Variable       | `camelCase`                   | `masterPassword`, `vaultEntries`       |
+| Constant       | `SCREAMING_SNAKE_CASE`        | `API_BASE_URL`, `MAX_RETRIES`          |
+| Interface/Type | `PascalCase`                  | `VaultEntry`, `EncryptionConfig`       |
+| Component file | `PascalCase.tsx`              | `PasswordList.tsx`                     |
+| Hook file      | `camelCase.ts`                | `useVault.ts`                          |
 
 ```typescript
 // Explicit types
@@ -110,10 +110,10 @@ export function ItemCard({ item, onClick }: ItemCardProps) {}
 
 #### Naming Best Practices
 
-- **Boolean variables**: Use prefixes `is`, `has`, `should`, `can`
-- **Functions**: Verb + Noun (e.g., `getVaultEntry`, `createVault`)
-- **Collections**: Use plural names (e.g., `vaultEntries`, `passwords`)
-- **Avoid abbreviations**: Unless very common (`id`, `url`, `html`)
+-   **Boolean variables**: Use prefixes `is`, `has`, `should`, `can`
+-   **Functions**: Verb + Noun (e.g., `getVaultEntry`, `createVault`)
+-   **Collections**: Use plural names (e.g., `vaultEntries`, `passwords`)
+-   **Avoid abbreviations**: Unless very common (`id`, `url`, `html`)
 
 ### Architecture Patterns
 
@@ -171,39 +171,39 @@ src/modules/
 
 #### Unit Tests
 
-- Test business logic in isolation
-- Mock external dependencies
-- Fast feedback loop
+-   Test business logic in isolation
+-   Mock external dependencies
+-   Fast feedback loop
 
 #### Integration Tests
 
-- Test full workflows
-- Use in-memory SQLite
-- Verify IPC communication
+-   Test full workflows
+-   Use in-memory SQLite
+-   Verify IPC communication
 
 #### Performance Tests
 
-- Benchmark critical operations
-- Test with large datasets (10M+ records)
-- Profile memory usage
+-   Benchmark critical operations
+-   Test with large datasets (10M+ records)
+-   Profile memory usage
 
 #### Performance Targets
 
-| Operation         | Target   | Strategy            |
-| ----------------- | -------- | ------------------- |
-| Initial Load      | < 500ms  | Pagination + index  |
-| Scroll Frame Rate | 60 FPS   | Virtual scrolling   |
-| Search            | < 100ms  | SQLite FTS          |
-| Insert            | < 10ms   | Optimized writes    |
+| Operation         | Target  | Strategy           |
+| ----------------- | ------- | ------------------ |
+| Initial Load      | < 500ms | Pagination + index |
+| Scroll Frame Rate | 60 FPS  | Virtual scrolling  |
+| Search            | < 100ms | SQLite FTS         |
+| Insert            | < 10ms  | Optimized writes   |
 
 ### Git Workflow
 
 #### Branching Strategy
 
-- `main` - Production-ready code
-- `feature/*` - New features
-- `fix/*` - Bug fixes
-- `docs/*` - Documentation updates
+-   `main` - Production-ready code
+-   `feature/*` - New features
+-   `fix/*` - Bug fixes
+-   `docs/*` - Documentation updates
 
 #### Commit Conventions
 
@@ -222,70 +222,70 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ### Core Concepts
 
-- **Vault**: A collection/container for organizing items
-- **Entry**: An individual record within a vault (media, book, photo, etc.)
-- **Collection**: User-defined grouping of entries
-- **Crawler**: Background worker that fetches metadata from external sources
-- **Dynamic Schema**: EAV (Entity-Attribute-Value) + JSON columns for flexible custom fields
+-   **Vault**: A collection/container for organizing items
+-   **Entry**: An individual record within a vault (media, book, photo, etc.)
+-   **Collection**: User-defined grouping of entries
+-   **Crawler**: Background worker that fetches metadata from external sources
+-   **Dynamic Schema**: EAV (Entity-Attribute-Value) + JSON columns for flexible custom fields
 
 ### Use Cases
 
-- **Media Collections**: Movies, TV series, anime, music
-- **Book Library**: Books, ebooks, manga
-- **Photo Archive**: Personal photo organization
-- **Scientific Records**: Research data management
-- **Inventory**: Equipment and item tracking
+-   **Media Collections**: Movies, TV series, anime, music
+-   **Book Library**: Books, ebooks, manga
+-   **Photo Archive**: Personal photo organization
+-   **Scientific Records**: Research data management
+-   **Inventory**: Equipment and item tracking
 
 ### Key Features
 
-- Virtual scrolling for 10M+ records display
-- Full-text search with indexed SQLite queries
-- Custom fields without schema migrations
-- Background metadata crawling
-- Offline-first operation
+-   Virtual scrolling for 10M+ records display
+-   Full-text search with indexed SQLite queries
+-   Custom fields without schema migrations
+-   Background metadata crawling
+-   Offline-first operation
 
 ## Important Constraints
 
 ### Technical Constraints
 
-- **Single User Only**: Desktop app, no multi-user support needed
-- **No Network Requirement**: Must work 100% offline
-- **SQLite Limitations**: Limited concurrent writes (acceptable for single-user)
-- **Cross-Platform**: Must support Windows, macOS, Linux
+-   **Single User Only**: Desktop app, no multi-user support needed
+-   **No Network Requirement**: Must work 100% offline
+-   **SQLite Limitations**: Limited concurrent writes (acceptable for single-user)
+-   **Cross-Platform**: Must support Windows, macOS, Linux
 
 ### Performance Constraints
 
-- Must handle 10+ million records smoothly
-- 60 FPS scrolling is mandatory
-- Search queries under 100ms
-- Startup time under 500ms
+-   Must handle 10+ million records smoothly
+-   60 FPS scrolling is mandatory
+-   Search queries under 100ms
+-   Startup time under 500ms
 
 ### Privacy Constraints
 
-- All data stored locally by default
-- No telemetry without explicit consent
-- No cloud sync (unless user explicitly enables)
+-   All data stored locally by default
+-   No telemetry without explicit consent
+-   No cloud sync (unless user explicitly enables)
 
 ### Project Status
 
-- **Status**: Planning & Design phase
-- **Development**: Early stage
-- **Purpose**: Personal learning project
+-   **Status**: Planning & Design phase
+-   **Development**: Early stage
+-   **Purpose**: Personal learning project
 
 ## External Dependencies
 
 ### Metadata Sources (Planned)
 
-- External APIs for media metadata (e.g., TMDB, IGDB)
-- Book databases (e.g., Open Library)
-- Custom crawler adapters
+-   External APIs for media metadata (e.g., TMDB, IGDB)
+-   Book databases (e.g., Open Library)
+-   Custom crawler adapters
 
 ### Development Dependencies
 
-- **GitHub**: Source control and CI/CD
-- **GitHub Actions**: Automated testing and builds
+-   **GitHub**: Source control and CI/CD
+-   **GitHub Actions**: Automated testing and builds
 
 ### Runtime Dependencies
 
-- **SQLite**: Embedded database (bundled)
-- **WebView2** (Windows) / **WebKit** (macOS/Linux): UI rendering via Tauri
+-   **SQLite**: Embedded database (bundled)
+-   **WebView2** (Windows) / **WebKit** (macOS/Linux): UI rendering via Tauri

@@ -6,11 +6,11 @@
 
 ## 📋 Quick Reference
 
-| Layer | File | Trách nhiệm |
-|-------|------|-------------|
-| **1. Commands** | `commands/*.rs` | Nhận request, gọi service |
-| **2. Services** | `*/service.rs` | Business logic, validation |
-| **3. Database** | `entities/*.rs` | CRUD operations |
+| Layer           | File            | Trách nhiệm                |
+| --------------- | --------------- | -------------------------- |
+| **1. Commands** | `commands/*.rs` | Nhận request, gọi service  |
+| **2. Services** | `*/service.rs`  | Business logic, validation |
+| **3. Database** | `entities/*.rs` | CRUD operations            |
 
 ---
 
@@ -45,10 +45,11 @@
 > 📍 **Location**: `src/commands/vault_commands.rs`
 
 ### Vai trò
-- **Nhận** input từ frontend qua IPC
-- **Validate** input cơ bản (type checking tự động)
-- **Gọi** service layer
-- **Trả về** response cho frontend
+
+-   **Nhận** input từ frontend qua IPC
+-   **Validate** input cơ bản (type checking tự động)
+-   **Gọi** service layer
+-   **Trả về** response cho frontend
 
 ### Ví dụ
 
@@ -99,7 +100,7 @@ pub async fn create_vault(...) -> Result<VaultDto, AppError> {
     if existing.is_some() {
         return Err(AppError::Conflict("Vault exists".into()));
     }
-    
+
     // Đây nên ở Service layer!
 }
 ```
@@ -111,10 +112,11 @@ pub async fn create_vault(...) -> Result<VaultDto, AppError> {
 > 📍 **Location**: `src/vault/service.rs`
 
 ### Vai trò
-- **Validate** dữ liệu (business rules)
-- **Xử lý** business logic
-- **Gọi** database operations
-- **Convert** models ↔ DTOs
+
+-   **Validate** dữ liệu (business rules)
+-   **Xử lý** business logic
+-   **Gọi** database operations
+-   **Convert** models ↔ DTOs
 
 ### Ví dụ
 
@@ -144,7 +146,7 @@ impl VaultService {
 
         // 2. BUSINESS LOGIC - Prepare data
         let now = Utc::now().naive_utc();
-        
+
         let vault = vault::ActiveModel {
             name: Set(name.to_string()),
             description: Set(dto.description),
@@ -194,9 +196,10 @@ impl VaultService {
 > 📍 **Location**: `src/entities/vault.rs`
 
 ### Vai trò
-- **Define** database schema
-- **Provide** type-safe query API
-- **Handle** serialization/deserialization
+
+-   **Define** database schema
+-   **Provide** type-safe query API
+-   **Handle** serialization/deserialization
 
 ### Ví dụ
 
@@ -209,18 +212,18 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    
+
     pub name: String,
-    
+
     #[sea_orm(nullable)]
     pub description: Option<String>,
-    
+
     pub icon: String,
-    
+
     pub color: String,
-    
+
     pub created_at: DateTime,
-    
+
     pub updated_at: DateTime,
 }
 
@@ -274,11 +277,11 @@ vault_model.delete(&db).await?;
 
 ### Tại sao cần DTO?
 
-| Model (Entity) | DTO |
-|----------------|-----|
-| Mapping 1:1 với DB | Tùy chỉnh cho API |
-| Có thể chứa sensitive data | Chỉ expose data cần thiết |
-| Cấu trúc cố định | Có thể khác nhau (Create, Update, Response) |
+| Model (Entity)             | DTO                                         |
+| -------------------------- | ------------------------------------------- |
+| Mapping 1:1 với DB         | Tùy chỉnh cho API                           |
+| Có thể chứa sensitive data | Chỉ expose data cần thiết                   |
+| Cấu trúc cố định           | Có thể khác nhau (Create, Update, Response) |
 
 ### Ví dụ
 
@@ -335,11 +338,11 @@ pub struct UpdateVaultDto {
 
 ## 📝 Tóm tắt
 
-| Layer | Làm | Không làm |
-|-------|-----|-----------|
-| **Commands** | Nhận input, gọi service, trả response | Business logic, DB queries |
-| **Services** | Validate, business logic, call DB | Raw SQL, expose internal models |
-| **Entities** | Define schema, CRUD operations | Business logic |
+| Layer        | Làm                                   | Không làm                       |
+| ------------ | ------------------------------------- | ------------------------------- |
+| **Commands** | Nhận input, gọi service, trả response | Business logic, DB queries      |
+| **Services** | Validate, business logic, call DB     | Raw SQL, expose internal models |
+| **Entities** | Define schema, CRUD operations        | Business logic                  |
 
 ---
 

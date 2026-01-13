@@ -6,13 +6,13 @@
 
 ## 📋 TL;DR
 
-| Component       | Technology     | Purpose                        |
-| --------------- | -------------- | ------------------------------ |
-| **Framework**   | Tauri v2       | Desktop app framework          |
-| **Runtime**     | Tokio          | Async runtime                  |
-| **ORM**         | SeaORM         | Database abstraction           |
-| **HTTP Client** | Reqwest        | External API calls             |
-| **Serialization** | Serde        | JSON serialization             |
+| Component         | Technology | Purpose               |
+| ----------------- | ---------- | --------------------- |
+| **Framework**     | Tauri v2   | Desktop app framework |
+| **Runtime**       | Tokio      | Async runtime         |
+| **ORM**           | SeaORM     | Database abstraction  |
+| **HTTP Client**   | Reqwest    | External API calls    |
+| **Serialization** | Serde      | JSON serialization    |
 
 ---
 
@@ -111,14 +111,14 @@ env_logger = "0.11"
 
 ### Dependency Purposes
 
-| Crate        | Purpose                    |
-| ------------ | -------------------------- |
-| `tauri`      | Desktop app framework      |
-| `tokio`      | Async runtime              |
-| `sea-orm`    | ORM for database access    |
-| `reqwest`    | HTTP client for crawlers   |
-| `serde`      | Serialization/deserialization |
-| `thiserror`  | Error type derivation      |
+| Crate       | Purpose                       |
+| ----------- | ----------------------------- |
+| `tauri`     | Desktop app framework         |
+| `tokio`     | Async runtime                 |
+| `sea-orm`   | ORM for database access       |
+| `reqwest`   | HTTP client for crawlers      |
+| `serde`     | Serialization/deserialization |
+| `thiserror` | Error type derivation         |
 
 ---
 
@@ -150,12 +150,12 @@ env_logger = "0.11"
 
 ### Layer Responsibilities
 
-| Layer        | Responsibility                          |
-| ------------ | --------------------------------------- |
+| Layer        | Responsibility                           |
+| ------------ | ---------------------------------------- |
 | Commands     | Parse input, call service, format output |
-| Services     | Business logic, validation              |
-| Repositories | Database access abstraction             |
-| Models       | Data structures, entity definitions     |
+| Services     | Business logic, validation               |
+| Repositories | Database access abstraction              |
+| Models       | Data structures, entity definitions      |
 
 ---
 
@@ -193,7 +193,7 @@ pub struct AppState {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     env_logger::init();
-    
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
@@ -225,16 +225,16 @@ pub fn run() {
 
 ```json
 {
-  "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "Default capabilities for Vaultrs",
-  "windows": ["main"],
-  "permissions": [
-    "core:default",
-    "opener:default",
-    "fs:default",
-    "dialog:default"
-  ]
+    "$schema": "../gen/schemas/desktop-schema.json",
+    "identifier": "default",
+    "description": "Default capabilities for Vaultrs",
+    "windows": ["main"],
+    "permissions": [
+        "core:default",
+        "opener:default",
+        "fs:default",
+        "dialog:default"
+    ]
 }
 ```
 
@@ -242,11 +242,11 @@ pub fn run() {
 
 Tauri v2 uses a capability-based security model:
 
-| Permission      | Purpose                    |
-| --------------- | -------------------------- |
-| `core:default`  | Basic Tauri functionality  |
-| `fs:default`    | File system access         |
-| `dialog:default`| System dialogs             |
+| Permission       | Purpose                   |
+| ---------------- | ------------------------- |
+| `core:default`   | Basic Tauri functionality |
+| `fs:default`     | File system access        |
+| `dialog:default` | System dialogs            |
 
 ---
 
@@ -294,23 +294,23 @@ cargo clippy
 
 ### Implementation Status
 
-| Module       | Status      | Files                    |
-| ------------ | ----------- | ------------------------ |
-| core/        | ⬜ Planned  | error.rs, config.rs      |
-| db/          | ⬜ Planned  | connection.rs, migrations|
-| models/      | ⬜ Planned  | collection.rs, item.rs   |
-| repositories/| ⬜ Planned  | collection_repo.rs       |
-| services/    | ⬜ Planned  | collection_service.rs    |
-| commands/    | ⬜ Planned  | collection_commands.rs   |
+| Module        | Status     | Files                     |
+| ------------- | ---------- | ------------------------- |
+| core/         | ⬜ Planned | error.rs, config.rs       |
+| db/           | ⬜ Planned | connection.rs, migrations |
+| models/       | ⬜ Planned | collection.rs, item.rs    |
+| repositories/ | ⬜ Planned | collection_repo.rs        |
+| services/     | ⬜ Planned | collection_service.rs     |
+| commands/     | ⬜ Planned | collection_commands.rs    |
 
 ---
 
 ## 🔗 Tài liệu Liên quan
 
-- [Tauri Commands](./2-commands.md)
-- [Error Handling](./3-error-handling.md)
-- [Services](./4-services.md)
-- [Database Integration](../02-database/)
+-   [Tauri Commands](./2-commands.md)
+-   [Error Handling](./3-error-handling.md)
+-   [Services](./4-services.md)
+-   [Database Integration](../02-database/)
 
 ---
 

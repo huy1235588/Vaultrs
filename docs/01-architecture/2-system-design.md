@@ -149,7 +149,7 @@ const [searchParams, setSearchParams] = useSearchParams();
 
 // 4. Server State - TanStack Query (nếu cần)
 const { data, isLoading } = useQuery({
-    queryKey: ['entries', collectionId],
+    queryKey: ["entries", collectionId],
     queryFn: () => entryService.getAll(collectionId),
 });
 ```
@@ -293,14 +293,15 @@ fn main() {
 ### Key Design Decisions
 
 1. **Dynamic Schema (EAV + JSON)**
-   - `properties` column stores JSON cho flexibility
-   - Core fields indexed cho performance
-   - Attributes table định nghĩa schema per collection
+
+    - `properties` column stores JSON cho flexibility
+    - Core fields indexed cho performance
+    - Attributes table định nghĩa schema per collection
 
 2. **SQLite WAL Mode**
-   - Concurrent reads during writes
-   - Better crash recovery
-   - Faster for read-heavy workloads
+    - Concurrent reads during writes
+    - Better crash recovery
+    - Faster for read-heavy workloads
 
 ---
 
@@ -341,13 +342,13 @@ fn main() {
 async fn process_crawl_task(task: CrawlTask, db: &DatabaseConnection) {
     // 1. Fetch metadata from external API
     let metadata = http_client.fetch(&task.url).await?;
-    
+
     // 2. Parse and transform data
     let parsed = parser.parse(metadata)?;
-    
+
     // 3. Update item in database
     item_repo.update_properties(task.item_id, parsed).await?;
-    
+
     // 4. Notify frontend (optional)
     emit_event("item_updated", task.item_id);
 }
@@ -373,10 +374,10 @@ async fn process_crawl_task(task: CrawlTask, db: &DatabaseConnection) {
 
 ### Tauri Security Features
 
-- **Process Isolation**: WebView và Rust process tách biệt
-- **IPC Validation**: Type-safe commands
-- **API Allowlist**: Chỉ expose các APIs cần thiết
-- **Content Security Policy**: Prevent XSS
+-   **Process Isolation**: WebView và Rust process tách biệt
+-   **IPC Validation**: Type-safe commands
+-   **API Allowlist**: Chỉ expose các APIs cần thiết
+-   **Content Security Policy**: Prevent XSS
 
 ---
 
@@ -387,10 +388,10 @@ async fn process_crawl_task(task: CrawlTask, db: &DatabaseConnection) {
 ```typescript
 // Only render visible rows
 const virtualizer = useVirtualizer({
-    count: totalItems,        // Could be 10M+
+    count: totalItems, // Could be 10M+
     getScrollElement: () => parentRef.current,
     estimateSize: () => ROW_HEIGHT,
-    overscan: 5,              // Buffer rows
+    overscan: 5, // Buffer rows
 });
 
 // Render chỉ ~50 rows thay vì 10M
@@ -465,11 +466,11 @@ src-tauri/src/services/
 
 ## 🔗 Tài liệu Liên quan
 
-- [Kiến trúc Tổng quan](./1-overview.md)
-- [Tech Stack](./3-tech-stack.md)
-- [Data Flow](./4-data-flow.md)
-- [Design Patterns](./5-design-patterns.md)
-- [Database Schema](../02-database/)
+-   [Kiến trúc Tổng quan](./1-overview.md)
+-   [Tech Stack](./3-tech-stack.md)
+-   [Data Flow](./4-data-flow.md)
+-   [Design Patterns](./5-design-patterns.md)
+-   [Database Schema](../02-database/)
 
 ---
 

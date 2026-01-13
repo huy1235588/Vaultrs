@@ -6,12 +6,12 @@
 
 ## 📋 TL;DR
 
-| Command                        | Purpose                    |
-| ------------------------------ | -------------------------- |
-| `sea-orm-cli migrate generate` | Tạo migration mới          |
-| `sea-orm-cli migrate up`       | Chạy pending migrations    |
-| `sea-orm-cli migrate down`     | Rollback migration cuối    |
-| `sea-orm-cli migrate status`   | Xem trạng thái migrations  |
+| Command                        | Purpose                   |
+| ------------------------------ | ------------------------- |
+| `sea-orm-cli migrate generate` | Tạo migration mới         |
+| `sea-orm-cli migrate up`       | Chạy pending migrations   |
+| `sea-orm-cli migrate down`     | Rollback migration cuối   |
+| `sea-orm-cli migrate status`   | Xem trạng thái migrations |
 
 ---
 
@@ -252,15 +252,15 @@ use sea_orm_migration::MigratorTrait;
 pub async fn init_database() -> Result<DatabaseConnection, DbErr> {
     let db_path = get_db_path();
     let db_url = format!("sqlite:{}?mode=rwc", db_path);
-    
+
     let db = Database::connect(&db_url).await?;
-    
+
     // Run migrations on startup
     Migrator::up(&db, None).await?;
-    
+
     // Configure SQLite
     configure_sqlite(&db).await?;
-    
+
     Ok(db)
 }
 ```
@@ -301,28 +301,28 @@ impl MigratorTrait for Migrator {
 
 ### Do's
 
-- ✅ One logical change per migration
-- ✅ Always provide `down()` method
-- ✅ Test migrations on copy of production data
-- ✅ Use transactions for multi-step operations
-- ✅ Backup before running migrations
-- ✅ Version control migrations
+-   ✅ One logical change per migration
+-   ✅ Always provide `down()` method
+-   ✅ Test migrations on copy of production data
+-   ✅ Use transactions for multi-step operations
+-   ✅ Backup before running migrations
+-   ✅ Version control migrations
 
 ### Don'ts
 
-- ❌ Modify existing migrations
-- ❌ Delete migrations that have been run
-- ❌ Commit migrations that don't pass tests
-- ❌ Skip migration numbers
-- ❌ Include data changes in schema migrations
+-   ❌ Modify existing migrations
+-   ❌ Delete migrations that have been run
+-   ❌ Commit migrations that don't pass tests
+-   ❌ Skip migration numbers
+-   ❌ Include data changes in schema migrations
 
 ---
 
 ## 🔗 Tài liệu Liên quan
 
-- [Database Overview](./1-overview.md)
-- [Schema](./2-schema.md)
-- [SeaORM Docs](https://www.sea-ql.org/SeaORM/)
+-   [Database Overview](./1-overview.md)
+-   [Schema](./2-schema.md)
+-   [SeaORM Docs](https://www.sea-ql.org/SeaORM/)
 
 ---
 

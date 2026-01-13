@@ -6,12 +6,12 @@
 
 ## 📋 Quick Reference
 
-| Folder | Vai trò |
-|--------|---------|
-| `commands/` | Tauri IPC handlers (Layer 1) |
-| `core/` | Utilities, error types |
-| `db/` | Database connection & migrations |
-| `entities/` | SeaORM models |
+| Folder             | Vai trò                           |
+| ------------------ | --------------------------------- |
+| `commands/`        | Tauri IPC handlers (Layer 1)      |
+| `core/`            | Utilities, error types            |
+| `db/`              | Database connection & migrations  |
+| `entities/`        | SeaORM models                     |
 | `vault/`, `entry/` | Business logic services (Layer 2) |
 
 ---
@@ -91,12 +91,12 @@ use crate::vault::{VaultDto, CreateVaultDto};
 
 ### Visibility
 
-| Keyword | Scope |
-|---------|-------|
-| (nothing) | Private - chỉ trong module |
-| `pub` | Public - ai cũng dùng được |
-| `pub(crate)` | Public trong crate này |
-| `pub(super)` | Public cho parent module |
+| Keyword      | Scope                      |
+| ------------ | -------------------------- |
+| (nothing)    | Private - chỉ trong module |
+| `pub`        | Public - ai cũng dùng được |
+| `pub(crate)` | Public trong crate này     |
+| `pub(super)` | Public cho parent module   |
 
 ---
 
@@ -206,10 +206,10 @@ chrono = { version = "0.4", features = ["serde"] }
 
 ## 📝 Kiểm tra Hiểu biết
 
-- [ ] Biết file nào là entry point
-- [ ] Hiểu được data flow từ Frontend → Backend → Database
-- [ ] Có thể tìm được code của một command cụ thể
-- [ ] Hiểu cách Rust module system hoạt động
+-   [ ] Biết file nào là entry point
+-   [ ] Hiểu được data flow từ Frontend → Backend → Database
+-   [ ] Có thể tìm được code của một command cụ thể
+-   [ ] Hiểu cách Rust module system hoạt động
 
 ---
 

@@ -22,10 +22,10 @@
 
 **This is a personal project currently in the planning phase.**
 
-- 📋 **Status**: Planning & Design
-- 🚧 **Development**: Not yet started
-- 📅 **Timeline**: TBD
-- 👤 **Maintainer**: Personal project (single developer)
+-   📋 **Status**: Planning & Design
+-   🚧 **Development**: Not yet started
+-   📅 **Timeline**: TBD
+-   👤 **Maintainer**: Personal project (single developer)
 
 ---
 
@@ -35,42 +35,46 @@ Vaultrs is a planned native desktop application for managing large-scale collect
 
 ### Design Goals
 
-- 🚀 **Native Performance**: Direct system access via Tauri, no browser overhead
-- 💾 **Embedded Database**: SQLite with WAL mode - zero configuration needed
-- ⚡ **Virtual Scrolling**: Handle millions of rows without UI lag
-- 🔄 **Auto-Crawling**: Automated metadata fetching with background workers
-- 🎨 **Dynamic Schema**: Flexible EAV + JSON architecture for custom fields
-- 🔒 **Privacy-First**: All data stored locally, complete offline capability
+-   🚀 **Native Performance**: Direct system access via Tauri, no browser overhead
+-   💾 **Embedded Database**: SQLite with WAL mode - zero configuration needed
+-   ⚡ **Virtual Scrolling**: Handle millions of rows without UI lag
+-   🔄 **Auto-Crawling**: Automated metadata fetching with background workers
+-   🎨 **Dynamic Schema**: Flexible EAV + JSON architecture for custom fields
+-   🔒 **Privacy-First**: All data stored locally, complete offline capability
 
 ## ✨ Planned Features
 
 ### Core Capabilities
-- 📊 **10M+ Records Support**: Virtual scrolling powered by TanStack Virtual
-- 🔍 **Instant Search**: Full-text search with indexed SQLite queries
-- 📝 **Custom Fields**: Dynamic schema system (EAV + JSON columns)
-- 🤖 **Auto-Metadata**: Background crawlers fetch data from external sources
-- 🎯 **Collections**: Organize content into customizable categories
-- 🖼️ **Rich Media**: Support for images, ratings, tags, and more
+
+-   📊 **10M+ Records Support**: Virtual scrolling powered by TanStack Virtual
+-   🔍 **Instant Search**: Full-text search with indexed SQLite queries
+-   📝 **Custom Fields**: Dynamic schema system (EAV + JSON columns)
+-   🤖 **Auto-Metadata**: Background crawlers fetch data from external sources
+-   🎯 **Collections**: Organize content into customizable categories
+-   🖼️ **Rich Media**: Support for images, ratings, tags, and more
 
 ### Technical Excellence
-- ⚡ **Zero Latency**: Native performance via Rust/Tauri
-- 💾 **Single File DB**: Embedded SQLite (WAL mode) - backup by copying
-- 🔄 **Async Operations**: Non-blocking crawlers with Tokio runtime
-- 🎨 **Modern UI**: Shadcn UI components with Tailwind styling
-- 🔌 **Type-Safe IPC**: Strongly-typed communication between frontend/backend
+
+-   ⚡ **Zero Latency**: Native performance via Rust/Tauri
+-   💾 **Single File DB**: Embedded SQLite (WAL mode) - backup by copying
+-   🔄 **Async Operations**: Non-blocking crawlers with Tokio runtime
+-   🎨 **Modern UI**: Shadcn UI components with Tailwind styling
+-   🔌 **Type-Safe IPC**: Strongly-typed communication between frontend/backend
 
 ## 🏗️ Planned Tech Stack
 
 **Frontend:**
-- React 18 + TypeScript + Vite
-- Shadcn UI + Tailwind CSS
-- TanStack Table + Virtual
+
+-   React 18 + TypeScript + Vite
+-   Shadcn UI + Tailwind CSS
+-   TanStack Table + Virtual
 
 **Backend:**
-- Rust + Tauri v2
-- Tokio (Async Runtime)
-- SeaORM + SQLite (WAL)
-- Reqwest (HTTP Client)
+
+-   Rust + Tauri v2
+-   Tokio (Async Runtime)
+-   SeaORM + SQLite (WAL)
+-   Reqwest (HTTP Client)
 
 For detailed architecture information, see [Architecture Overview](.docs/ARCHITECTURE.md).
 
@@ -78,29 +82,31 @@ For detailed architecture information, see [Architecture Overview](.docs/ARCHITE
 
 All documentation represents the **planned architecture** and design:
 
-- **[Installation Guide](.docs/INSTALLATION.md)** - Setup instructions (when implemented)
-- **[Architecture Overview](.docs/ARCHITECTURE.md)** - System design and technical architecture
-- **[Database Schema](.docs/DATABASE.md)** - Complete database structure and optimization
-- **[API Reference](.docs/API.md)** - Tauri command documentation
-- **[Performance Guide](.docs/PERFORMANCE.md)** - Optimization techniques and benchmarks
-- **[Development Guide](.docs/DEVELOPMENT.md)** - Development workflow
-- **[User Guide](.docs/USER_GUIDE.md)** - End-user documentation (planned)
-- **[Troubleshooting](.docs/TROUBLESHOOTING.md)** - Common issues and solutions (planned)
+-   **[Installation Guide](.docs/INSTALLATION.md)** - Setup instructions (when implemented)
+-   **[Architecture Overview](.docs/ARCHITECTURE.md)** - System design and technical architecture
+-   **[Database Schema](.docs/DATABASE.md)** - Complete database structure and optimization
+-   **[API Reference](.docs/API.md)** - Tauri command documentation
+-   **[Performance Guide](.docs/PERFORMANCE.md)** - Optimization techniques and benchmarks
+-   **[Development Guide](.docs/DEVELOPMENT.md)** - Development workflow
+-   **[User Guide](.docs/USER_GUIDE.md)** - End-user documentation (planned)
+-   **[Troubleshooting](.docs/TROUBLESHOOTING.md)** - Common issues and solutions (planned)
 
 ## 🎯 Why This Project?
 
 **Personal Learning Goals:**
-- Master Rust systems programming
-- Explore Tauri for desktop app development
-- Learn advanced React patterns (virtual scrolling, etc.)
-- Practice database optimization at scale
-- Build a real-world application from scratch
+
+-   Master Rust systems programming
+-   Explore Tauri for desktop app development
+-   Learn advanced React patterns (virtual scrolling, etc.)
+-   Practice database optimization at scale
+-   Build a real-world application from scratch
 
 **Practical Need:**
-- Manage large personal media collections efficiently
-- No reliance on cloud services or subscriptions
-- Full control over data and privacy
-- Offline-first approach
+
+-   Manage large personal media collections efficiently
+-   No reliance on cloud services or subscriptions
+-   Full control over data and privacy
+-   Offline-first approach
 
 ## 📄 License
 
@@ -110,20 +116,20 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 Inspiration and planned technologies:
 
-- [Tauri](https://tauri.app/) - Desktop framework
-- [Rust](https://www.rust-lang.org/) - Systems programming language
-- [React](https://react.dev/) - UI library
-- [TanStack](https://tanstack.com/) - Table & Virtual scrolling
-- [SeaORM](https://www.sea-ql.org/SeaORM/) - Async ORM
-- [Shadcn UI](https://ui.shadcn.com/) - UI components
-- [SQLite](https://www.sqlite.org/) - Embedded database
+-   [Tauri](https://tauri.app/) - Desktop framework
+-   [Rust](https://www.rust-lang.org/) - Systems programming language
+-   [React](https://react.dev/) - UI library
+-   [TanStack](https://tanstack.com/) - Table & Virtual scrolling
+-   [SeaORM](https://www.sea-ql.org/SeaORM/) - Async ORM
+-   [Shadcn UI](https://ui.shadcn.com/) - UI components
+-   [SQLite](https://www.sqlite.org/) - Embedded database
 
 ## 📝 Notes
 
-- **This is a personal learning project** - not intended for production use by others
-- **No timeline or guarantees** - developed as time permits
-- **Architecture may evolve** - documentation represents current thinking
-- **No support provided** - use at your own risk if you decide to fork
+-   **This is a personal learning project** - not intended for production use by others
+-   **No timeline or guarantees** - developed as time permits
+-   **Architecture may evolve** - documentation represents current thinking
+-   **No support provided** - use at your own risk if you decide to fork
 
 ---
 

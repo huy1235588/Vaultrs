@@ -6,13 +6,13 @@
 
 ## 📋 TL;DR
 
-| Task                | Command/Method                     |
-| ------------------- | ---------------------------------- |
-| **Manual backup**   | Copy `vaultrs.db` file             |
-| **SQLite backup**   | `.backup` command                  |
-| **Export SQL**      | `.dump` command                    |
-| **Restore**         | Copy backup file hoặc `.read`      |
-| **Verify**          | `PRAGMA integrity_check`           |
+| Task              | Command/Method                |
+| ----------------- | ----------------------------- |
+| **Manual backup** | Copy `vaultrs.db` file        |
+| **SQLite backup** | `.backup` command             |
+| **Export SQL**    | `.dump` command               |
+| **Restore**       | Copy backup file hoặc `.read` |
+| **Verify**        | `PRAGMA integrity_check`      |
 
 ---
 
@@ -60,17 +60,17 @@ use chrono::Utc;
 pub fn backup_database(source: &str, backup_dir: &str) -> Result<String, std::io::Error> {
     // Create backup directory if needed
     fs::create_dir_all(backup_dir)?;
-    
+
     // Generate backup filename with timestamp
     let timestamp = Utc::now().format("%Y%m%d_%H%M%S");
     let backup_path = format!("{}/vaultrs_{}.db", backup_dir, timestamp);
-    
+
     // Copy database file
     fs::copy(source, &backup_path)?;
-    
+
     // Clean old backups (keep last 5)
     cleanup_old_backups(backup_dir, 5)?;
-    
+
     Ok(backup_path)
 }
 
@@ -79,15 +79,15 @@ fn cleanup_old_backups(dir: &str, keep: usize) -> Result<(), std::io::Error> {
         .filter_map(|e| e.ok())
         .filter(|e| e.path().extension().map_or(false, |ext| ext == "db"))
         .collect();
-    
+
     // Sort by modified time (newest first)
     backups.sort_by_key(|e| std::cmp::Reverse(e.metadata().ok()?.modified().ok()?));
-    
+
     // Delete old backups
     for backup in backups.into_iter().skip(keep) {
         fs::remove_file(backup.path())?;
     }
-    
+
     Ok(())
 }
 ```
@@ -99,7 +99,7 @@ fn cleanup_old_backups(dir: &str, keep: usize) -> Result<(), std::io::Error> {
 async fn create_backup() -> Result<String, String> {
     let db_path = get_database_path();
     let backup_dir = get_backup_directory();
-    
+
     backup_database(&db_path, &backup_dir)
         .map_err(|e| e.to_string())
 }
@@ -164,12 +164,12 @@ pub async fn verify_database(db: &DatabaseConnection) -> Result<bool, DbErr> {
             "PRAGMA integrity_check;".to_string(),
         ))
         .await?;
-    
+
     if let Some(row) = result {
         let check: String = row.try_get("", "integrity_check")?;
         return Ok(check == "ok");
     }
-    
+
     Ok(false)
 }
 ```
@@ -180,11 +180,11 @@ pub async fn verify_database(db: &DatabaseConnection) -> Result<bool, DbErr> {
 
 ### Recommended Strategy
 
-| Backup Type     | Frequency    | Retention |
-| --------------- | ------------ | --------- |
-| Auto on close   | Every close  | Last 5    |
-| Manual export   | Weekly       | Last 4    |
-| Full SQL dump   | Monthly      | Last 12   |
+| Backup Type   | Frequency   | Retention |
+| ------------- | ----------- | --------- |
+| Auto on close | Every close | Last 5    |
+| Manual export | Weekly      | Last 4    |
+| Full SQL dump | Monthly     | Last 12   |
 
 ### Backup Locations
 
@@ -217,13 +217,13 @@ pub async fn export_collection_to_json(
         .filter(item::Column::CollectionId.eq(collection_id))
         .all(db)
         .await?;
-    
+
     let json = json!({
         "exported_at": chrono::Utc::now().to_rfc3339(),
         "collection_id": collection_id,
         "items": items,
     });
-    
+
     Ok(serde_json::to_string_pretty(&json).unwrap())
 }
 ```
@@ -245,12 +245,12 @@ FROM items WHERE collection_id = 1;
 
 ### Common Issues
 
-| Issue                  | Solution                            |
-| ---------------------- | ----------------------------------- |
-| Database corrupted     | `.recover` command                  |
-| App won't start        | Delete WAL files, try again         |
-| Missing data           | Restore from backup                 |
-| Slow after crash       | `VACUUM` and `ANALYZE`              |
+| Issue              | Solution                    |
+| ------------------ | --------------------------- |
+| Database corrupted | `.recover` command          |
+| App won't start    | Delete WAL files, try again |
+| Missing data       | Restore from backup         |
+| Slow after crash   | `VACUUM` and `ANALYZE`      |
 
 ### Emergency WAL Recovery
 
@@ -272,9 +272,9 @@ rm vaultrs.db vaultrs.db-wal vaultrs.db-shm
 
 ## 🔗 Tài liệu Liên quan
 
-- [Database Overview](./1-overview.md)
-- [Schema](./2-schema.md)
-- [Indexes](./3-indexes.md)
+-   [Database Overview](./1-overview.md)
+-   [Schema](./2-schema.md)
+-   [Indexes](./3-indexes.md)
 
 ---
 

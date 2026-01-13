@@ -6,12 +6,12 @@
 
 ## 📋 Quick Reference
 
-| Concept | Syntax |
-|---------|--------|
-| Define command | `#[tauri::command]` |
-| Inject state | `State<'_, T>` |
-| Return success | `Result<T, AppError>` |
-| Register | `tauri::generate_handler![cmd1, cmd2]` |
+| Concept        | Syntax                                 |
+| -------------- | -------------------------------------- |
+| Define command | `#[tauri::command]`                    |
+| Inject state   | `State<'_, T>`                         |
+| Return success | `Result<T, AppError>`                  |
+| Register       | `tauri::generate_handler![cmd1, cmd2]` |
 
 ---
 
@@ -21,22 +21,25 @@
 
 ```typescript
 // src/services/vault.ts (TypeScript)
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
 interface VaultDto {
-  id: number;
-  name: string;
-  description?: string;
-  icon: string;
-  color: string;
+    id: number;
+    name: string;
+    description?: string;
+    icon: string;
+    color: string;
 }
 
 // Gọi Rust command
-export async function createVault(name: string, description?: string): Promise<VaultDto> {
-  return invoke<VaultDto>('create_vault', {
-    name,
-    description,
-  });
+export async function createVault(
+    name: string,
+    description?: string
+): Promise<VaultDto> {
+    return invoke<VaultDto>("create_vault", {
+        name,
+        description,
+    });
 }
 ```
 
@@ -69,10 +72,10 @@ pub async fn create_vault(
 ### Rules
 
 | Input Type | Must Implement |
-|------------|----------------|
-| Parameters | `Deserialize` |
-| Return Ok | `Serialize` |
-| Return Err | `Serialize` |
+| ---------- | -------------- |
+| Parameters | `Deserialize`  |
+| Return Ok  | `Serialize`    |
+| Return Err | `Serialize`    |
 
 ```rust
 use serde::{Deserialize, Serialize};
@@ -106,10 +109,10 @@ pub fn run() {
         .setup(|app| {
             // Tạo database connection
             let db: DatabaseConnection = /* ... */;
-            
+
             // Đăng ký state - có thể inject vào bất kỳ command nào
             app.manage(db);
-            
+
             Ok(())
         })
         // ...
@@ -177,13 +180,13 @@ pub fn run() {
             list_vaults,
             update_vault,
             delete_vault,
-            
+
             // Entry commands
             create_entry,
             list_entries,
             update_entry,
             delete_entry,
-            
+
             // Thêm command mới ở đây!
         ])
         .run(tauri::generate_context!())
@@ -215,12 +218,12 @@ pub async fn example(
 
 ```typescript
 // TypeScript call
-invoke('example', {
-  id: 1,
-  name: 'test',
-  active: true,
-  count: 5,        // hoặc không truyền
-  tags: ['a', 'b']
+invoke("example", {
+    id: 1,
+    name: "test",
+    active: true,
+    count: 5, // hoặc không truyền
+    tags: ["a", "b"],
 });
 ```
 
@@ -250,15 +253,15 @@ pub async fn create_vault_complex(
 ```
 
 ```typescript
-invoke('create_vault_complex', {
-  input: {
-    name: 'My Vault',
-    description: 'Description',
-    settings: {
-      is_public: false,
-      max_entries: 1000
-    }
-  }
+invoke("create_vault_complex", {
+    input: {
+        name: "My Vault",
+        description: "Description",
+        settings: {
+            is_public: false,
+            max_entries: 1000,
+        },
+    },
 });
 ```
 
@@ -287,12 +290,12 @@ pub fn sync_operation(name: String) -> String {
 
 ## 📝 Checklist Tạo Command Mới
 
-- [ ] Tạo function với `#[tauri::command]`
-- [ ] Inject states cần thiết (`State<'_, T>`)
-- [ ] Define input parameters
-- [ ] Return `Result<T, AppError>`
-- [ ] Register trong `generate_handler![]`
-- [ ] Test từ frontend với `invoke()`
+-   [ ] Tạo function với `#[tauri::command]`
+-   [ ] Inject states cần thiết (`State<'_, T>`)
+-   [ ] Define input parameters
+-   [ ] Return `Result<T, AppError>`
+-   [ ] Register trong `generate_handler![]`
+-   [ ] Test từ frontend với `invoke()`
 
 ---
 

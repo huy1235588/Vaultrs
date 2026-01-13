@@ -6,14 +6,14 @@
 
 ## 📋 TL;DR
 
-| Pattern             | Layer    | Purpose                          |
-| ------------------- | -------- | -------------------------------- |
-| Repository          | Backend  | Abstract data access             |
-| Service Layer       | Backend  | Encapsulate business logic       |
-| Command             | IPC      | Frontend-Backend communication   |
-| Observer/Event      | Both     | Async notifications              |
-| Builder             | Backend  | Complex object construction      |
-| Module Pattern      | Both     | Code organization                |
+| Pattern        | Layer   | Purpose                        |
+| -------------- | ------- | ------------------------------ |
+| Repository     | Backend | Abstract data access           |
+| Service Layer  | Backend | Encapsulate business logic     |
+| Command        | IPC     | Frontend-Backend communication |
+| Observer/Event | Both    | Async notifications            |
+| Builder        | Backend | Complex object construction    |
+| Module Pattern | Both    | Code organization              |
 
 ---
 
@@ -53,9 +53,9 @@ impl ItemRepository for SqliteItemRepository {
 
 ### Benefits
 
-- ✅ Testable (mock repositories)
-- ✅ Swappable implementations
-- ✅ Clear separation of concerns
+-   ✅ Testable (mock repositories)
+-   ✅ Swappable implementations
+-   ✅ Clear separation of concerns
 
 ---
 
@@ -77,18 +77,18 @@ impl ItemService {
     pub async fn create_item(&self, data: CreateItemDto) -> Result<Item> {
         // 1. Validate
         self.validator.validate(&data)?;
-        
+
         // 2. Business rules
         if data.title.len() > 255 {
             return Err(ValidationError::TitleTooLong.into());
         }
-        
+
         // 3. Persist
         let item = self.repository.create(data.into()).await?;
-        
+
         // 4. Side effects (if any)
         // emit_event("item_created", &item);
-        
+
         Ok(item)
     }
 }
@@ -187,13 +187,13 @@ pub async fn process_crawl_task(
     // Process task...
     let metadata = fetch_metadata(&task.url).await?;
     update_item(task.item_id, metadata).await?;
-    
+
     // Notify frontend
     handle.emit("item_updated", ItemUpdatedPayload {
         item_id: task.item_id,
         status: "completed",
     })?;
-    
+
     Ok(())
 }
 ```
@@ -201,18 +201,18 @@ pub async fn process_crawl_task(
 ### Frontend (Listen Event)
 
 ```typescript
-import { listen } from '@tauri-apps/api/event';
+import { listen } from "@tauri-apps/api/event";
 
 useEffect(() => {
-  const unlisten = listen<ItemUpdatedPayload>('item_updated', (event) => {
-    console.log('Item updated:', event.payload.item_id);
-    // Refresh item data
-    refetchItem(event.payload.item_id);
-  });
-  
-  return () => {
-    unlisten.then(fn => fn());
-  };
+    const unlisten = listen<ItemUpdatedPayload>("item_updated", (event) => {
+        console.log("Item updated:", event.payload.item_id);
+        // Refresh item data
+        refetchItem(event.payload.item_id);
+    });
+
+    return () => {
+        unlisten.then((fn) => fn());
+    };
 }, []);
 ```
 
@@ -247,30 +247,30 @@ impl ItemQueryBuilder {
             limit: 50,
         }
     }
-    
+
     pub fn collection(mut self, id: i32) -> Self {
         self.collection_id = Some(id);
         self
     }
-    
+
     pub fn search(mut self, query: &str) -> Self {
         self.search = Some(query.to_string());
         self
     }
-    
+
     pub fn paginate(mut self, offset: u64, limit: u64) -> Self {
         self.offset = offset;
         self.limit = limit;
         self
     }
-    
+
     pub async fn execute(self, db: &DatabaseConnection) -> Result<Vec<Item>> {
         let mut query = item::Entity::find();
-        
+
         if let Some(id) = self.collection_id {
             query = query.filter(item::Column::CollectionId.eq(id));
         }
-        
+
         query.offset(self.offset).limit(self.limit).all(db).await
     }
 }
@@ -292,14 +292,14 @@ let items = ItemQueryBuilder::new()
 
 ```typescript
 // modules/entry/index.ts - Public API
-export { EntryList } from './components/EntryList';
-export { EntryCard } from './components/EntryCard';
-export { useEntries } from './hooks/useEntries';
-export { entryService } from './services/entryService';
-export type { Entry, CreateEntryDto } from './types/entry.types';
+export { EntryList } from "./components/EntryList";
+export { EntryCard } from "./components/EntryCard";
+export { useEntries } from "./hooks/useEntries";
+export { entryService } from "./services/entryService";
+export type { Entry, CreateEntryDto } from "./types/entry.types";
 
 // Usage in other modules
-import { EntryList, useEntries, Entry } from '@/modules/entry';
+import { EntryList, useEntries, Entry } from "@/modules/entry";
 ```
 
 ### Backend (Rust)
@@ -319,9 +319,9 @@ pub use models::{Item, CreateItemDto};
 
 ### Benefits
 
-- ✅ Encapsulation
-- ✅ Clear dependencies
-- ✅ Easy to refactor
+-   ✅ Encapsulation
+-   ✅ Clear dependencies
+-   ✅ Easy to refactor
 
 ---
 
@@ -339,13 +339,13 @@ pub struct AppState {
 impl AppState {
     pub async fn new() -> Result<Self> {
         let db = Arc::new(Database::connect("sqlite:vault.db").await?);
-        
+
         let item_repo = Arc::new(SqliteItemRepository::new(db.clone()));
         let item_service = Arc::new(ItemService::new(item_repo));
-        
+
         let collection_repo = Arc::new(SqliteCollectionRepository::new(db.clone()));
         let collection_service = Arc::new(CollectionService::new(collection_repo));
-        
+
         Ok(Self {
             db,
             item_service,
@@ -359,10 +359,10 @@ impl AppState {
 
 ## 🔗 Tài liệu Liên quan
 
-- [Kiến trúc Tổng quan](./1-overview.md)
-- [Thiết kế Hệ thống](./2-system-design.md)
-- [Tech Stack](./3-tech-stack.md)
-- [Data Flow](./4-data-flow.md)
+-   [Kiến trúc Tổng quan](./1-overview.md)
+-   [Thiết kế Hệ thống](./2-system-design.md)
+-   [Tech Stack](./3-tech-stack.md)
+-   [Data Flow](./4-data-flow.md)
 
 ---
 

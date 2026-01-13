@@ -6,12 +6,12 @@
 
 ## 📋 Quick Reference
 
-| Pattern | Khi nào dùng |
-|---------|--------------|
+| Pattern      | Khi nào dùng               |
+| ------------ | -------------------------- |
 | `?` operator | Propagate error lên caller |
-| `match` | Handle từng case cụ thể |
-| `.map_err()` | Convert error type |
-| `.ok_or()` | Option → Result |
+| `match`      | Handle từng case cụ thể    |
+| `.map_err()` | Convert error type         |
+| `.ok_or()`   | Option → Result            |
 
 ---
 
@@ -26,16 +26,16 @@ use serde::Serialize;
 pub enum AppError {
     #[error("Database error: {0}")]
     Database(#[from] sea_orm::DbErr),
-    
+
     #[error("Vault not found: {0}")]
     VaultNotFound(i32),
-    
+
     #[error("Entry not found: {0}")]
     EntryNotFound(i32),
-    
+
     #[error("Validation error: {0}")]
     Validation(String),
-    
+
     #[error("Internal error: {0}")]
     Internal(String),
 }
@@ -57,7 +57,7 @@ impl Serialize for AppError {
 pub async fn get_vault(db: &DatabaseConnection, id: i32) -> Result<VaultDto, AppError> {
     // ? tự động convert DbErr → AppError (nhờ #[from])
     let vault = Vault::find_by_id(id).one(db).await?;
-    
+
     // Option → Result với ok_or
     vault
         .map(VaultDto::from)
@@ -95,9 +95,10 @@ pub async fn create_vault(
 ```
 
 Frontend nhận:
+
 ```typescript
 try {
-    const vault = await invoke('create_vault', { name: '' });
+    const vault = await invoke("create_vault", { name: "" });
 } catch (error) {
     console.error(error); // "Validation error: Name cannot be empty"
 }

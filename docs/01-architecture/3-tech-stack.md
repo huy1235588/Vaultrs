@@ -6,20 +6,20 @@
 
 ## 📋 TL;DR
 
-| Layer        | Technology       | Version | Purpose                   |
-| ------------ | ---------------- | ------- | ------------------------- |
-| **Desktop**  | Tauri            | v2      | Native desktop framework  |
-| **UI**       | React            | 18+     | Component-based UI        |
-| **Language** | TypeScript       | 5+      | Type-safe frontend        |
-| **Build**    | Vite             | 5+      | Fast bundler              |
-| **Backend**  | Rust             | 1.70+   | System programming        |
-| **Async**    | Tokio            | 1.x     | Async runtime             |
-| **ORM**      | SeaORM           | 0.12+   | Async database ORM        |
-| **Database** | SQLite           | -       | Embedded database         |
-| **UI Kit**   | Shadcn UI        | -       | Accessible components     |
-| **Styling**  | Tailwind CSS     | 3+      | Utility-first CSS         |
-| **Grid**     | TanStack Table   | 8+      | Headless table logic      |
-| **Virtual**  | TanStack Virtual | 3+      | Virtual scrolling         |
+| Layer        | Technology       | Version | Purpose                  |
+| ------------ | ---------------- | ------- | ------------------------ |
+| **Desktop**  | Tauri            | v2      | Native desktop framework |
+| **UI**       | React            | 18+     | Component-based UI       |
+| **Language** | TypeScript       | 5+      | Type-safe frontend       |
+| **Build**    | Vite             | 5+      | Fast bundler             |
+| **Backend**  | Rust             | 1.70+   | System programming       |
+| **Async**    | Tokio            | 1.x     | Async runtime            |
+| **ORM**      | SeaORM           | 0.12+   | Async database ORM       |
+| **Database** | SQLite           | -       | Embedded database        |
+| **UI Kit**   | Shadcn UI        | -       | Accessible components    |
+| **Styling**  | Tailwind CSS     | 3+      | Utility-first CSS        |
+| **Grid**     | TanStack Table   | 8+      | Headless table logic     |
+| **Virtual**  | TanStack Virtual | 3+      | Virtual scrolling        |
 
 ---
 
@@ -27,20 +27,20 @@
 
 ### Tauri vs Electron
 
-| Tiêu chí        | Tauri      | Electron    |
-| --------------- | ---------- | ----------- |
-| Binary Size     | ~8 MB      | ~150 MB     |
-| Memory Usage    | ~50 MB     | ~200 MB+    |
-| Startup Time    | Nhanh      | Chậm        |
-| Security        | Tốt hơn    | Kém hơn     |
-| Backend         | Rust       | JavaScript  |
+| Tiêu chí     | Tauri   | Electron   |
+| ------------ | ------- | ---------- |
+| Binary Size  | ~8 MB   | ~150 MB    |
+| Memory Usage | ~50 MB  | ~200 MB+   |
+| Startup Time | Nhanh   | Chậm       |
+| Security     | Tốt hơn | Kém hơn    |
+| Backend      | Rust    | JavaScript |
 
 ### Key Features
 
-- **Commands**: Type-safe IPC
-- **State Management**: Managed app state
-- **Events**: Backend → Frontend communication
-- **File System**: Native file access
+-   **Commands**: Type-safe IPC
+-   **State Management**: Managed app state
+-   **Events**: Backend → Frontend communication
+-   **File System**: Native file access
 
 ---
 
@@ -50,34 +50,34 @@
 
 ```typescript
 // Modern React with TypeScript
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface Item {
-  id: number;
-  title: string;
+    id: number;
+    title: string;
 }
 
 const ItemList: React.FC = () => {
-  const [items, setItems] = useState<Item[]>([]);
-  // ...
-}
+    const [items, setItems] = useState<Item[]>([]);
+    // ...
+};
 ```
 
 ### Shadcn UI + Tailwind CSS
 
-- **Shadcn**: Copy-paste components, full customization
-- **Tailwind**: Utility-first styling, dark mode ready
+-   **Shadcn**: Copy-paste components, full customization
+-   **Tailwind**: Utility-first styling, dark mode ready
 
 ### TanStack (Table + Virtual)
 
-- **Table**: Headless table logic
-- **Virtual**: Render 10M+ rows efficiently
+-   **Table**: Headless table logic
+-   **Virtual**: Render 10M+ rows efficiently
 
 ```typescript
 const virtualizer = useVirtualizer({
-  count: 10_000_000,
-  estimateSize: () => 50,
-  overscan: 5,
+    count: 10_000_000,
+    estimateSize: () => 50,
+    overscan: 5,
 });
 ```
 
@@ -125,17 +125,17 @@ pnpm tauri build
 
 ### VS Code Extensions
 
-- `rust-analyzer`
-- `bradlc.vscode-tailwindcss`
-- `tauri-apps.tauri-vscode`
+-   `rust-analyzer`
+-   `bradlc.vscode-tailwindcss`
+-   `tauri-apps.tauri-vscode`
 
 ---
 
 ## 🔗 Tài liệu Liên quan
 
-- [Kiến trúc Tổng quan](./1-overview.md)
-- [Thiết kế Hệ thống](./2-system-design.md)
-- [Data Flow](./4-data-flow.md)
+-   [Kiến trúc Tổng quan](./1-overview.md)
+-   [Thiết kế Hệ thống](./2-system-design.md)
+-   [Data Flow](./4-data-flow.md)
 
 ---
 

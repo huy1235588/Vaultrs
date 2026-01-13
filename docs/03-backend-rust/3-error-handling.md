@@ -27,22 +27,22 @@ use serde::Serialize;
 pub enum VaultError {
     #[error("Database error: {0}")]
     Database(#[from] sea_orm::DbErr),
-    
+
     #[error("Not found: {0}")]
     NotFound(String),
-    
+
     #[error("Validation error: {0}")]
     Validation(String),
-    
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    
+
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
-    
+
     #[error("HTTP error: {0}")]
     Http(#[from] reqwest::Error),
-    
+
     #[error("Internal error: {0}")]
     Internal(String),
 }
@@ -81,7 +81,7 @@ pub async fn get_item(db: &DatabaseConnection, id: i32) -> Result<Item> {
     let item = Item::find_by_id(id)
         .one(db)
         .await?;  // ? propagates error
-    
+
     // Convert None to custom error
     item.ok_or(VaultError::NotFound(format!("Item {}", id)))
 }
@@ -93,10 +93,10 @@ pub async fn get_item(db: &DatabaseConnection, id: i32) -> Result<Item> {
 pub async fn parse_config(path: &str) -> Result<Config> {
     let content = std::fs::read_to_string(path)
         .map_err(|e| VaultError::Io(e))?;
-    
+
     let config: Config = serde_json::from_str(&content)
         .map_err(|e| VaultError::Json(e))?;
-    
+
     Ok(config)
 }
 ```
@@ -114,7 +114,7 @@ pub async fn get_item(
     id: i32,
 ) -> Result<Item, VaultError> {
     let item = ItemService::get_by_id(&state.db, id).await?;
-    
+
     item.ok_or(VaultError::NotFound(format!("Item {} not found", id)))
 }
 ```
@@ -154,27 +154,27 @@ impl ItemService {
         // Validation
         Self::validate_title(&title)?;
         Self::validate_collection_exists(db, collection_id).await?;
-        
+
         // Create item...
         Ok(item)
     }
-    
+
     fn validate_title(title: &str) -> Result<()> {
         if title.is_empty() {
             return Err(VaultError::Validation(
                 "Title cannot be empty".to_string()
             ));
         }
-        
+
         if title.len() > 255 {
             return Err(VaultError::Validation(
                 "Title cannot exceed 255 characters".to_string()
             ));
         }
-        
+
         Ok(())
     }
-    
+
     async fn validate_collection_exists(
         db: &DatabaseConnection,
         collection_id: i32,
@@ -183,13 +183,13 @@ impl ItemService {
             .one(db)
             .await?
             .is_some();
-        
+
         if !exists {
             return Err(VaultError::NotFound(
                 format!("Collection {} not found", collection_id)
             ));
         }
-        
+
         Ok(())
     }
 }
@@ -204,55 +204,55 @@ impl ItemService {
 ```typescript
 // src/types/error.types.ts
 export interface ApiError {
-  type: 'database' | 'not_found' | 'validation' | 'internal';
-  message: string;
+    type: "database" | "not_found" | "validation" | "internal";
+    message: string;
 }
 
 export function parseError(error: unknown): ApiError {
-  const message = typeof error === 'string' ? error : 'Unknown error';
-  
-  if (message.includes('Not found')) {
-    return { type: 'not_found', message };
-  }
-  if (message.includes('Validation')) {
-    return { type: 'validation', message };
-  }
-  if (message.includes('Database')) {
-    return { type: 'database', message };
-  }
-  
-  return { type: 'internal', message };
+    const message = typeof error === "string" ? error : "Unknown error";
+
+    if (message.includes("Not found")) {
+        return { type: "not_found", message };
+    }
+    if (message.includes("Validation")) {
+        return { type: "validation", message };
+    }
+    if (message.includes("Database")) {
+        return { type: "database", message };
+    }
+
+    return { type: "internal", message };
 }
 ```
 
 ### Error Handling in React
 
 ```typescript
-import { toast } from 'sonner';
-import { parseError } from '@/types/error.types';
+import { toast } from "sonner";
+import { parseError } from "@/types/error.types";
 
 async function createItem(title: string) {
-  try {
-    const item = await api.createItem(collectionId, title);
-    toast.success('Item created successfully');
-    return item;
-  } catch (error) {
-    const { type, message } = parseError(error);
-    
-    switch (type) {
-      case 'validation':
-        toast.error(message);
-        break;
-      case 'not_found':
-        toast.error('Collection not found');
-        break;
-      default:
-        toast.error('An unexpected error occurred');
-        console.error(error);
+    try {
+        const item = await api.createItem(collectionId, title);
+        toast.success("Item created successfully");
+        return item;
+    } catch (error) {
+        const { type, message } = parseError(error);
+
+        switch (type) {
+            case "validation":
+                toast.error(message);
+                break;
+            case "not_found":
+                toast.error("Collection not found");
+                break;
+            default:
+                toast.error("An unexpected error occurred");
+                console.error(error);
+        }
+
+        return null;
     }
-    
-    return null;
-  }
 }
 ```
 
@@ -269,7 +269,7 @@ pub fn run() {
         env_logger::Env::default().default_filter_or("info")
     )
     .init();
-    
+
     // ...
 }
 ```
@@ -282,7 +282,7 @@ use log::{error, warn, info};
 impl ItemService {
     pub async fn create(...) -> Result<Item> {
         info!("Creating item: {}", title);
-        
+
         match Self::do_create(db, title, properties).await {
             Ok(item) => {
                 info!("Created item with id: {}", item.id);
@@ -303,18 +303,18 @@ impl ItemService {
 
 ### Do's
 
-- ✅ Use specific error variants for different cases
-- ✅ Include context in error messages
-- ✅ Log errors at appropriate levels
-- ✅ Convert errors at boundaries (command layer)
-- ✅ Use `?` operator for propagation
+-   ✅ Use specific error variants for different cases
+-   ✅ Include context in error messages
+-   ✅ Log errors at appropriate levels
+-   ✅ Convert errors at boundaries (command layer)
+-   ✅ Use `?` operator for propagation
 
 ### Don'ts
 
-- ❌ Use `.unwrap()` or `.expect()` in production code
-- ❌ Ignore errors silently
-- ❌ Return raw error messages to frontend (security)
-- ❌ Use panic!() for recoverable errors
+-   ❌ Use `.unwrap()` or `.expect()` in production code
+-   ❌ Ignore errors silently
+-   ❌ Return raw error messages to frontend (security)
+-   ❌ Use panic!() for recoverable errors
 
 ### Example: Complete Error Flow
 
@@ -323,16 +323,16 @@ impl ItemService {
 pub async fn update_item(...) -> Result<Item> {
     // Validation
     Self::validate_item(&update)?;
-    
+
     // Get existing item
     let existing = Item::find_by_id(id)
         .one(db)
         .await?
         .ok_or(VaultError::NotFound("Item not found".into()))?;
-    
+
     // Update
     let updated = existing.update(db, update).await?;
-    
+
     Ok(updated)
 }
 
@@ -352,9 +352,9 @@ pub async fn update_item(...) -> Result<Item, String> {
 
 ## 🔗 Tài liệu Liên quan
 
-- [Backend Overview](./1-overview.md)
-- [Commands](./2-commands.md)
-- [Services](./4-services.md)
+-   [Backend Overview](./1-overview.md)
+-   [Commands](./2-commands.md)
+-   [Services](./4-services.md)
 
 ---
 

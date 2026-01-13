@@ -6,13 +6,13 @@
 
 ## 📋 TL;DR
 
-| Query Type      | Use Case                    | Performance |
-| --------------- | --------------------------- | ----------- |
-| Basic CRUD      | Create, Read, Update, Delete| < 10ms      |
-| Pagination      | List with offset/limit      | < 50ms      |
-| Search          | Title search                | < 100ms     |
-| Full-text       | FTS5 search                 | < 200ms     |
-| JSON Extract    | Filter by properties        | < 200ms     |
+| Query Type   | Use Case                     | Performance |
+| ------------ | ---------------------------- | ----------- |
+| Basic CRUD   | Create, Read, Update, Delete | < 10ms      |
+| Pagination   | List with offset/limit       | < 50ms      |
+| Search       | Title search                 | < 100ms     |
+| Full-text    | FTS5 search                  | < 200ms     |
+| JSON Extract | Filter by properties         | < 200ms     |
 
 ---
 
@@ -53,11 +53,11 @@ SELECT * FROM collections WHERE slug = 'movies';
 SELECT * FROM items WHERE id = 123;
 
 -- Get items with specific fields
-SELECT 
-    id, 
-    title, 
+SELECT
+    id,
+    title,
     json_extract(properties, '$.rating') as rating
-FROM items 
+FROM items
 WHERE collection_id = 1;
 ```
 
@@ -65,12 +65,12 @@ WHERE collection_id = 1;
 
 ```sql
 -- Update collection
-UPDATE collections 
+UPDATE collections
 SET name = 'Films', description = 'Updated description'
 WHERE id = 1;
 
 -- Update item properties (merge JSON)
-UPDATE items 
+UPDATE items
 SET properties = json_patch(
     properties,
     '{"rating": 9.0, "status": "Completed"}'
@@ -133,7 +133,7 @@ LIMIT 100;
 
 ```sql
 -- Get items and total count in one query
-SELECT 
+SELECT
     id, title, properties,
     (SELECT COUNT(*) FROM items WHERE collection_id = 1) as total_count
 FROM items
@@ -200,16 +200,16 @@ LIMIT 50;
 
 ```sql
 -- Single value
-SELECT 
-    id, 
+SELECT
+    id,
     title,
     json_extract(properties, '$.director') as director
 FROM items
 WHERE collection_id = 1;
 
 -- Multiple values
-SELECT 
-    id, 
+SELECT
+    id,
     title,
     json_extract(properties, '$.director') as director,
     json_extract(properties, '$.rating') as rating,
@@ -250,8 +250,8 @@ WHERE collection_id = 1
   AND json_each.value = 'Sci-Fi';
 
 -- Count array items
-SELECT 
-    id, 
+SELECT
+    id,
     title,
     json_array_length(properties, '$.genre') as genre_count
 FROM items
@@ -296,7 +296,7 @@ WHERE id = 123;
 
 ```sql
 -- Items per collection
-SELECT 
+SELECT
     c.name,
     COUNT(i.id) as item_count
 FROM collections c
@@ -305,7 +305,7 @@ GROUP BY c.id
 ORDER BY item_count DESC;
 
 -- Items by year
-SELECT 
+SELECT
     json_extract(properties, '$.release_year') as year,
     COUNT(*) as count
 FROM items
@@ -314,7 +314,7 @@ GROUP BY year
 ORDER BY year DESC;
 
 -- Average rating by genre
-SELECT 
+SELECT
     json_each.value as genre,
     AVG(json_extract(properties, '$.rating')) as avg_rating,
     COUNT(*) as count
@@ -328,7 +328,7 @@ ORDER BY avg_rating DESC;
 
 ```sql
 -- Collection statistics
-SELECT 
+SELECT
     COUNT(*) as total_items,
     AVG(json_extract(properties, '$.rating')) as avg_rating,
     MAX(json_extract(properties, '$.rating')) as max_rating,
@@ -411,8 +411,8 @@ let items: Vec<Item> = Item::find()
     .from_raw_sql(Statement::from_sql_and_values(
         DbBackend::Sqlite,
         r#"
-        SELECT * FROM items 
-        WHERE collection_id = $1 
+        SELECT * FROM items
+        WHERE collection_id = $1
           AND json_extract(properties, '$.rating') > $2
         ORDER BY created_at DESC
         LIMIT $3
@@ -427,9 +427,9 @@ let items: Vec<Item> = Item::find()
 
 ## 🔗 Tài liệu Liên quan
 
-- [Database Overview](./1-overview.md)
-- [Schema](./2-schema.md)
-- [Indexes](./3-indexes.md)
+-   [Database Overview](./1-overview.md)
+-   [Schema](./2-schema.md)
+-   [Indexes](./3-indexes.md)
 
 ---
 

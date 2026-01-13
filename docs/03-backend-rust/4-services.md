@@ -6,11 +6,11 @@
 
 ## 📋 TL;DR
 
-| Service             | Responsibility                    |
-| ------------------- | --------------------------------- |
-| `CollectionService` | Collection CRUD, validation       |
-| `ItemService`       | Item CRUD, search, pagination     |
-| `CrawlerService`    | Background metadata fetching      |
+| Service             | Responsibility                |
+| ------------------- | ----------------------------- |
+| `CollectionService` | Collection CRUD, validation   |
+| `ItemService`       | Item CRUD, search, pagination |
+| `CrawlerService`    | Background metadata fetching  |
 
 ---
 
@@ -34,12 +34,12 @@ Repositories (Data Access)
 
 ### Why Services?
 
-| Benefit              | Explanation                        |
-| -------------------- | ---------------------------------- |
-| **Separation**       | Commands chỉ parse input/output    |
-| **Reusability**      | Logic có thể dùng ở nhiều commands |
-| **Testability**      | Dễ mock và unit test               |
-| **Maintainability**  | Logic tập trung một chỗ            |
+| Benefit             | Explanation                        |
+| ------------------- | ---------------------------------- |
+| **Separation**      | Commands chỉ parse input/output    |
+| **Reusability**     | Logic có thể dùng ở nhiều commands |
+| **Testability**     | Dễ mock và unit test               |
+| **Maintainability** | Logic tập trung một chỗ            |
 
 ---
 
@@ -62,10 +62,10 @@ impl CollectionService {
             .order_by_asc(collection::Column::Name)
             .all(db)
             .await?;
-        
+
         Ok(collections)
     }
-    
+
     /// Get collection by ID
     pub async fn get_by_id(
         db: &DatabaseConnection,
@@ -74,10 +74,10 @@ impl CollectionService {
         let collection = CollectionEntity::find_by_id(id)
             .one(db)
             .await?;
-        
+
         Ok(collection)
     }
-    
+
     /// Get collection by slug
     pub async fn get_by_slug(
         db: &DatabaseConnection,
@@ -87,10 +87,10 @@ impl CollectionService {
             .filter(collection::Column::Slug.eq(slug))
             .one(db)
             .await?;
-        
+
         Ok(collection)
     }
-    
+
     /// Create new collection
     pub async fn create(
         db: &DatabaseConnection,
@@ -103,7 +103,7 @@ impl CollectionService {
         Self::validate_name(&name)?;
         Self::validate_slug(&slug)?;
         Self::check_slug_unique(db, &slug).await?;
-        
+
         // Create model
         let model = collection::ActiveModel {
             name: Set(name),
@@ -112,11 +112,11 @@ impl CollectionService {
             description: Set(description),
             ..Default::default()
         };
-        
+
         let collection = model.insert(db).await?;
         Ok(collection)
     }
-    
+
     /// Update existing collection
     pub async fn update(
         db: &DatabaseConnection,
@@ -129,15 +129,15 @@ impl CollectionService {
         let existing = Self::get_by_id(db, id)
             .await?
             .ok_or(VaultError::NotFound(format!("Collection {}", id)))?;
-        
+
         // Validate if name provided
         if let Some(ref n) = name {
             Self::validate_name(n)?;
         }
-        
+
         // Update
         let mut model: collection::ActiveModel = existing.into();
-        
+
         if let Some(n) = name {
             model.name = Set(n);
         }
@@ -147,24 +147,24 @@ impl CollectionService {
         if let Some(d) = description {
             model.description = Set(Some(d));
         }
-        
+
         let updated = model.update(db).await?;
         Ok(updated)
     }
-    
+
     /// Delete collection (cascades to items)
     pub async fn delete(db: &DatabaseConnection, id: i32) -> Result<()> {
         let result = CollectionEntity::delete_by_id(id)
             .exec(db)
             .await?;
-        
+
         if result.rows_affected == 0 {
             return Err(VaultError::NotFound(format!("Collection {}", id)));
         }
-        
+
         Ok(())
     }
-    
+
     // Validation helpers
     fn validate_name(name: &str) -> Result<()> {
         if name.trim().is_empty() {
@@ -175,7 +175,7 @@ impl CollectionService {
         }
         Ok(())
     }
-    
+
     fn validate_slug(slug: &str) -> Result<()> {
         if slug.trim().is_empty() {
             return Err(VaultError::Validation("Slug cannot be empty".into()));
@@ -187,7 +187,7 @@ impl CollectionService {
         }
         Ok(())
     }
-    
+
     async fn check_slug_unique(db: &DatabaseConnection, slug: &str) -> Result<()> {
         if Self::get_by_slug(db, slug).await?.is_some() {
             return Err(VaultError::Validation(
@@ -226,24 +226,24 @@ impl ItemService {
     ) -> Result<Vec<Item>> {
         let mut query = ItemEntity::find()
             .filter(item::Column::CollectionId.eq(collection_id));
-        
+
         // Apply search filter
         if let Some(ref search_term) = search {
             query = query.filter(
                 item::Column::Title.contains(search_term)
             );
         }
-        
+
         let items = query
             .order_by_desc(item::Column::CreatedAt)
             .offset(offset)
             .limit(limit)
             .all(db)
             .await?;
-        
+
         Ok(items)
     }
-    
+
     /// Get single item by ID
     pub async fn get_by_id(
         db: &DatabaseConnection,
@@ -252,10 +252,10 @@ impl ItemService {
         let item = ItemEntity::find_by_id(id)
             .one(db)
             .await?;
-        
+
         Ok(item)
     }
-    
+
     /// Create new item
     pub async fn create(
         db: &DatabaseConnection,
@@ -266,18 +266,18 @@ impl ItemService {
         // Validation
         Self::validate_title(&title)?;
         Self::validate_collection_exists(db, collection_id).await?;
-        
+
         let model = item::ActiveModel {
             collection_id: Set(collection_id),
             title: Set(title),
             properties: Set(properties.unwrap_or(JsonValue::Object(Default::default()))),
             ..Default::default()
         };
-        
+
         let item = model.insert(db).await?;
         Ok(item)
     }
-    
+
     /// Update item
     pub async fn update(
         db: &DatabaseConnection,
@@ -288,47 +288,47 @@ impl ItemService {
         let existing = Self::get_by_id(db, id)
             .await?
             .ok_or(VaultError::NotFound(format!("Item {}", id)))?;
-        
+
         if let Some(ref t) = title {
             Self::validate_title(t)?;
         }
-        
+
         let mut model: item::ActiveModel = existing.into();
-        
+
         if let Some(t) = title {
             model.title = Set(t);
         }
         if let Some(p) = properties {
             model.properties = Set(p);
         }
-        
+
         let updated = model.update(db).await?;
         Ok(updated)
     }
-    
+
     /// Delete item
     pub async fn delete(db: &DatabaseConnection, id: i32) -> Result<()> {
         let result = ItemEntity::delete_by_id(id)
             .exec(db)
             .await?;
-        
+
         if result.rows_affected == 0 {
             return Err(VaultError::NotFound(format!("Item {}", id)));
         }
-        
+
         Ok(())
     }
-    
+
     /// Count items in collection
     pub async fn count(db: &DatabaseConnection, collection_id: i32) -> Result<u64> {
         let count = ItemEntity::find()
             .filter(item::Column::CollectionId.eq(collection_id))
             .count(db)
             .await?;
-        
+
         Ok(count)
     }
-    
+
     // Validation helpers
     fn validate_title(title: &str) -> Result<()> {
         if title.trim().is_empty() {
@@ -339,9 +339,9 @@ impl ItemService {
         }
         Ok(())
     }
-    
+
     async fn validate_collection_exists(
-        db: &DatabaseConnection, 
+        db: &DatabaseConnection,
         collection_id: i32
     ) -> Result<()> {
         if CollectionService::get_by_id(db, collection_id).await?.is_none() {
@@ -380,7 +380,7 @@ pub struct CrawlerService {
 impl CrawlerService {
     pub fn new(db: Arc<DatabaseConnection>) -> Self {
         let (tx, mut rx) = mpsc::channel::<CrawlTask>(100);
-        
+
         // Spawn background worker
         tokio::spawn(async move {
             while let Some(task) = rx.recv().await {
@@ -389,41 +389,41 @@ impl CrawlerService {
                 }
             }
         });
-        
+
         Self { tx }
     }
-    
+
     /// Queue a crawl task
     pub async fn queue(&self, task: CrawlTask) -> Result<()> {
         self.tx.send(task).await
             .map_err(|e| crate::core::VaultError::Internal(e.to_string()))?;
         Ok(())
     }
-    
+
     /// Process a single crawl task
     async fn process_task(db: &DatabaseConnection, task: CrawlTask) -> Result<()> {
         log::info!("Processing crawl for item {}", task.item_id);
-        
+
         // Fetch metadata from external source
         let metadata = Self::fetch_metadata(&task.source, &task.external_id).await?;
-        
+
         // Update item with metadata
         ItemService::update_properties(db, task.item_id, metadata).await?;
-        
+
         log::info!("Completed crawl for item {}", task.item_id);
         Ok(())
     }
-    
+
     async fn fetch_metadata(source: &str, id: &str) -> Result<serde_json::Value> {
         let client = reqwest::Client::new();
         let url = format!("https://api.{}.com/{}", source, id);
-        
+
         let response = client
             .get(&url)
             .timeout(std::time::Duration::from_secs(10))
             .send()
             .await?;
-        
+
         let json = response.json().await?;
         Ok(json)
     }
@@ -461,7 +461,7 @@ impl AppState {
         let db = db::init_database().await?;
         let db_arc = Arc::new(db.clone());
         let crawler = CrawlerService::new(db_arc);
-        
+
         Ok(Self { db, crawler })
     }
 }
@@ -493,7 +493,7 @@ mod tests {
                 updated_at: 0,
             }]])
             .into_connection();
-        
+
         let result = CollectionService::create(
             &db,
             "Movies".to_string(),
@@ -501,7 +501,7 @@ mod tests {
             Some("🎬".to_string()),
             None,
         ).await;
-        
+
         assert!(result.is_ok());
         let collection = result.unwrap();
         assert_eq!(collection.name, "Movies");
@@ -513,9 +513,9 @@ mod tests {
 
 ## 🔗 Tài liệu Liên quan
 
-- [Backend Overview](./1-overview.md)
-- [Commands](./2-commands.md)
-- [Error Handling](./3-error-handling.md)
+-   [Backend Overview](./1-overview.md)
+-   [Commands](./2-commands.md)
+-   [Error Handling](./3-error-handling.md)
 
 ---
 

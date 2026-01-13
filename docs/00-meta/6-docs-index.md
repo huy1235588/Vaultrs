@@ -31,14 +31,14 @@
 
 Hướng dẫn cách tổ chức, viết và maintain tài liệu dự án.
 
-| # | Tài liệu | Mô tả |
-|---|----------|-------|
-| 1 | [📁 Cấu trúc Thư mục](./1-folder-structure.md) | Mô tả chi tiết cấu trúc thư mục dự án |
-| 2 | [📝 Quy ước Đặt tên](./2-naming-convention.md) | Naming conventions cho Rust, React, files |
-| 3 | [📘 Hướng dẫn Viết Docs](./3-how-to-document.md) | Cách viết, đọc và maintain tài liệu |
-| 4 | [📖 Từ điển Thuật ngữ](./4-glossary.md) | Định nghĩa các thuật ngữ chuyên ngành |
-| 5 | [🏷️ Quy ước Versioning](./5-versioning.md) | Semantic versioning, changelog, release |
-| 6 | [📚 Mục lục Tài liệu](./6-docs-index.md) | File này — danh mục tổng hợp |
+| #   | Tài liệu                                         | Mô tả                                     |
+| --- | ------------------------------------------------ | ----------------------------------------- |
+| 1   | [📁 Cấu trúc Thư mục](./1-folder-structure.md)   | Mô tả chi tiết cấu trúc thư mục dự án     |
+| 2   | [📝 Quy ước Đặt tên](./2-naming-convention.md)   | Naming conventions cho Rust, React, files |
+| 3   | [📘 Hướng dẫn Viết Docs](./3-how-to-document.md) | Cách viết, đọc và maintain tài liệu       |
+| 4   | [📖 Từ điển Thuật ngữ](./4-glossary.md)          | Định nghĩa các thuật ngữ chuyên ngành     |
+| 5   | [🏷️ Quy ước Versioning](./5-versioning.md)       | Semantic versioning, changelog, release   |
+| 6   | [📚 Mục lục Tài liệu](./6-docs-index.md)         | File này — danh mục tổng hợp              |
 
 ---
 
@@ -46,15 +46,16 @@ Hướng dẫn cách tổ chức, viết và maintain tài liệu dự án.
 
 Sơ đồ và giải thích kiến trúc tổng quan của Vaultrs.
 
-| # | Tài liệu | Mô tả |
-|---|----------|-------|
-| | _Đang phát triển..._ | |
+| #   | Tài liệu             | Mô tả |
+| --- | -------------------- | ----- |
+|     | _Đang phát triển..._ |       |
 
 **Nên có:**
-- [ ] Kiến trúc tổng quan (Tauri + React)
-- [ ] Data flow diagram
-- [ ] Security architecture
-- [ ] Deployment architecture
+
+-   [ ] Kiến trúc tổng quan (Tauri + React)
+-   [ ] Data flow diagram
+-   [ ] Security architecture
+-   [ ] Deployment architecture
 
 ---
 
@@ -62,15 +63,16 @@ Sơ đồ và giải thích kiến trúc tổng quan của Vaultrs.
 
 Schema, format và cách lưu trữ dữ liệu.
 
-| # | Tài liệu | Mô tả |
-|---|----------|-------|
-| | _Đang phát triển..._ | |
+| #   | Tài liệu             | Mô tả |
+| --- | -------------------- | ----- |
+|     | _Đang phát triển..._ |       |
 
 **Nên có:**
-- [ ] Vault file format specification
-- [ ] Entry schema & fields
-- [ ] Migration guide
-- [ ] Backup & restore
+
+-   [ ] Vault file format specification
+-   [ ] Entry schema & fields
+-   [ ] Migration guide
+-   [ ] Backup & restore
 
 ---
 
@@ -78,16 +80,17 @@ Schema, format và cách lưu trữ dữ liệu.
 
 Tài liệu cho phần backend viết bằng Rust với Tauri framework.
 
-| # | Tài liệu | Mô tả |
-|---|----------|-------|
-| | _Đang phát triển..._ | |
+| #   | Tài liệu             | Mô tả |
+| --- | -------------------- | ----- |
+|     | _Đang phát triển..._ |       |
 
 **Nên có:**
-- [ ] Tauri commands API reference
-- [ ] Cryptography implementation
-- [ ] Error handling guide
-- [ ] Module documentation
-- [ ] Testing guide
+
+-   [ ] Tauri commands API reference
+-   [ ] Cryptography implementation
+-   [ ] Error handling guide
+-   [ ] Module documentation
+-   [ ] Testing guide
 
 ---
 
@@ -95,16 +98,17 @@ Tài liệu cho phần backend viết bằng Rust với Tauri framework.
 
 Tài liệu cho phần frontend viết bằng React + TypeScript.
 
-| # | Tài liệu | Mô tả |
-|---|----------|-------|
-| | _Đang phát triển..._ | |
+| #   | Tài liệu             | Mô tả |
+| --- | -------------------- | ----- |
+|     | _Đang phát triển..._ |       |
 
 **Nên có:**
-- [ ] Component library / Design system
-- [ ] State management guide
-- [ ] UI/UX patterns
-- [ ] Accessibility (a11y) guide
-- [ ] Testing guide
+
+-   [ ] Component library / Design system
+-   [ ] State management guide
+-   [ ] UI/UX patterns
+-   [ ] Accessibility (a11y) guide
+-   [ ] Testing guide
 
 ---
 
@@ -112,9 +116,9 @@ Tài liệu cho phần frontend viết bằng React + TypeScript.
 
 Ý tưởng, debug notes và ghi chép temporary.
 
-| # | Tài liệu | Mô tả |
-|---|----------|-------|
-| 1 | [💡 Ý tưởng & Features](../99-dev-notes/idea.md) | Danh sách ý tưởng và tính năng mới |
+| #   | Tài liệu                                         | Mô tả                              |
+| --- | ------------------------------------------------ | ---------------------------------- |
+| 1   | [💡 Ý tưởng & Features](../99-dev-notes/idea.md) | Danh sách ý tưởng và tính năng mới |
 
 ---
 
@@ -132,16 +136,16 @@ Tài liệu cho phần frontend viết bằng React + TypeScript.
 
 ### Theo nhiệm vụ:
 
-| Bạn muốn... | Đọc... |
-|-------------|--------|
-| Hiểu cấu trúc project | [1-folder-structure.md](./1-folder-structure.md) |
+| Bạn muốn...               | Đọc...                                             |
+| ------------------------- | -------------------------------------------------- |
+| Hiểu cấu trúc project     | [1-folder-structure.md](./1-folder-structure.md)   |
 | Viết code đúng convention | [2-naming-convention.md](./2-naming-convention.md) |
-| Viết/cập nhật tài liệu | [3-how-to-document.md](./3-how-to-document.md) |
-| Hiểu thuật ngữ crypto | [4-glossary.md](./4-glossary.md) |
-| Hiểu cách đánh version | [5-versioning.md](./5-versioning.md) |
-| Làm backend Rust | `docs/03-backend-rust/` |
-| Làm frontend React | `docs/04-frontend-react/` |
-| Ghi ý tưởng mới | [99-dev-notes/idea.md](../99-dev-notes/idea.md) |
+| Viết/cập nhật tài liệu    | [3-how-to-document.md](./3-how-to-document.md)     |
+| Hiểu thuật ngữ crypto     | [4-glossary.md](./4-glossary.md)                   |
+| Hiểu cách đánh version    | [5-versioning.md](./5-versioning.md)               |
+| Làm backend Rust          | `docs/03-backend-rust/`                            |
+| Làm frontend React        | `docs/04-frontend-react/`                          |
+| Ghi ý tưởng mới           | [99-dev-notes/idea.md](../99-dev-notes/idea.md)    |
 
 ---
 
@@ -149,12 +153,12 @@ Tài liệu cho phần frontend viết bằng React + TypeScript.
 
 Các file quan trọng ở thư mục gốc:
 
-| File | Mô tả |
-|------|-------|
-| [README.md](../../README.md) | Giới thiệu dự án, cài đặt, sử dụng |
-| [CHANGELOG.md](../../CHANGELOG.md) | Lịch sử thay đổi qua các version |
-| [CONTRIBUTING.md](../../CONTRIBUTING.md) | Hướng dẫn đóng góp code |
-| [CODE_OF_CONDUCT.md](../../CODE_OF_CONDUCT.md) | Quy tắc ứng xử cộng đồng |
+| File                                           | Mô tả                              |
+| ---------------------------------------------- | ---------------------------------- |
+| [README.md](../../README.md)                   | Giới thiệu dự án, cài đặt, sử dụng |
+| [CHANGELOG.md](../../CHANGELOG.md)             | Lịch sử thay đổi qua các version   |
+| [CONTRIBUTING.md](../../CONTRIBUTING.md)       | Hướng dẫn đóng góp code            |
+| [CODE_OF_CONDUCT.md](../../CODE_OF_CONDUCT.md) | Quy tắc ứng xử cộng đồng           |
 
 ---
 
@@ -162,35 +166,35 @@ Các file quan trọng ở thư mục gốc:
 
 ### Theo Công nghệ
 
-| Công nghệ | Tài liệu liên quan |
-|-----------|-------------------|
-| **Rust** | `03-backend-rust/`, `00-meta/2-naming-convention.md` |
-| **Tauri** | `03-backend-rust/`, `01-architecture/` |
-| **React** | `04-frontend-react/`, `00-meta/2-naming-convention.md` |
-| **TypeScript** | `04-frontend-react/`, `00-meta/2-naming-convention.md` |
-| **Cryptography** | `03-backend-rust/`, `00-meta/4-glossary.md` |
+| Công nghệ        | Tài liệu liên quan                                     |
+| ---------------- | ------------------------------------------------------ |
+| **Rust**         | `03-backend-rust/`, `00-meta/2-naming-convention.md`   |
+| **Tauri**        | `03-backend-rust/`, `01-architecture/`                 |
+| **React**        | `04-frontend-react/`, `00-meta/2-naming-convention.md` |
+| **TypeScript**   | `04-frontend-react/`, `00-meta/2-naming-convention.md` |
+| **Cryptography** | `03-backend-rust/`, `00-meta/4-glossary.md`            |
 
 ### Theo Chủ đề
 
-| Chủ đề | Tài liệu liên quan |
-|--------|-------------------|
-| **Bảo mật** | `03-backend-rust/`, `01-architecture/` |
-| **UI/UX** | `04-frontend-react/` |
+| Chủ đề      | Tài liệu liên quan                       |
+| ----------- | ---------------------------------------- |
+| **Bảo mật** | `03-backend-rust/`, `01-architecture/`   |
+| **UI/UX**   | `04-frontend-react/`                     |
 | **Testing** | `03-backend-rust/`, `04-frontend-react/` |
-| **DevOps** | `01-architecture/` |
+| **DevOps**  | `01-architecture/`                       |
 
 ---
 
 ## 📊 Trạng thái Tài liệu
 
-| Thư mục | Trạng thái | Độ hoàn thiện |
-|---------|------------|---------------|
-| `00-meta/` | ✅ Có | ████████░░ 80% |
-| `01-architecture/` | 🔄 Đang làm | ██░░░░░░░░ 20% |
-| `02-database/` | 🔄 Đang làm | ██░░░░░░░░ 20% |
-| `03-backend-rust/` | 🔄 Đang làm | ██░░░░░░░░ 20% |
+| Thư mục              | Trạng thái  | Độ hoàn thiện  |
+| -------------------- | ----------- | -------------- |
+| `00-meta/`           | ✅ Có       | ████████░░ 80% |
+| `01-architecture/`   | 🔄 Đang làm | ██░░░░░░░░ 20% |
+| `02-database/`       | 🔄 Đang làm | ██░░░░░░░░ 20% |
+| `03-backend-rust/`   | 🔄 Đang làm | ██░░░░░░░░ 20% |
 | `04-frontend-react/` | 🔄 Đang làm | ██░░░░░░░░ 20% |
-| `99-dev-notes/` | ✅ Có | ████████░░ 80% |
+| `99-dev-notes/`      | ✅ Có       | ████████░░ 80% |
 
 ---
 

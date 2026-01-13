@@ -6,13 +6,13 @@
 
 ## 📋 TL;DR
 
-| Thành phần      | Công nghệ/Cách tiếp cận | Lý do                              |
-| --------------- | ----------------------- | ---------------------------------- |
-| **Database**    | SQLite 3.x              | Embedded, zero-config, portable    |
-| **Mode**        | WAL (Write-Ahead Log)   | Better concurrency, crash recovery |
-| **Schema**      | Hybrid EAV + JSON       | Flexibility + Performance          |
-| **ORM**         | SeaORM                  | Async-first, type-safe             |
-| **Target**      | 10M+ records            | Virtual scrolling + indexing       |
+| Thành phần   | Công nghệ/Cách tiếp cận | Lý do                              |
+| ------------ | ----------------------- | ---------------------------------- |
+| **Database** | SQLite 3.x              | Embedded, zero-config, portable    |
+| **Mode**     | WAL (Write-Ahead Log)   | Better concurrency, crash recovery |
+| **Schema**   | Hybrid EAV + JSON       | Flexibility + Performance          |
+| **ORM**      | SeaORM                  | Async-first, type-safe             |
+| **Target**   | 10M+ records            | Virtual scrolling + indexing       |
 
 ---
 
@@ -35,21 +35,21 @@
 
 ### SQLite Advantages cho Vaultrs
 
-| Ưu điểm               | Giải thích                                |
-| --------------------- | ----------------------------------------- |
-| **Zero Configuration**| Không cần install, setup server           |
-| **Single File**       | Dễ backup (copy file), portable           |
-| **Read Performance**  | Cực nhanh cho read-heavy workloads        |
-| **ACID Transactions** | Data integrity đầy đủ                     |
-| **Mature & Stable**   | 20+ năm development, tested extensively   |
+| Ưu điểm                | Giải thích                              |
+| ---------------------- | --------------------------------------- |
+| **Zero Configuration** | Không cần install, setup server         |
+| **Single File**        | Dễ backup (copy file), portable         |
+| **Read Performance**   | Cực nhanh cho read-heavy workloads      |
+| **ACID Transactions**  | Data integrity đầy đủ                   |
+| **Mature & Stable**    | 20+ năm development, tested extensively |
 
 ### SQLite Limitations (và cách xử lý)
 
-| Limitation            | Mitigation trong Vaultrs                  |
-| --------------------- | ----------------------------------------- |
-| Single-writer         | WAL mode cho concurrent reads             |
-| No network access     | OK - desktop app, single user             |
-| Limited concurrency   | OK - single user, mainly reads            |
+| Limitation          | Mitigation trong Vaultrs       |
+| ------------------- | ------------------------------ |
+| Single-writer       | WAL mode cho concurrent reads  |
+| No network access   | OK - desktop app, single user  |
+| Limited concurrency | OK - single user, mainly reads |
 
 ---
 
@@ -105,7 +105,7 @@ CREATE TABLE items (id, data JSON);
 CREATE TABLE items (
     id INTEGER PRIMARY KEY,
     collection_id INTEGER,     -- ← Indexed
-    title TEXT,                -- ← Indexed  
+    title TEXT,                -- ← Indexed
     created_at INTEGER,        -- ← Indexed
     properties TEXT            -- ← JSON cho flexibility
 );
@@ -147,11 +147,11 @@ CREATE TABLE items (
 
 ### Relationships
 
-| Relationship           | Type | Description                      |
-| ---------------------- | ---- | -------------------------------- |
-| Collection → Items     | 1:N  | Một collection có nhiều items    |
-| Collection → Attributes| 1:N  | Một collection có nhiều attributes|
-| Attribute → Item       | Meta | Attributes định nghĩa schema cho items |
+| Relationship            | Type | Description                            |
+| ----------------------- | ---- | -------------------------------------- |
+| Collection → Items      | 1:N  | Một collection có nhiều items          |
+| Collection → Attributes | 1:N  | Một collection có nhiều attributes     |
+| Attribute → Item        | Meta | Attributes định nghĩa schema cho items |
 
 ---
 
@@ -186,9 +186,9 @@ PRAGMA journal_mode = WAL;
 
 ### Benefits cho Vaultrs
 
-- ✅ UI không bị block khi background crawler đang write
-- ✅ Better crash recovery
-- ✅ Faster writes (no full page writes)
+-   ✅ UI không bị block khi background crawler đang write
+-   ✅ Better crash recovery
+-   ✅ Faster writes (no full page writes)
 
 ---
 
@@ -208,11 +208,11 @@ vaultrs/
 
 ### File Descriptions
 
-| File             | Purpose                        | Size        |
-| ---------------- | ------------------------------ | ----------- |
-| `vaultrs.db`     | Main database                  | Variable    |
-| `vaultrs.db-wal` | Pending writes (WAL mode)      | Up to 1GB   |
-| `vaultrs.db-shm` | Shared memory for concurrency  | 32KB        |
+| File             | Purpose                       | Size      |
+| ---------------- | ----------------------------- | --------- |
+| `vaultrs.db`     | Main database                 | Variable  |
+| `vaultrs.db-wal` | Pending writes (WAL mode)     | Up to 1GB |
+| `vaultrs.db-shm` | Shared memory for concurrency | 32KB      |
 
 ---
 
@@ -220,33 +220,33 @@ vaultrs/
 
 ### Query Performance Goals
 
-| Operation          | Target   | Notes                     |
-| ------------------ | -------- | ------------------------- |
-| Single item lookup | < 1ms    | By primary key            |
-| Collection list    | < 50ms   | With pagination           |
-| Title search       | < 100ms  | Using LIKE or FTS         |
-| Full-text search   | < 200ms  | Using FTS5                |
-| Insert single      | < 10ms   | With indexes              |
-| Bulk insert 1000   | < 500ms  | In transaction            |
+| Operation          | Target  | Notes             |
+| ------------------ | ------- | ----------------- |
+| Single item lookup | < 1ms   | By primary key    |
+| Collection list    | < 50ms  | With pagination   |
+| Title search       | < 100ms | Using LIKE or FTS |
+| Full-text search   | < 200ms | Using FTS5        |
+| Insert single      | < 10ms  | With indexes      |
+| Bulk insert 1000   | < 500ms | In transaction    |
 
 ### Scale Targets
 
-| Metric              | Target      |
-| ------------------- | ----------- |
-| Max items           | 10,000,000+ |
-| Max collections     | 10,000      |
-| Max attributes      | 100/collection |
-| Database size       | Up to 10GB  |
+| Metric          | Target         |
+| --------------- | -------------- |
+| Max items       | 10,000,000+    |
+| Max collections | 10,000         |
+| Max attributes  | 100/collection |
+| Database size   | Up to 10GB     |
 
 ---
 
 ## 🔗 Tài liệu Liên quan
 
-- [Schema Chi tiết](./2-schema.md)
-- [Indexes & Performance](./3-indexes.md)
-- [Queries](./4-queries.md)
-- [Migrations](./5-migrations.md)
-- [Backup & Recovery](./6-backup.md)
+-   [Schema Chi tiết](./2-schema.md)
+-   [Indexes & Performance](./3-indexes.md)
+-   [Queries](./4-queries.md)
+-   [Migrations](./5-migrations.md)
+-   [Backup & Recovery](./6-backup.md)
 
 ---
 

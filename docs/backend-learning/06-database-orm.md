@@ -6,21 +6,21 @@
 
 ## 📋 Quick Reference
 
-| Operation | SeaORM | SQL |
-|-----------|--------|-----|
+| Operation  | SeaORM                           | SQL                     |
+| ---------- | -------------------------------- | ----------------------- |
 | Find by ID | `Entity::find_by_id(1).one(&db)` | `SELECT * WHERE id = 1` |
-| Find all | `Entity::find().all(&db)` | `SELECT *` |
-| Insert | `model.insert(&db)` | `INSERT INTO ...` |
-| Update | `model.update(&db)` | `UPDATE SET ...` |
-| Delete | `model.delete(&db)` | `DELETE FROM ...` |
+| Find all   | `Entity::find().all(&db)`        | `SELECT *`              |
+| Insert     | `model.insert(&db)`              | `INSERT INTO ...`       |
+| Update     | `model.update(&db)`              | `UPDATE SET ...`        |
+| Delete     | `model.delete(&db)`              | `DELETE FROM ...`       |
 
 ---
 
 ## 6.1 SQLite Overview
 
-- **Embedded database** - không cần server
-- **Single file** - tất cả trong `.db`
-- **Zero config** - không setup
+-   **Embedded database** - không cần server
+-   **Single file** - tất cả trong `.db`
+-   **Zero config** - không setup
 
 ```
 Location: %APPDATA%/com.vaultrs.app/vaultrs.db
@@ -49,6 +49,7 @@ pub struct Model {
 ## 6.3 CRUD Operations
 
 ### Create
+
 ```rust
 let vault = vault::ActiveModel {
     name: Set("My Vault".to_string()),
@@ -58,6 +59,7 @@ vault.insert(&db).await?;
 ```
 
 ### Read
+
 ```rust
 // By ID
 Vault::find_by_id(1).one(&db).await?;
@@ -72,6 +74,7 @@ Vault::find()
 ```
 
 ### Update
+
 ```rust
 let mut vault: vault::ActiveModel = vault.into();
 vault.name = Set("New Name".to_string());
@@ -79,6 +82,7 @@ vault.update(&db).await?;
 ```
 
 ### Delete
+
 ```rust
 vault.delete(&db).await?;
 ```

@@ -6,8 +6,8 @@
 
 ## 📋 TL;DR
 
-| Thành phần       | Công nghệ         | Vai trò                          |
-| ---------------- | ----------------- | -------------------------------- |
+| Thành phần       | Công nghệ          | Vai trò                          |
+| ---------------- | ------------------ | -------------------------------- |
 | **Frontend**     | React + TypeScript | Giao diện người dùng             |
 | **Backend**      | Rust + Tauri v2    | Xử lý logic, quản lý dữ liệu     |
 | **Database**     | SQLite (WAL Mode)  | Lưu trữ dữ liệu nhúng            |
@@ -34,11 +34,11 @@
 
 ### Use Cases
 
-- **Media Collections**: Quản lý phim, series, anime, music
-- **Book Library**: Theo dõi sách, ebooks, manga
-- **Photo Archive**: Tổ chức ảnh cá nhân
-- **Scientific Records**: Quản lý dữ liệu nghiên cứu
-- **Inventory**: Theo dõi đồ vật, thiết bị
+-   **Media Collections**: Quản lý phim, series, anime, music
+-   **Book Library**: Theo dõi sách, ebooks, manga
+-   **Photo Archive**: Tổ chức ảnh cá nhân
+-   **Scientific Records**: Quản lý dữ liệu nghiên cứu
+-   **Inventory**: Theo dõi đồ vật, thiết bị
 
 ---
 
@@ -71,13 +71,13 @@ Vaultrs sử dụng kiến trúc **Modular Monolith** - tất cả components tr
 
 ### Tại sao Modular Monolith?
 
-| Ưu điểm                    | Giải thích                              |
-| -------------------------- | --------------------------------------- |
-| **Đơn giản để deploy**     | Một file executable duy nhất            |
-| **Performance tốt**        | Không có network overhead giữa services |
-| **Dễ debug**               | Tất cả code trong một process           |
-| **Module boundaries**      | Dễ tách thành microservices sau này     |
-| **Phù hợp single-user**    | Desktop app không cần scale horizontal  |
+| Ưu điểm                 | Giải thích                              |
+| ----------------------- | --------------------------------------- |
+| **Đơn giản để deploy**  | Một file executable duy nhất            |
+| **Performance tốt**     | Không có network overhead giữa services |
+| **Dễ debug**            | Tất cả code trong một process           |
+| **Module boundaries**   | Dễ tách thành microservices sau này     |
+| **Phù hợp single-user** | Desktop app không cần scale horizontal  |
 
 ---
 
@@ -92,10 +92,11 @@ Vaultrs sử dụng kiến trúc **Modular Monolith** - tất cả components tr
 ```
 
 **Trách nhiệm:**
-- Render UI components
-- Handle user interactions
-- Virtual scrolling cho large datasets
-- State management
+
+-   Render UI components
+-   Handle user interactions
+-   Virtual scrolling cho large datasets
+-   State management
 
 ### Layer 2: Service Layer (Backend)
 
@@ -106,10 +107,11 @@ Vaultrs sử dụng kiến trúc **Modular Monolith** - tất cả components tr
 ```
 
 **Trách nhiệm:**
-- Xử lý business logic
-- Validation dữ liệu
-- Background tasks (crawling)
-- Error handling
+
+-   Xử lý business logic
+-   Validation dữ liệu
+-   Background tasks (crawling)
+-   Error handling
 
 ### Layer 3: Data Layer (Database)
 
@@ -120,10 +122,11 @@ Vaultrs sử dụng kiến trúc **Modular Monolith** - tất cả components tr
 ```
 
 **Trách nhiệm:**
-- Lưu trữ dữ liệu
-- Query execution
-- Data integrity
-- Indexing & optimization
+
+-   Lưu trữ dữ liệu
+-   Query execution
+-   Data integrity
+-   Indexing & optimization
 
 ---
 
@@ -217,9 +220,9 @@ crawler/  → Fetch metadata
 
 ### 4. Privacy-First
 
-- Tất cả dữ liệu lưu local
-- Không gửi data lên cloud (mặc định)
-- Hoạt động 100% offline
+-   Tất cả dữ liệu lưu local
+-   Không gửi data lên cloud (mặc định)
+-   Hoạt động 100% offline
 
 ---
 
@@ -249,22 +252,22 @@ crawler/  → Fetch metadata
 
 ### Performance Targets
 
-| Operation         | Target   | Strategy            |
-| ----------------- | -------- | ------------------- |
-| Initial Load      | < 500ms  | Pagination + index  |
-| Scroll Frame Rate | 60 FPS   | Virtual scrolling   |
-| Search            | < 100ms  | SQLite FTS          |
-| Insert            | < 10ms   | Optimized writes    |
+| Operation         | Target  | Strategy           |
+| ----------------- | ------- | ------------------ |
+| Initial Load      | < 500ms | Pagination + index |
+| Scroll Frame Rate | 60 FPS  | Virtual scrolling  |
+| Search            | < 100ms | SQLite FTS         |
+| Insert            | < 10ms  | Optimized writes   |
 
 ---
 
 ## 🔗 Tài liệu Liên quan
 
-- [Thiết kế Hệ thống Chi tiết](./2-system-design.md)
-- [Công nghệ Sử dụng](./3-tech-stack.md)
-- [Luồng Dữ liệu](./4-data-flow.md)
-- [Design Patterns](./5-design-patterns.md)
-- [Database Schema](../02-database/)
+-   [Thiết kế Hệ thống Chi tiết](./2-system-design.md)
+-   [Công nghệ Sử dụng](./3-tech-stack.md)
+-   [Luồng Dữ liệu](./4-data-flow.md)
+-   [Design Patterns](./5-design-patterns.md)
+-   [Database Schema](../02-database/)
 
 ---
 

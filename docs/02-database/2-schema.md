@@ -6,12 +6,12 @@
 
 ## 📋 TL;DR
 
-| Table          | Purpose                   | Expected Rows |
-| -------------- | ------------------------- | ------------- |
-| `collections`  | Collection definitions    | ~100          |
-| `attributes`   | Custom field definitions  | ~1,000        |
-| `items`        | Main data storage         | 10,000,000+   |
-| `items_fts`    | Full-text search index    | Virtual       |
+| Table         | Purpose                  | Expected Rows |
+| ------------- | ------------------------ | ------------- |
+| `collections` | Collection definitions   | ~100          |
+| `attributes`  | Custom field definitions | ~1,000        |
+| `items`       | Main data storage        | 10,000,000+   |
+| `items_fts`   | Full-text search index   | Virtual       |
 
 ---
 
@@ -46,15 +46,15 @@ END;
 
 ### Columns
 
-| Column       | Type    | Constraints     | Description              |
-| ------------ | ------- | --------------- | ------------------------ |
-| `id`         | INTEGER | PK, AUTO        | Unique identifier        |
-| `name`       | TEXT    | NOT NULL        | Display name             |
-| `slug`       | TEXT    | UNIQUE, NOT NULL| URL-friendly identifier  |
-| `icon`       | TEXT    | -               | Emoji hoặc icon path     |
-| `description`| TEXT    | -               | Collection description   |
-| `created_at` | INTEGER | NOT NULL        | Unix timestamp           |
-| `updated_at` | INTEGER | NOT NULL        | Unix timestamp           |
+| Column        | Type    | Constraints      | Description             |
+| ------------- | ------- | ---------------- | ----------------------- |
+| `id`          | INTEGER | PK, AUTO         | Unique identifier       |
+| `name`        | TEXT    | NOT NULL         | Display name            |
+| `slug`        | TEXT    | UNIQUE, NOT NULL | URL-friendly identifier |
+| `icon`        | TEXT    | -                | Emoji hoặc icon path    |
+| `description` | TEXT    | -                | Collection description  |
+| `created_at`  | INTEGER | NOT NULL         | Unix timestamp          |
+| `updated_at`  | INTEGER | NOT NULL         | Unix timestamp          |
 
 ### Example Data
 
@@ -97,35 +97,35 @@ CREATE INDEX idx_attributes_collection ON attributes(collection_id);
 
 ### Columns
 
-| Column          | Type    | Constraints      | Description              |
-| --------------- | ------- | ---------------- | ------------------------ |
-| `id`            | INTEGER | PK, AUTO         | Unique identifier        |
-| `collection_id` | INTEGER | FK, NOT NULL     | Parent collection        |
-| `name`          | TEXT    | NOT NULL         | Display name             |
-| `key`           | TEXT    | NOT NULL         | JSON object key          |
-| `type`          | TEXT    | NOT NULL         | Field type               |
-| `options`       | TEXT    | -                | JSON for select options  |
-| `display_order` | INTEGER | DEFAULT 0        | Order in UI              |
-| `required`      | INTEGER | DEFAULT 0        | Boolean (0/1)            |
-| `searchable`    | INTEGER | DEFAULT 0        | Include in FTS           |
-| `created_at`    | INTEGER | NOT NULL         | Unix timestamp           |
+| Column          | Type    | Constraints  | Description             |
+| --------------- | ------- | ------------ | ----------------------- |
+| `id`            | INTEGER | PK, AUTO     | Unique identifier       |
+| `collection_id` | INTEGER | FK, NOT NULL | Parent collection       |
+| `name`          | TEXT    | NOT NULL     | Display name            |
+| `key`           | TEXT    | NOT NULL     | JSON object key         |
+| `type`          | TEXT    | NOT NULL     | Field type              |
+| `options`       | TEXT    | -            | JSON for select options |
+| `display_order` | INTEGER | DEFAULT 0    | Order in UI             |
+| `required`      | INTEGER | DEFAULT 0    | Boolean (0/1)           |
+| `searchable`    | INTEGER | DEFAULT 0    | Include in FTS          |
+| `created_at`    | INTEGER | NOT NULL     | Unix timestamp          |
 
 ### Field Types
 
-| Type         | Input Component  | Validation           |
-| ------------ | ---------------- | -------------------- |
-| `text`       | Text input       | Max 255 chars        |
-| `textarea`   | Text area        | Max 10000 chars      |
-| `number`     | Number input     | Integer              |
-| `decimal`    | Number input     | Float                |
-| `date`       | Date picker      | ISO date             |
-| `datetime`   | Datetime picker  | ISO datetime         |
-| `select`     | Dropdown         | From options         |
-| `multiselect`| Multi-select     | Array from options   |
-| `checkbox`   | Checkbox         | Boolean              |
-| `url`        | URL input        | Valid URL            |
-| `image`      | Image picker     | Valid path/URL       |
-| `file`       | File picker      | Valid path           |
+| Type          | Input Component | Validation         |
+| ------------- | --------------- | ------------------ |
+| `text`        | Text input      | Max 255 chars      |
+| `textarea`    | Text area       | Max 10000 chars    |
+| `number`      | Number input    | Integer            |
+| `decimal`     | Number input    | Float              |
+| `date`        | Date picker     | ISO date           |
+| `datetime`    | Datetime picker | ISO datetime       |
+| `select`      | Dropdown        | From options       |
+| `multiselect` | Multi-select    | Array from options |
+| `checkbox`    | Checkbox        | Boolean            |
+| `url`         | URL input       | Valid URL          |
+| `image`       | Image picker    | Valid path/URL     |
+| `file`        | File picker     | Valid path         |
 
 ### Example Data
 
@@ -186,14 +186,14 @@ END;
 
 ### Columns
 
-| Column          | Type    | Constraints     | Description              |
-| --------------- | ------- | --------------- | ------------------------ |
-| `id`            | INTEGER | PK, AUTO        | Unique identifier        |
-| `collection_id` | INTEGER | FK, NOT NULL    | Parent collection        |
-| `title`         | TEXT    | NOT NULL        | Item title (indexed)     |
-| `created_at`    | INTEGER | NOT NULL        | Unix timestamp           |
-| `updated_at`    | INTEGER | NOT NULL        | Unix timestamp           |
-| `properties`    | TEXT    | NOT NULL        | JSON blob                |
+| Column          | Type    | Constraints  | Description          |
+| --------------- | ------- | ------------ | -------------------- |
+| `id`            | INTEGER | PK, AUTO     | Unique identifier    |
+| `collection_id` | INTEGER | FK, NOT NULL | Parent collection    |
+| `title`         | TEXT    | NOT NULL     | Item title (indexed) |
+| `created_at`    | INTEGER | NOT NULL     | Unix timestamp       |
+| `updated_at`    | INTEGER | NOT NULL     | Unix timestamp       |
+| `properties`    | TEXT    | NOT NULL     | JSON blob            |
 
 ### Properties JSON Structure
 
@@ -317,7 +317,7 @@ LIMIT 50;
 │                                                                  │
 └──────────────────────────────────────────────────────────────────┘
 
-Legend: PK = Primary Key, FK = Foreign Key, UQ = Unique, 
+Legend: PK = Primary Key, FK = Foreign Key, UQ = Unique,
         IX = Indexed, JS = JSON
 ```
 
@@ -325,9 +325,9 @@ Legend: PK = Primary Key, FK = Foreign Key, UQ = Unique,
 
 ## 🔗 Tài liệu Liên quan
 
-- [Database Overview](./1-overview.md)
-- [Indexes & Performance](./3-indexes.md)
-- [Queries](./4-queries.md)
+-   [Database Overview](./1-overview.md)
+-   [Indexes & Performance](./3-indexes.md)
+-   [Queries](./4-queries.md)
 
 ---
 

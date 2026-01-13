@@ -6,14 +6,14 @@
 
 ## 📋 Quick Reference
 
-| Concept | Ví dụ | Ghi nhớ |
-|---------|-------|---------|
-| Immutable | `let x = 5;` | Mặc định không đổi |
-| Mutable | `let mut x = 5;` | Thêm `mut` để thay đổi |
-| Ownership | `let s2 = s1;` | s1 không còn hợp lệ |
-| Borrowing | `let s2 = &s1;` | Mượn, s1 vẫn hợp lệ |
-| Result | `Result<T, E>` | Ok(value) hoặc Err(error) |
-| Option | `Option<T>` | Some(value) hoặc None |
+| Concept   | Ví dụ            | Ghi nhớ                   |
+| --------- | ---------------- | ------------------------- |
+| Immutable | `let x = 5;`     | Mặc định không đổi        |
+| Mutable   | `let mut x = 5;` | Thêm `mut` để thay đổi    |
+| Ownership | `let s2 = s1;`   | s1 không còn hợp lệ       |
+| Borrowing | `let s2 = &s1;`  | Mượn, s1 vẫn hợp lệ       |
+| Result    | `Result<T, E>`   | Ok(value) hoặc Err(error) |
+| Option    | `Option<T>`      | Some(value) hoặc None     |
 
 ---
 
@@ -47,7 +47,7 @@ age = 26;  // ✅ OK
 ```rust
 // Numbers
 let int_num: i32 = 42;          // 32-bit signed integer
-let unsigned: u32 = 100;        // 32-bit unsigned integer  
+let unsigned: u32 = 100;        // 32-bit unsigned integer
 let big_num: i64 = 1_000_000;   // 64-bit (dấu _ để dễ đọc)
 let float: f64 = 3.14;          // 64-bit floating point
 
@@ -107,11 +107,11 @@ println!("{}", s);  // "Hello World"
 
 ### Borrow Rules
 
-| Rule | Giải thích |
-|------|------------|
-| Nhiều `&` cùng lúc | ✅ OK - nhiều immutable borrows |
-| Một `&mut` duy nhất | ✅ OK - chỉ 1 mutable borrow |
-| `&` và `&mut` cùng lúc | ❌ Không được |
+| Rule                   | Giải thích                      |
+| ---------------------- | ------------------------------- |
+| Nhiều `&` cùng lúc     | ✅ OK - nhiều immutable borrows |
+| Một `&mut` duy nhất    | ✅ OK - chỉ 1 mutable borrow    |
+| `&` và `&mut` cùng lúc | ❌ Không được                   |
 
 ---
 
@@ -240,19 +240,20 @@ println!("{:?}", result);  // [6, 8, 10]
 ## 📝 Bài tập Thực hành
 
 1. Tạo project mới và chạy thử các ví dụ trên:
-   ```bash
-   cargo new rust_practice
-   cd rust_practice
-   # Sửa src/main.rs
-   cargo run
-   ```
+
+    ```bash
+    cargo new rust_practice
+    cd rust_practice
+    # Sửa src/main.rs
+    cargo run
+    ```
 
 2. Viết hàm tính factorial với error handling:
-   ```rust
-   fn factorial(n: u32) -> Result<u32, String> {
-       // TODO: Implement
-   }
-   ```
+    ```rust
+    fn factorial(n: u32) -> Result<u32, String> {
+        // TODO: Implement
+    }
+    ```
 
 ---
 

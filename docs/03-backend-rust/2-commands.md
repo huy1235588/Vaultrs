@@ -6,12 +6,12 @@
 
 ## 📋 TL;DR
 
-| Concept        | Description                              |
-| -------------- | ---------------------------------------- |
-| `#[tauri::command]` | Macro đánh dấu function là command  |
-| `invoke()`     | Frontend gọi command                     |
-| `State<>`      | Access managed state                     |
-| `Result<T, E>` | Return success hoặc error                |
+| Concept             | Description                        |
+| ------------------- | ---------------------------------- |
+| `#[tauri::command]` | Macro đánh dấu function là command |
+| `invoke()`          | Frontend gọi command               |
+| `State<>`           | Access managed state               |
+| `Result<T, E>`      | Return success hoặc error          |
 
 ---
 
@@ -46,9 +46,9 @@ fn greet(name: String) -> String {
 ### Frontend Call
 
 ```typescript
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
-const greeting = await invoke<string>('greet', { name: 'User' });
+const greeting = await invoke<string>("greet", { name: "User" });
 ```
 
 ---
@@ -270,29 +270,29 @@ pub async fn get_items_count(
 ```typescript
 // src/types/api.types.ts
 export interface Collection {
-  id: number;
-  name: string;
-  slug: string;
-  icon?: string;
-  description?: string;
-  created_at: number;
-  updated_at: number;
+    id: number;
+    name: string;
+    slug: string;
+    icon?: string;
+    description?: string;
+    created_at: number;
+    updated_at: number;
 }
 
 export interface Item {
-  id: number;
-  collection_id: number;
-  title: string;
-  properties: Record<string, unknown>;
-  created_at: number;
-  updated_at: number;
+    id: number;
+    collection_id: number;
+    title: string;
+    properties: Record<string, unknown>;
+    created_at: number;
+    updated_at: number;
 }
 
 export interface GetItemsParams {
-  collection_id: number;
-  offset?: number;
-  limit?: number;
-  search?: string;
+    collection_id: number;
+    offset?: number;
+    limit?: number;
+    search?: string;
 }
 ```
 
@@ -300,36 +300,33 @@ export interface GetItemsParams {
 
 ```typescript
 // src/services/api.ts
-import { invoke } from '@tauri-apps/api/core';
-import type { Collection, Item, GetItemsParams } from '@/types/api.types';
+import { invoke } from "@tauri-apps/api/core";
+import type { Collection, Item, GetItemsParams } from "@/types/api.types";
 
 export const api = {
-  // Collections
-  getCollections: () => invoke<Collection[]>('get_collections'),
-  
-  getCollection: (id: number) => 
-    invoke<Collection | null>('get_collection', { id }),
-  
-  createCollection: (name: string, slug: string, icon?: string) =>
-    invoke<Collection>('create_collection', { name, slug, icon }),
-  
-  deleteCollection: (id: number) =>
-    invoke<void>('delete_collection', { id }),
+    // Collections
+    getCollections: () => invoke<Collection[]>("get_collections"),
 
-  // Items
-  getItems: (params: GetItemsParams) =>
-    invoke<Item[]>('get_items', { params }),
-  
-  getItem: (id: number) =>
-    invoke<Item | null>('get_item', { id }),
-  
-  createItem: (collectionId: number, title: string, properties?: object) =>
-    invoke<Item>('create_item', { 
-      params: { collection_id: collectionId, title, properties }
-    }),
-  
-  deleteItem: (id: number) =>
-    invoke<void>('delete_item', { id }),
+    getCollection: (id: number) =>
+        invoke<Collection | null>("get_collection", { id }),
+
+    createCollection: (name: string, slug: string, icon?: string) =>
+        invoke<Collection>("create_collection", { name, slug, icon }),
+
+    deleteCollection: (id: number) => invoke<void>("delete_collection", { id }),
+
+    // Items
+    getItems: (params: GetItemsParams) =>
+        invoke<Item[]>("get_items", { params }),
+
+    getItem: (id: number) => invoke<Item | null>("get_item", { id }),
+
+    createItem: (collectionId: number, title: string, properties?: object) =>
+        invoke<Item>("create_item", {
+            params: { collection_id: collectionId, title, properties },
+        }),
+
+    deleteItem: (id: number) => invoke<void>("delete_item", { id }),
 };
 ```
 
@@ -337,32 +334,34 @@ export const api = {
 
 ```typescript
 // src/hooks/useItems.ts
-import { useState, useEffect } from 'react';
-import { api } from '@/services/api';
-import type { Item } from '@/types/api.types';
+import { useState, useEffect } from "react";
+import { api } from "@/services/api";
+import type { Item } from "@/types/api.types";
 
 export function useItems(collectionId: number) {
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [items, setItems] = useState<Item[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        setLoading(true);
-        const data = await api.getItems({ collection_id: collectionId });
-        setItems(data);
-      } catch (err) {
-        setError(err as string);
-      } finally {
-        setLoading(false);
-      }
-    };
+    useEffect(() => {
+        const fetchItems = async () => {
+            try {
+                setLoading(true);
+                const data = await api.getItems({
+                    collection_id: collectionId,
+                });
+                setItems(data);
+            } catch (err) {
+                setError(err as string);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    fetchItems();
-  }, [collectionId]);
+        fetchItems();
+    }, [collectionId]);
 
-  return { items, loading, error };
+    return { items, loading, error };
 }
 ```
 
@@ -381,7 +380,7 @@ pub async fn get_item(
     id: i32,
 ) -> Result<Item, VaultError> {
     let item = ItemService::get_by_id(&state.db, id).await?;
-    
+
     item.ok_or(VaultError::NotFound(format!("Item {} not found", id)))
 }
 ```
@@ -390,11 +389,11 @@ pub async fn get_item(
 
 ```typescript
 try {
-  const item = await api.getItem(123);
+    const item = await api.getItem(123);
 } catch (error) {
-  // error is the serialized VaultError
-  console.error('Failed to get item:', error);
-  toast.error(error as string);
+    // error is the serialized VaultError
+    console.error("Failed to get item:", error);
+    toast.error(error as string);
 }
 ```
 
@@ -415,11 +414,11 @@ pub async fn start_crawler(
     // Start background task
     tokio::spawn(async move {
         // ... crawl logic ...
-        
+
         // Notify frontend when done
         app.emit("item_updated", item_id).unwrap();
     });
-    
+
     Ok(())
 }
 ```
@@ -427,17 +426,17 @@ pub async fn start_crawler(
 ### Listen in Frontend
 
 ```typescript
-import { listen } from '@tauri-apps/api/event';
+import { listen } from "@tauri-apps/api/event";
 
 useEffect(() => {
-  const unlisten = listen<number>('item_updated', (event) => {
-    console.log('Item updated:', event.payload);
-    refetchItem(event.payload);
-  });
+    const unlisten = listen<number>("item_updated", (event) => {
+        console.log("Item updated:", event.payload);
+        refetchItem(event.payload);
+    });
 
-  return () => {
-    unlisten.then(fn => fn());
-  };
+    return () => {
+        unlisten.then((fn) => fn());
+    };
 }, []);
 ```
 
@@ -445,9 +444,9 @@ useEffect(() => {
 
 ## 🔗 Tài liệu Liên quan
 
-- [Backend Overview](./1-overview.md)
-- [Error Handling](./3-error-handling.md)
-- [Services](./4-services.md)
+-   [Backend Overview](./1-overview.md)
+-   [Error Handling](./3-error-handling.md)
+-   [Services](./4-services.md)
 
 ---
 

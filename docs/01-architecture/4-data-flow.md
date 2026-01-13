@@ -57,12 +57,12 @@ UI Update ← React State Update ← JSON Response ← Result<T> ← SeaORM Quer
 ```typescript
 // Frontend: hooks/useItems.ts
 const fetchItems = async (collectionId: number, page: number) => {
-  const items = await invoke<Item[]>('get_items', {
-    collectionId,
-    offset: page * PAGE_SIZE,
-    limit: PAGE_SIZE,
-  });
-  return items;
+    const items = await invoke<Item[]>("get_items", {
+        collectionId,
+        offset: page * PAGE_SIZE,
+        limit: PAGE_SIZE,
+    });
+    return items;
 };
 ```
 
@@ -127,7 +127,7 @@ async fn get_items(
 ```typescript
 // Frontend: services/itemService.ts
 export const createItem = async (data: CreateItemDto): Promise<Item> => {
-  return invoke<Item>('create_item', { data });
+    return invoke<Item>("create_item", { data });
 };
 ```
 
@@ -136,7 +136,7 @@ export const createItem = async (data: CreateItemDto): Promise<Item> => {
 pub async fn create(&self, data: CreateItemDto) -> Result<Item> {
     // Validate
     self.validator.validate(&data)?;
-    
+
     // Create entity
     let item = item::ActiveModel {
         collection_id: Set(data.collection_id),
@@ -144,7 +144,7 @@ pub async fn create(&self, data: CreateItemDto) -> Result<Item> {
         properties: Set(data.properties),
         ..Default::default()
     };
-    
+
     // Insert
     let result = item.insert(&self.db).await?;
     Ok(result)
@@ -183,14 +183,14 @@ pub async fn create(&self, data: CreateItemDto) -> Result<Item> {
 
 ```typescript
 const useSearch = (collectionId: number) => {
-  const [query, setQuery] = useState('');
-  const debouncedQuery = useDebounce(query, 300);
-  
-  useEffect(() => {
-    if (debouncedQuery) {
-      searchItems(collectionId, debouncedQuery);
-    }
-  }, [debouncedQuery, collectionId]);
+    const [query, setQuery] = useState("");
+    const debouncedQuery = useDebounce(query, 300);
+
+    useEffect(() => {
+        if (debouncedQuery) {
+            searchItems(collectionId, debouncedQuery);
+        }
+    }, [debouncedQuery, collectionId]);
 };
 ```
 
@@ -302,10 +302,10 @@ const useSearch = (collectionId: number) => {
 
 ## 🔗 Tài liệu Liên quan
 
-- [Kiến trúc Tổng quan](./1-overview.md)
-- [Thiết kế Hệ thống](./2-system-design.md)
-- [Tech Stack](./3-tech-stack.md)
-- [Design Patterns](./5-design-patterns.md)
+-   [Kiến trúc Tổng quan](./1-overview.md)
+-   [Thiết kế Hệ thống](./2-system-design.md)
+-   [Tech Stack](./3-tech-stack.md)
+-   [Design Patterns](./5-design-patterns.md)
 
 ---
 

@@ -6,12 +6,12 @@
 
 ## 📋 TL;DR
 
-| Index                          | Column(s)                    | Purpose              |
-| ------------------------------ | ---------------------------- | -------------------- |
-| `idx_items_collection`         | `collection_id`              | Filter by collection |
-| `idx_items_title`              | `title`                      | Search by title      |
-| `idx_items_created_at`         | `created_at DESC`            | Sort by date         |
-| `idx_items_collection_created` | `collection_id, created_at`  | Combined filter+sort |
+| Index                          | Column(s)                   | Purpose              |
+| ------------------------------ | --------------------------- | -------------------- |
+| `idx_items_collection`         | `collection_id`             | Filter by collection |
+| `idx_items_title`              | `title`                     | Search by title      |
+| `idx_items_created_at`         | `created_at DESC`           | Sort by date         |
+| `idx_items_collection_created` | `collection_id, created_at` | Combined filter+sort |
 
 ---
 
@@ -31,7 +31,7 @@ CREATE INDEX idx_items_created_at ON items(created_at DESC);
 CREATE INDEX idx_items_updated_at ON items(updated_at DESC);
 
 -- Composite index for common query pattern
-CREATE INDEX idx_items_collection_created 
+CREATE INDEX idx_items_collection_created
     ON items(collection_id, created_at DESC);
 ```
 
@@ -85,7 +85,7 @@ CREATE INDEX idx_items_title ON items(title COLLATE NOCASE);
 
 ```sql
 -- Multi-column index
-CREATE INDEX idx_items_collection_created 
+CREATE INDEX idx_items_collection_created
     ON items(collection_id, created_at DESC);
 
 -- Covers queries that:
@@ -100,12 +100,12 @@ CREATE INDEX idx_items_collection_created
 
 ### Benchmark Results (Simulated 1M rows)
 
-| Query Type            | Without Index | With Index | Speedup |
-| --------------------- | ------------- | ---------- | ------- |
-| Filter by collection  | 500ms         | 5ms        | 100x    |
-| Search by title       | 800ms         | 15ms       | 53x     |
-| Sort by created_at    | 1200ms        | 50ms       | 24x     |
-| Filter + Sort         | 1500ms        | 8ms        | 187x    |
+| Query Type           | Without Index | With Index | Speedup |
+| -------------------- | ------------- | ---------- | ------- |
+| Filter by collection | 500ms         | 5ms        | 100x    |
+| Search by title      | 800ms         | 15ms       | 53x     |
+| Sort by created_at   | 1200ms        | 50ms       | 24x     |
+| Filter + Sort        | 1500ms        | 8ms        | 187x    |
 
 ### Index Size vs Performance Trade-off
 
@@ -154,6 +154,7 @@ LIMIT 100;
 ### Common Query Patterns
 
 **Pattern 1: List items in collection**
+
 ```sql
 -- ✅ Optimized (uses composite index)
 SELECT id, title, properties
@@ -164,6 +165,7 @@ LIMIT 100 OFFSET 0;
 ```
 
 **Pattern 2: Search by title**
+
 ```sql
 -- ✅ Uses title index
 SELECT id, title
@@ -173,6 +175,7 @@ WHERE collection_id = 1
 ```
 
 **Pattern 3: Filter by JSON property**
+
 ```sql
 -- ⚠️ No index on JSON - use sparingly
 SELECT id, title
@@ -182,6 +185,7 @@ WHERE collection_id = 1
 ```
 
 **Pattern 4: Full-text search**
+
 ```sql
 -- ✅ Uses FTS5 index
 SELECT i.id, i.title, fts.rank
@@ -239,7 +243,7 @@ pub async fn configure_db(db: &DatabaseConnection) -> Result<()> {
 
 ```sql
 -- List all indexes
-SELECT name, sql FROM sqlite_master 
+SELECT name, sql FROM sqlite_master
 WHERE type = 'index' AND name NOT LIKE 'sqlite_%';
 
 -- Index sizes
@@ -327,9 +331,9 @@ pub async fn run_maintenance(db: &DatabaseConnection) -> Result<()> {
 
 ## 🔗 Tài liệu Liên quan
 
-- [Database Overview](./1-overview.md)
-- [Schema](./2-schema.md)
-- [Queries](./4-queries.md)
+-   [Database Overview](./1-overview.md)
+-   [Schema](./2-schema.md)
+-   [Queries](./4-queries.md)
 
 ---
 

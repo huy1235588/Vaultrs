@@ -16,11 +16,11 @@ Version format:  MAJOR.MINOR.PATCH  (ví dụ: 1.2.3)
 Pre-release:     1.0.0-alpha.1, 1.0.0-beta.2, 1.0.0-rc.1
 ```
 
-| Thay đổi                    | Increment | Ví dụ           |
-| --------------------------- | --------- | --------------- |
-| Breaking API change         | MAJOR     | 1.0.0 → 2.0.0   |
-| New feature (backward safe) | MINOR     | 1.0.0 → 1.1.0   |
-| Bug fix                     | PATCH     | 1.0.0 → 1.0.1   |
+| Thay đổi                    | Increment | Ví dụ         |
+| --------------------------- | --------- | ------------- |
+| Breaking API change         | MAJOR     | 1.0.0 → 2.0.0 |
+| New feature (backward safe) | MINOR     | 1.0.0 → 1.1.0 |
+| Bug fix                     | PATCH     | 1.0.0 → 1.0.1 |
 
 ---
 
@@ -87,11 +87,11 @@ Ví dụ: 1.5.2 → 1.5.3
 
 ### Pre-release Labels
 
-| Label   | Ý nghĩa                                 | Ổn định      |
-| ------- | --------------------------------------- | ------------ |
-| `alpha` | Development build, nhiều bug            | ❌ Rất thấp  |
-| `beta`  | Feature complete, đang test             | ⚠️ Thấp      |
-| `rc`    | Release Candidate, gần như sẵn sàng     | ✅ Cao       |
+| Label   | Ý nghĩa                             | Ổn định     |
+| ------- | ----------------------------------- | ----------- |
+| `alpha` | Development build, nhiều bug        | ❌ Rất thấp |
+| `beta`  | Feature complete, đang test         | ⚠️ Thấp     |
+| `rc`    | Release Candidate, gần như sẵn sàng | ✅ Cao      |
 
 ```
 Flow: alpha → beta → rc → release
@@ -130,57 +130,66 @@ và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Added
-- Tính năng mới đang phát triển
+
+-   Tính năng mới đang phát triển
 
 ## [1.2.0] - 2025-12-26
 
 ### Added
-- Thêm dark mode (#123)
-- Thêm password strength indicator (#145)
+
+-   Thêm dark mode (#123)
+-   Thêm password strength indicator (#145)
 
 ### Changed
-- Cải thiện UI vault list
-- Tăng default Argon2 iterations
+
+-   Cải thiện UI vault list
+-   Tăng default Argon2 iterations
 
 ### Fixed
-- Fix lỗi copy password trên macOS (#156)
-- Fix memory leak khi unlock vault (#160)
+
+-   Fix lỗi copy password trên macOS (#156)
+-   Fix memory leak khi unlock vault (#160)
 
 ### Security
-- Cập nhật AES-GCM library để fix CVE-2025-XXXX
+
+-   Cập nhật AES-GCM library để fix CVE-2025-XXXX
 
 ## [1.1.0] - 2025-11-15
 
 ### Added
-- Thêm tính năng export CSV
+
+-   Thêm tính năng export CSV
 
 ### Deprecated
-- `generate_password_simple()` sẽ bị xóa ở v2.0
+
+-   `generate_password_simple()` sẽ bị xóa ở v2.0
 ```
 
 ### Categories
 
-| Category       | Ý nghĩa                              |
-| -------------- | ------------------------------------ |
-| **Added**      | Tính năng mới                        |
-| **Changed**    | Thay đổi tính năng hiện có           |
-| **Deprecated** | Tính năng sẽ bị xóa trong tương lai  |
-| **Removed**    | Tính năng đã bị xóa                  |
-| **Fixed**      | Bug fixes                            |
-| **Security**   | Vulnerability fixes                  |
+| Category       | Ý nghĩa                             |
+| -------------- | ----------------------------------- |
+| **Added**      | Tính năng mới                       |
+| **Changed**    | Thay đổi tính năng hiện có          |
+| **Deprecated** | Tính năng sẽ bị xóa trong tương lai |
+| **Removed**    | Tính năng đã bị xóa                 |
+| **Fixed**      | Bug fixes                           |
+| **Security**   | Vulnerability fixes                 |
 
 ### Best Practices
 
 ```markdown
 ✅ ĐÚNG:
-- Thêm nút "Copy Password" vào entry detail (#123)
-- Fix lỗi crash khi vault file bị corrupt (#145)
-- [BREAKING] Thay đổi vault format v2
+
+-   Thêm nút "Copy Password" vào entry detail (#123)
+-   Fix lỗi crash khi vault file bị corrupt (#145)
+-   [BREAKING] Thay đổi vault format v2
 
 ❌ SAI:
-- Fixed bug                    # Quá chung chung
-- Updated code                 # Không có thông tin
-- Changes                      # Vô nghĩa
+
+-   Fixed bug # Quá chung chung
+-   Updated code # Không có thông tin
+-   Changes # Vô nghĩa
 ```
 
 ---
@@ -220,30 +229,35 @@ và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## Release Checklist v1.x.x
 
 ### Code
-- [ ] Tất cả tests pass
-- [ ] Không có linter warnings
-- [ ] Code review completed
+
+-   [ ] Tất cả tests pass
+-   [ ] Không có linter warnings
+-   [ ] Code review completed
 
 ### Documentation
-- [ ] CHANGELOG.md updated
-- [ ] README.md updated (nếu cần)
-- [ ] API docs updated
+
+-   [ ] CHANGELOG.md updated
+-   [ ] README.md updated (nếu cần)
+-   [ ] API docs updated
 
 ### Version Bump
-- [ ] desktop/src-tauri/Cargo.toml
-- [ ] desktop/src-tauri/tauri.conf.json
-- [ ] desktop/package.json
+
+-   [ ] desktop/src-tauri/Cargo.toml
+-   [ ] desktop/src-tauri/tauri.conf.json
+-   [ ] desktop/package.json
 
 ### Testing
-- [ ] Windows build OK
-- [ ] macOS build OK (nếu có)
-- [ ] Linux build OK (nếu có)
-- [ ] Manual testing completed
+
+-   [ ] Windows build OK
+-   [ ] macOS build OK (nếu có)
+-   [ ] Linux build OK (nếu có)
+-   [ ] Manual testing completed
 
 ### Release
-- [ ] Git tag created
-- [ ] GitHub Release created
-- [ ] Release notes written
+
+-   [ ] Git tag created
+-   [ ] GitHub Release created
+-   [ ] Release notes written
 ```
 
 ### Version Bump Locations
@@ -291,11 +305,11 @@ struct VaultHeader {
 
 ### Migration Rules
 
-| App Version | Schema Version | Compatibility                     |
-| ----------- | -------------- | --------------------------------- |
-| 1.x.x       | 1              | Read/Write                        |
-| 2.0.0       | 2              | Read v1 (migrate), Write v2       |
-| 2.1.0       | 2              | Read v1 & v2, Write v2            |
+| App Version | Schema Version | Compatibility               |
+| ----------- | -------------- | --------------------------- |
+| 1.x.x       | 1              | Read/Write                  |
+| 2.0.0       | 2              | Read v1 (migrate), Write v2 |
+| 2.1.0       | 2              | Read v1 & v2, Write v2      |
 
 ```
 Quy tắc:
@@ -330,15 +344,15 @@ fn get_version() -> String {
 
 ```json
 {
-  "name": "vaultrs",
-  "version": "1.0.0"
+    "name": "vaultrs",
+    "version": "1.0.0"
 }
 ```
 
 ### TypeScript (Runtime)
 
 ```typescript
-import { version } from '../package.json';
+import { version } from "../package.json";
 
 export const APP_VERSION = version;
 ```
@@ -349,12 +363,12 @@ export const APP_VERSION = version;
 
 ### Severity Levels
 
-| Level      | Response Time | Action                            |
-| ---------- | ------------- | --------------------------------- |
-| Critical   | 24 hours      | Hotfix release, notify users      |
-| High       | 1 week        | Patch release                     |
-| Medium     | Next minor    | Include in planned release        |
-| Low        | Next minor    | Include in planned release        |
+| Level    | Response Time | Action                       |
+| -------- | ------------- | ---------------------------- |
+| Critical | 24 hours      | Hotfix release, notify users |
+| High     | 1 week        | Patch release                |
+| Medium   | Next minor    | Include in planned release   |
+| Low      | Next minor    | Include in planned release   |
 
 ### Security Release Naming
 
@@ -370,18 +384,18 @@ v1.5.2 → v2.0.0 (dù là security fix)
 
 ## 🔗 Tài liệu Liên quan
 
-- [Cấu trúc thư mục](./1-folder-structure.md)
-- [Quy ước đặt tên](./2-naming-convention.md)
-- [Hướng dẫn viết docs](./3-how-to-document.md)
-- [Từ điển thuật ngữ](./4-glossary.md)
+-   [Cấu trúc thư mục](./1-folder-structure.md)
+-   [Quy ước đặt tên](./2-naming-convention.md)
+-   [Hướng dẫn viết docs](./3-how-to-document.md)
+-   [Từ điển thuật ngữ](./4-glossary.md)
 
 ---
 
 ## 📚 Tham khảo
 
-- [Semantic Versioning 2.0.0](https://semver.org/)
-- [Keep a Changelog](https://keepachangelog.com/)
-- [Conventional Commits](https://www.conventionalcommits.org/)
+-   [Semantic Versioning 2.0.0](https://semver.org/)
+-   [Keep a Changelog](https://keepachangelog.com/)
+-   [Conventional Commits](https://www.conventionalcommits.org/)
 
 ---
 

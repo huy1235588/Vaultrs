@@ -7,6 +7,7 @@
 ## 8.1 Full Example: Create Vault
 
 ### Command
+
 ```rust
 // src/commands/vault_commands.rs
 #[tauri::command]
@@ -21,6 +22,7 @@ pub async fn create_vault(
 ```
 
 ### Service
+
 ```rust
 // src/vault/service.rs
 impl VaultService {
@@ -48,10 +50,11 @@ impl VaultService {
 ```
 
 ### Frontend
+
 ```typescript
-const vault = await invoke<VaultDto>('create_vault', {
-    name: 'My Vault',
-    description: 'Description here'
+const vault = await invoke<VaultDto>("create_vault", {
+    name: "My Vault",
+    description: "Description here",
 });
 ```
 
@@ -60,6 +63,7 @@ const vault = await invoke<VaultDto>('create_vault', {
 ## 8.2 Full Example: List with Pagination
 
 ### Command
+
 ```rust
 #[tauri::command]
 pub async fn list_vaults(
@@ -72,6 +76,7 @@ pub async fn list_vaults(
 ```
 
 ### Service
+
 ```rust
 impl VaultService {
     pub async fn list(
@@ -101,6 +106,7 @@ impl VaultService {
 ## 8.3 Full Example: Update Vault
 
 ### Command
+
 ```rust
 #[tauri::command]
 pub async fn update_vault(
@@ -114,6 +120,7 @@ pub async fn update_vault(
 ```
 
 ### Service
+
 ```rust
 impl VaultService {
     pub async fn update(
