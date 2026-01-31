@@ -4,9 +4,11 @@
 //! - Create, Read, Update, Delete (CRUD)
 //! - Listing with pagination
 //! - Counting entries
+//! - Metadata validation and cleanup
 //!
 //! For image operations, see `image_service.rs`.
 //! For search operations, see `search_service.rs`.
+//! For metadata operations, see `metadata_service.rs`.
 
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
@@ -18,6 +20,7 @@ use crate::entities::entry::{self, ActiveModel, Entity as Entry};
 use crate::entities::vault::Entity as Vault;
 use crate::image::ImageStorage;
 
+use super::metadata_service::MetadataService;
 use super::{CreateEntryDto, EntryDto, PaginatedEntries, UpdateEntryDto};
 
 /// Service for entry CRUD operations.
@@ -25,6 +28,8 @@ pub struct EntryService;
 
 impl EntryService {
     /// Creates a new entry in a vault.
+    ///
+    /// Validates required fields if metadata is provided.
     pub async fn create(conn: &DatabaseConnection, dto: CreateEntryDto) -> AppResult<EntryDto> {
         // Validate title is not empty
         if dto.title.trim().is_empty() {
@@ -36,6 +41,20 @@ impl EntryService {
             .one(conn)
             .await?
             .ok_or(AppError::VaultNotFound(dto.vault_id))?;
+
+        // Validate required fields if metadata is provided
+        if dto.metadata.is_some() {
+            let validation = MetadataService::validate_required_fields(
+                conn,
+                dto.vault_id,
+                dto.metadata.as_deref(),
+            )
+            .await?;
+
+            if !validation.is_valid {
+                return Err(AppError::Validation(validation.errors.join("; ")));
+            }
+        }
 
         let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
@@ -113,6 +132,8 @@ impl EntryService {
     }
 
     /// Updates an existing entry.
+    ///
+    /// Implements lazy cleanup: removes orphan field data when metadata is updated.
     pub async fn update(
         conn: &DatabaseConnection,
         id: i32,
@@ -125,7 +146,7 @@ impl EntryService {
 
         let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
-        let mut active_model: ActiveModel = entry.into();
+        let mut active_model: ActiveModel = entry.clone().into();
 
         if let Some(title) = dto.title {
             if title.trim().is_empty() {
@@ -139,7 +160,23 @@ impl EntryService {
         }
 
         if let Some(metadata) = dto.metadata {
-            active_model.metadata = Set(Some(metadata));
+            // Validate required fields
+            let validation = MetadataService::validate_required_fields(
+                conn,
+                entry.vault_id,
+                Some(&metadata),
+            )
+            .await?;
+
+            if !validation.is_valid {
+                return Err(AppError::Validation(validation.errors.join("; ")));
+            }
+
+            // Cleanup orphan data (Lazy Cleanup on Write strategy)
+            let cleaned_metadata =
+                MetadataService::cleanup_orphan_data(conn, entry.vault_id, &metadata).await?;
+
+            active_model.metadata = Set(Some(cleaned_metadata));
         }
 
         active_model.updated_at = Set(now);

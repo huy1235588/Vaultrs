@@ -2,7 +2,14 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import { appDataDir } from '@tauri-apps/api/path';
-import type { Entry, CreateEntryParams, UpdateEntryParams, PaginatedEntries, SearchResult } from '../types';
+import type {
+    Entry,
+    CreateEntryParams,
+    UpdateEntryParams,
+    PaginatedEntries,
+    SearchResult,
+    MetadataValidationResult,
+} from '../types';
 
 export const entryApi = {
     /**
@@ -117,6 +124,28 @@ export const entryApi = {
         return invoke<Entry>('remove_entry_cover', {
             entryId,
             appDataDir: appDataDirPath,
+        });
+    },
+
+    /**
+     * Validates entry metadata against field definitions.
+     *
+     * Checks:
+     * - Required fields are present
+     * - Field values match their types
+     * - Field values satisfy options constraints (min/max, choices, etc.)
+     *
+     * @param vaultId - The vault ID to validate against
+     * @param metadata - JSON string of metadata to validate
+     * @returns Validation result with errors and warnings
+     */
+    async validateMetadata(
+        vaultId: number,
+        metadata: string | null
+    ): Promise<MetadataValidationResult> {
+        return invoke<MetadataValidationResult>('validate_entry_metadata', {
+            vaultId,
+            metadata: metadata ?? null,
         });
     },
 };

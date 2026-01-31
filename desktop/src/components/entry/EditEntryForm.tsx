@@ -44,7 +44,7 @@ export function EditEntryForm({
     const [description, setDescription] = useState(entry.description || '');
     const [metadata, setMetadata] = useState<EntryMetadata>(existingMetadata);
 
-    // Validation
+    // Validation - uses field.id as key
     const [titleError, setTitleError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -60,18 +60,19 @@ export function EditEntryForm({
             setTitleError(null);
         }
 
-        // Validate required custom fields
+        // Validate required custom fields - use field.id as key
         for (const field of fields) {
+            const fieldKey = field.id.toString();
             if (field.required) {
-                const value = metadata[field.name];
+                const value = metadata[fieldKey];
                 if (value === null || value === undefined || value === '') {
-                    newFieldErrors[field.name] = `${field.name} is required`;
+                    newFieldErrors[fieldKey] = `${field.name} is required`;
                     isValid = false;
                 }
             }
 
             // Type-specific validation
-            const value = metadata[field.name];
+            const value = metadata[fieldKey];
             if (value !== null && value !== undefined && value !== '') {
                 switch (field.field_type) {
                     case 'url':
@@ -79,21 +80,21 @@ export function EditEntryForm({
                             typeof value === 'string' &&
                             !isValidUrl(value)
                         ) {
-                            newFieldErrors[field.name] = 'Invalid URL format';
+                            newFieldErrors[fieldKey] = 'Invalid URL format';
                             isValid = false;
                         }
                         break;
                     case 'number':
                         if (typeof value !== 'number' && isNaN(Number(value))) {
-                            newFieldErrors[field.name] = 'Must be a number';
+                            newFieldErrors[fieldKey] = 'Must be a number';
                             isValid = false;
                         }
                         if (field.options?.min !== undefined && Number(value) < field.options.min) {
-                            newFieldErrors[field.name] = `Minimum value is ${field.options.min}`;
+                            newFieldErrors[fieldKey] = `Minimum value is ${field.options.min}`;
                             isValid = false;
                         }
                         if (field.options?.max !== undefined && Number(value) > field.options.max) {
-                            newFieldErrors[field.name] = `Maximum value is ${field.options.max}`;
+                            newFieldErrors[fieldKey] = `Maximum value is ${field.options.max}`;
                             isValid = false;
                         }
                         break;
@@ -103,7 +104,7 @@ export function EditEntryForm({
                             typeof value === 'string' &&
                             value.length > field.options.maxLength
                         ) {
-                            newFieldErrors[field.name] = `Maximum ${field.options.maxLength} characters`;
+                            newFieldErrors[fieldKey] = `Maximum ${field.options.maxLength} characters`;
                             isValid = false;
                         }
                         break;
@@ -139,16 +140,18 @@ export function EditEntryForm({
         }
     };
 
-    const handleFieldChange = (fieldName: string, value: string | number | boolean | null) => {
+    // Use field.id as key for metadata
+    const handleFieldChange = (fieldId: number, value: string | number | boolean | null) => {
+        const fieldKey = fieldId.toString();
         setMetadata((prev) => ({
             ...prev,
-            [fieldName]: value,
+            [fieldKey]: value,
         }));
         // Clear error when user types
-        if (fieldErrors[fieldName]) {
+        if (fieldErrors[fieldKey]) {
             setFieldErrors((prev) => {
                 const next = { ...prev };
-                delete next[fieldName];
+                delete next[fieldKey];
                 return next;
             });
         }
@@ -213,17 +216,20 @@ export function EditEntryForm({
                         Custom Fields
                     </h4>
                     <div className="space-y-4">
-                        {fields.map((field) => (
-                            <CustomFieldInput
-                                key={field.id}
-                                field={field}
-                                value={metadata[field.name] ?? null}
-                                onChange={(value: string | number | boolean | null) =>
-                                    handleFieldChange(field.name, value)
-                                }
-                                error={fieldErrors[field.name]}
-                            />
-                        ))}
+                        {fields.map((field) => {
+                            const fieldKey = field.id.toString();
+                            return (
+                                <CustomFieldInput
+                                    key={field.id}
+                                    field={field}
+                                    value={metadata[fieldKey] ?? null}
+                                    onChange={(value: string | number | boolean | null) =>
+                                        handleFieldChange(field.id, value)
+                                    }
+                                    error={fieldErrors[fieldKey]}
+                                />
+                            );
+                        })}
                     </div>
                 </div>
             )}

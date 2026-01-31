@@ -9,6 +9,7 @@ use crate::core::{AppError, AppResult};
 const MAX_IMAGE_SIZE: u64 = 10 * 1024 * 1024;
 
 /// Timeout for URL downloads (30 seconds).
+#[allow(dead_code)]
 const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Image storage handler.
@@ -116,6 +117,7 @@ impl ImageStorage {
     }
 
     /// Downloads an image from a URL and saves it to storage.
+    #[allow(dead_code)]
     pub async fn download_and_save_image(
         &self,
         vault_id: i32,
@@ -227,6 +229,7 @@ impl ImageStorage {
     }
 
     /// Checks if an image exists.
+    #[allow(dead_code)]
     pub fn image_exists(&self, relative_path: &str) -> bool {
         self.get_full_path(relative_path).exists()
     }

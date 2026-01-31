@@ -40,3 +40,40 @@ export interface SearchResult {
     limit: number;
     has_more: boolean;
 }
+
+// Metadata validation result from backend
+export interface MetadataValidationResult {
+    is_valid: boolean;
+    errors: string[];
+    warnings: string[];
+}
+
+// Parsed metadata type - maps field ID to value
+export type ParsedMetadata = Record<string, string | number | boolean | null>;
+
+/**
+ * Parses metadata JSON string to an object.
+ * Keys are field IDs (as strings), values are the field values.
+ */
+export function parseMetadata(metadata: string | null): ParsedMetadata {
+    if (!metadata) return {};
+    try {
+        return JSON.parse(metadata);
+    } catch {
+        return {};
+    }
+}
+
+/**
+ * Builds metadata JSON string from an object.
+ * Filters out null/undefined values.
+ */
+export function buildMetadataJson(values: ParsedMetadata): string {
+    const filtered: ParsedMetadata = {};
+    for (const [key, value] of Object.entries(values)) {
+        if (value !== null && value !== undefined) {
+            filtered[key] = value;
+        }
+    }
+    return JSON.stringify(filtered);
+}

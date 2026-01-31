@@ -46,9 +46,53 @@ Field Definition                Entry Metadata
 
 ---
 
-## 2. Quy trình xử lý từng thao tác
+## 2. Cấu trúc Metadata JSON
 
-### 2.1 Khi TẠO field mới
+### 2.1 Format chung
+
+Metadata của entry là JSON object với **key = field ID (string)** và **value = giá trị tương ứng**.
+
+```json
+{
+  "1": "Christopher Nolan",
+  "2": 2010,
+  "3": "2010-07-16",
+  "4": true,
+  "5": "Action"
+}
+```
+
+### 2.2 Kiểu dữ liệu theo Field Type
+
+| Field Type | JSON Value Type | Ví dụ |
+|------------|-----------------|-------|
+| `text`     | string          | `"Hello World"` |
+| `number`   | number          | `42`, `3.14` |
+| `date`     | string (ISO 8601) | `"2024-01-15"` |
+| `url`      | string          | `"https://example.com"` |
+| `boolean`  | boolean         | `true`, `false` |
+| `select`   | string          | `"Option A"` |
+
+### 2.3 Xử lý giá trị null/empty
+
+- Field không có giá trị → **không có key** trong metadata (thay vì `"1": null`)
+- Khi hiển thị: nếu không tìm thấy key → hiển thị trống hoặc placeholder
+
+**Ví dụ:**
+```json
+// Entry chỉ có 2/5 field có giá trị
+{
+  "1": "Nolan",
+  "3": "2010-07-16"
+}
+// Field 2, 4, 5 không có trong JSON → hiển thị trống
+```
+
+---
+
+## 3. Quy trình xử lý từng thao tác
+
+### 3.1 Khi TẠO field mới
 
 **Các bước:**
 
@@ -62,7 +106,7 @@ Field Definition                Entry Metadata
 
 ---
 
-### 2.2 Khi LƯU metadata của entry
+### 3.2 Khi LƯU metadata của entry
 
 **Các bước:**
 
@@ -75,7 +119,7 @@ Field Definition                Entry Metadata
 
 ---
 
-### 2.3 Khi ĐỌC metadata để hiển thị
+### 3.3 Khi ĐỌC metadata để hiển thị
 
 **Các bước:**
 
@@ -100,7 +144,7 @@ Field Definition                Entry Metadata
 
 ---
 
-### 2.4 Khi ĐỔI TÊN field
+### 3.4 Khi ĐỔI TÊN field
 
 **Các bước:**
 
@@ -122,7 +166,7 @@ Field Definition                Entry Metadata
 
 ---
 
-### 2.5 Khi XÓA field
+### 3.5 Khi XÓA field
 
 **Các bước:**
 
@@ -165,7 +209,7 @@ Field Definition                Entry Metadata
 
 ---
 
-### 2.6 Khi THAY ĐỔI loại field
+### 3.6 Khi THAY ĐỔI loại field
 
 **Quyết định:** KHÔNG CHO PHÉP
 
@@ -183,7 +227,7 @@ Field Definition                Entry Metadata
 
 ---
 
-### 2.7 Khi THAY ĐỔI options của field
+### 3.7 Khi THAY ĐỔI options của field
 
 **Các bước:**
 
@@ -218,7 +262,9 @@ Field Definition                Entry Metadata
 
 ---
 
-## 3. Migration dữ liệu cũ
+## 4. Migration dữ liệu cũ (Optional)
+
+> ⚠️ **Section này chỉ áp dụng** nếu đã có dữ liệu cũ sử dụng name-based key. Bỏ qua nếu đây là project mới.
 
 Nếu đã có dữ liệu theo cách cũ (name-based), cần chuyển đổi:
 
@@ -239,9 +285,34 @@ Nếu đã có dữ liệu theo cách cũ (name-based), cần chuyển đổi:
 
 ---
 
-## 4. Xử lý validation
+## 5. Xử lý Validation
 
-### Khi lưu metadata
+### 5.1 Validation theo Field Type
+
+| Field Type | Validation Rules |
+|------------|------------------|
+| `text`     | `maxLength` nếu có trong options |
+| `number`   | `min`, `max` nếu có trong options |
+| `date`     | Format ISO 8601 (YYYY-MM-DD) |
+| `url`      | Valid URL format |
+| `boolean`  | Chỉ `true` hoặc `false` |
+| `select`   | Giá trị phải nằm trong `choices` |
+
+### 5.2 Xử lý Required Field
+
+**Khi tạo/sửa entry:**
+
+1. Lấy danh sách field definitions có `required = true`
+2. Kiểm tra metadata có chứa key tương ứng không
+3. Nếu thiếu required field → báo lỗi validation
+
+**Ví dụ:**
+```rust
+// Field ID=1 (Director) có required=true
+// Metadata: {"2": 2010} → Lỗi: "Field 'Director' is required"
+```
+
+### 5.3 Khi lưu metadata
 
 1. Parse metadata JSON
 2. Với mỗi key:
@@ -249,7 +320,7 @@ Nếu đã có dữ liệu theo cách cũ (name-based), cần chuyển đổi:
     - Kiểm tra field ID có tồn tại trong vault không → nếu không, cảnh báo (có thể là orphan)
 3. Cho phép lưu (không block) vì orphan data vô hại
 
-### Khi hiển thị
+### 5.4 Khi hiển thị
 
 1. Chỉ hiển thị các field có trong field_definitions
 2. Bỏ qua orphan keys trong metadata
@@ -259,7 +330,69 @@ Nếu đã có dữ liệu theo cách cũ (name-based), cần chuyển đổi:
 
 ---
 
-## 5. Tóm tắt logic chính
+## 6. API Contract
+
+### 6.1 Field Definition APIs
+
+```typescript
+// Tạo field mới
+create_field_definition(
+  vault_id: number,
+  name: string,
+  field_type: "text" | "number" | "date" | "url" | "boolean" | "select",
+  options?: FieldOptions,
+  required?: boolean
+) → FieldDefinition
+
+// Cập nhật field (không đổi được type)
+update_field_definition(
+  id: number,
+  name?: string,
+  options?: FieldOptions,
+  required?: boolean
+) → FieldDefinition
+
+// Xóa field
+delete_field_definition(id: number) → void
+
+// Lấy danh sách field của vault
+list_field_definitions(vault_id: number) → FieldDefinition[]
+```
+
+### 6.2 Entry Metadata APIs
+
+```typescript
+// Tạo entry với metadata
+create_entry(
+  vault_id: number,
+  title: string,
+  description?: string,
+  metadata?: string  // JSON string: {"field_id": value}
+) → Entry
+
+// Cập nhật entry metadata
+update_entry(
+  id: number,
+  title?: string,
+  description?: string,
+  metadata?: string  // JSON string
+) → Entry
+```
+
+### 6.3 FieldOptions Structure
+
+```typescript
+interface FieldOptions {
+  maxLength?: number;    // cho text
+  min?: number;          // cho number
+  max?: number;          // cho number
+  choices?: string[];    // cho select
+}
+```
+
+---
+
+## 7. Tóm tắt logic chính
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -283,7 +416,7 @@ Nếu đã có dữ liệu theo cách cũ (name-based), cần chuyển đổi:
 
 ---
 
-## 6. Lợi ích của ID-based approach
+## 8. Lợi ích của ID-based approach
 
 | Điểm               | Mô tả                                        |
 | ------------------ | -------------------------------------------- |
@@ -294,7 +427,7 @@ Nếu đã có dữ liệu theo cách cũ (name-based), cần chuyển đổi:
 
 ---
 
-## 7. Trade-offs
+## 9. Trade-offs
 
 | Nhược điểm               | Giải pháp                              |
 | ------------------------ | -------------------------------------- |

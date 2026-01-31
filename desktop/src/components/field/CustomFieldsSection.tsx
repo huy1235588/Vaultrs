@@ -16,9 +16,10 @@ export function CustomFieldsSection({
         return null;
     }
 
-    // Filter to only show fields that have values
+    // Filter to only show fields that have values - use field.id as key
     const fieldsWithValues = fields.filter((field) => {
-        const value = metadata?.[field.name];
+        const fieldKey = field.id.toString();
+        const value = metadata?.[fieldKey];
         return value !== null && value !== undefined && value !== '';
     });
 
@@ -41,13 +42,16 @@ export function CustomFieldsSection({
                 Custom Fields
             </h4>
             <div className="grid gap-3">
-                {fieldsWithValues.map((field) => (
-                    <CustomFieldRenderer
-                        key={field.id}
-                        field={field}
-                        value={metadata?.[field.name] ?? null}
-                    />
-                ))}
+                {fieldsWithValues.map((field) => {
+                    const fieldKey = field.id.toString();
+                    return (
+                        <CustomFieldRenderer
+                            key={field.id}
+                            field={field}
+                            value={metadata?.[fieldKey] ?? null}
+                        />
+                    );
+                })}
             </div>
         </div>
     );

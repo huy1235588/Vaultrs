@@ -18,7 +18,7 @@ use crate::commands::{
     delete_field_definition, delete_vault, get_entry, get_entry_thumbnail, get_field_definition,
     get_vault, list_entries, list_field_definitions, list_vaults, remove_entry_cover,
     reorder_field_definitions, search_entries, set_entry_cover_url, update_entry,
-    update_field_definition, update_vault, upload_entry_cover_image,
+    update_field_definition, update_vault, upload_entry_cover_image, validate_entry_metadata,
 };
 use crate::db::{run_migrations, Database};
 
@@ -78,6 +78,7 @@ pub fn run() {
             update_entry,
             delete_entry,
             search_entries,
+            validate_entry_metadata,
             // Image commands
             upload_entry_cover_image,
             set_entry_cover_url,

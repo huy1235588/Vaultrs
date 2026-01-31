@@ -1,14 +1,23 @@
 //! Entry-related Tauri commands.
 
 use sea_orm::DatabaseConnection;
+use serde::Serialize;
 use tauri::State;
 
 use crate::core::AppError;
 use crate::entry::{
-    CreateEntryDto, EntryDto, EntrySearchService, EntryService, PaginatedEntries, SearchResult,
-    UpdateEntryDto,
+    CreateEntryDto, EntryDto, EntrySearchService, EntryService, MetadataService, PaginatedEntries,
+    SearchResult, UpdateEntryDto,
 };
 use crate::image::ImageStorage;
+
+/// Response DTO for metadata validation.
+#[derive(Debug, Serialize)]
+pub struct MetadataValidationResponse {
+    pub is_valid: bool,
+    pub errors: Vec<String>,
+    pub warnings: Vec<String>,
+}
 
 /// Creates a new entry in a vault.
 #[tauri::command]
@@ -94,4 +103,26 @@ pub async fn search_entries(
     limit: u64,
 ) -> Result<SearchResult, AppError> {
     EntrySearchService::search(&db, vault_id, &query, page, limit).await
+}
+
+/// Validates entry metadata against field definitions.
+///
+/// This command checks:
+/// - Required fields are present
+/// - Field values match their types
+/// - Field values satisfy options constraints (min/max, choices, etc.)
+#[tauri::command]
+pub async fn validate_entry_metadata(
+    db: State<'_, DatabaseConnection>,
+    vault_id: i32,
+    metadata: Option<String>,
+) -> Result<MetadataValidationResponse, AppError> {
+    let result =
+        MetadataService::validate_metadata(&db, vault_id, metadata.as_deref()).await?;
+
+    Ok(MetadataValidationResponse {
+        is_valid: result.is_valid,
+        errors: result.errors,
+        warnings: result.warnings,
+    })
 }
