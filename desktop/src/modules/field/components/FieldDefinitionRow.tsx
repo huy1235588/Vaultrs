@@ -13,6 +13,7 @@ import {
     Link,
     ToggleLeft,
     List,
+    Link2,
 } from 'lucide-react';
 import type { FieldDefinition, FieldType } from '../types';
 
@@ -31,6 +32,7 @@ const FIELD_TYPE_ICONS: Record<FieldType, React.ReactNode> = {
     url: <Link className="h-4 w-4" />,
     boolean: <ToggleLeft className="h-4 w-4" />,
     select: <List className="h-4 w-4" />,
+    relation: <Link2 className="h-4 w-4" />,
 };
 
 const FIELD_TYPE_LABELS: Record<FieldType, string> = {
@@ -40,6 +42,7 @@ const FIELD_TYPE_LABELS: Record<FieldType, string> = {
     url: 'URL',
     boolean: 'Boolean',
     select: 'Select',
+    relation: 'Relation',
 };
 
 export function FieldDefinitionRow({

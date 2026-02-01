@@ -1,6 +1,6 @@
 // Create Field Dialog - Form for creating a new field definition
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Loader2, Plus, X } from 'lucide-react';
 import { useFieldStore } from '../store';
+import { vaultApi, type Vault } from '@/modules/vault';
 import type { FieldType, FieldOptions } from '../types';
 
 interface CreateFieldDialogProps {
@@ -29,13 +30,14 @@ interface CreateFieldDialogProps {
     onClose: () => void;
 }
 
-const FIELD_TYPES: { value: FieldType; label: string }[] = [
-    { value: 'text', label: 'Text' },
-    { value: 'number', label: 'Number' },
-    { value: 'date', label: 'Date' },
-    { value: 'url', label: 'URL' },
-    { value: 'boolean', label: 'Yes/No' },
-    { value: 'select', label: 'Dropdown' },
+const FIELD_TYPES: { value: FieldType; label: string; description?: string }[] = [
+    { value: 'text', label: 'Text', description: 'Single or multi-line text' },
+    { value: 'number', label: 'Number', description: 'Integer or decimal' },
+    { value: 'date', label: 'Date', description: 'Date picker' },
+    { value: 'url', label: 'URL', description: 'Web link' },
+    { value: 'boolean', label: 'Yes/No', description: 'Toggle switch' },
+    { value: 'select', label: 'Dropdown', description: 'Pick from options' },
+    { value: 'relation', label: 'Relation', description: 'Link to another vault' },
 ];
 
 export function CreateFieldDialog({
@@ -55,6 +57,28 @@ export function CreateFieldDialog({
     const [min, setMin] = useState<string>('');
     const [max, setMax] = useState<string>('');
     const [choices, setChoices] = useState<string[]>(['']);
+    
+    // Relation-specific state
+    const [targetVaultId, setTargetVaultId] = useState<string>('');
+    const [availableVaults, setAvailableVaults] = useState<Vault[]>([]);
+    const [isLoadingVaults, setIsLoadingVaults] = useState(false);
+
+    // Load available vaults when relation type is selected
+    useEffect(() => {
+        if (fieldType === 'relation' && isOpen) {
+            setIsLoadingVaults(true);
+            vaultApi.list()
+                .then((vaults) => {
+                    // Filter out the current vault (can't link to self)
+                    setAvailableVaults(vaults.filter((v) => v.id !== vaultId));
+                })
+                .catch((err) => {
+                    console.error('Failed to load vaults:', err);
+                    setAvailableVaults([]);
+                })
+                .finally(() => setIsLoadingVaults(false));
+        }
+    }, [fieldType, isOpen, vaultId]);
 
     const resetForm = () => {
         setName('');
@@ -64,6 +88,7 @@ export function CreateFieldDialog({
         setMin('');
         setMax('');
         setChoices(['']);
+        setTargetVaultId('');
         setError(null);
     };
 
@@ -104,6 +129,15 @@ export function CreateFieldDialog({
                     return;
                 }
                 options.choices = validChoices;
+            }
+
+            if (fieldType === 'relation') {
+                if (!targetVaultId) {
+                    setError('Please select a target vault for the relation field');
+                    setIsSaving(false);
+                    return;
+                }
+                options.targetVaultId = parseInt(targetVaultId, 10);
             }
 
             await createField({
@@ -271,6 +305,44 @@ export function CreateFieldDialog({
                                     Add Option
                                 </Button>
                             </div>
+                        </div>
+                    )}
+
+                    {fieldType === 'relation' && (
+                        <div className="space-y-2">
+                            <Label>Target Vault *</Label>
+                            <p className="text-xs text-muted-foreground">
+                                Select which vault this field will link to
+                            </p>
+                            {isLoadingVaults ? (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Loading vaults...
+                                </div>
+                            ) : availableVaults.length === 0 ? (
+                                <div className="text-sm text-muted-foreground">
+                                    No other vaults available. Create another vault first.
+                                </div>
+                            ) : (
+                                <Select
+                                    value={targetVaultId}
+                                    onValueChange={setTargetVaultId}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a vault..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableVaults.map((vault) => (
+                                            <SelectItem key={vault.id} value={String(vault.id)}>
+                                                <div className="flex items-center gap-2">
+                                                    {vault.icon && <span>{vault.icon}</span>}
+                                                    <span>{vault.name}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
                         </div>
                     )}
 

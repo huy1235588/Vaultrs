@@ -5,6 +5,9 @@ import type {
     FieldDefinition,
     CreateFieldParams,
     UpdateFieldParams,
+    EntryPickerItem,
+    RelationRef,
+    ResolvedRelation,
 } from './types';
 
 export const fieldApi = {
@@ -59,5 +62,44 @@ export const fieldApi = {
      */
     async reorder(vaultId: number, ids: number[]): Promise<void> {
         return invoke<void>('reorder_field_definitions', { vaultId, ids });
+    },
+};
+
+/**
+ * Relation API - Functions for cross-vault references
+ */
+export const relationApi = {
+    /**
+     * Searches entries in a vault for the relation picker.
+     */
+    async searchEntriesForPicker(
+        vaultId: number,
+        query: string,
+        limit?: number
+    ): Promise<EntryPickerItem[]> {
+        return invoke<EntryPickerItem[]>('search_entries_for_relation', {
+            vaultId,
+            query,
+            limit: limit ?? 20,
+        });
+    },
+
+    /**
+     * Resolves multiple relation references in batch.
+     * Returns a map where keys are "entry_id:vault_id" strings.
+     */
+    async resolveRelations(
+        relations: RelationRef[]
+    ): Promise<Record<string, ResolvedRelation>> {
+        return invoke<Record<string, ResolvedRelation>>('resolve_relations', {
+            relations,
+        });
+    },
+
+    /**
+     * Creates a key for looking up resolved relations.
+     */
+    createRelationKey(entryId: number, vaultId: number): string {
+        return `${entryId}:${vaultId}`;
     },
 };

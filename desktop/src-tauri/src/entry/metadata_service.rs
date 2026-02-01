@@ -219,6 +219,7 @@ impl MetadataService {
             FieldType::Url => Self::validate_url(value),
             FieldType::Boolean => Self::validate_boolean(value),
             FieldType::Select => Self::validate_select(field, value),
+            FieldType::Relation => Self::validate_relation(field, value),
         }
     }
 
@@ -317,6 +318,51 @@ impl MetadataService {
                     ));
                 }
             }
+        }
+
+        Ok(())
+    }
+
+    /// Validates a relation field value.
+    /// Expects an object with entry_id and vault_id fields.
+    fn validate_relation(field: &FieldDefinitionDto, value: &Value) -> Result<(), String> {
+        let obj = value.as_object().ok_or_else(|| {
+            format!(
+                "Field '{}': expected object with entry_id and vault_id",
+                field.name
+            )
+        })?;
+
+        // Check entry_id exists and is a number
+        let entry_id = obj
+            .get("entry_id")
+            .and_then(|v| v.as_i64())
+            .ok_or_else(|| format!("Field '{}': missing or invalid entry_id", field.name))?;
+
+        // Check vault_id exists and is a number
+        let vault_id = obj
+            .get("vault_id")
+            .and_then(|v| v.as_i64())
+            .ok_or_else(|| format!("Field '{}': missing or invalid vault_id", field.name))?;
+
+        // Validate vault_id matches target_vault_id from options (if configured)
+        if let Some(ref options) = field.options {
+            if let Some(target_vault_id) = options.target_vault_id {
+                if vault_id != target_vault_id as i64 {
+                    return Err(format!(
+                        "Field '{}': vault_id {} does not match target vault {}",
+                        field.name, vault_id, target_vault_id
+                    ));
+                }
+            }
+        }
+
+        // Basic sanity checks
+        if entry_id <= 0 {
+            return Err(format!("Field '{}': entry_id must be positive", field.name));
+        }
+        if vault_id <= 0 {
+            return Err(format!("Field '{}': vault_id must be positive", field.name));
         }
 
         Ok(())

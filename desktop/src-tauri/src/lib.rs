@@ -7,6 +7,7 @@ mod entities;
 mod entry;
 mod field;
 mod image;
+mod relation;
 mod vault;
 
 use sea_orm::DatabaseConnection;
@@ -17,8 +18,9 @@ use crate::commands::{
     count_entries, create_entry, create_field_definition, create_vault, delete_entry,
     delete_field_definition, delete_vault, get_entry, get_entry_thumbnail, get_field_definition,
     get_vault, list_entries, list_field_definitions, list_vaults, remove_entry_cover,
-    reorder_field_definitions, search_entries, set_entry_cover_url, update_entry,
-    update_field_definition, update_vault, upload_entry_cover_image, validate_entry_metadata,
+    reorder_field_definitions, resolve_relations, search_entries, search_entries_for_relation,
+    set_entry_cover_url, update_entry, update_field_definition, update_vault,
+    upload_entry_cover_image, validate_entry_metadata,
 };
 use crate::db::{run_migrations, Database};
 
@@ -91,6 +93,9 @@ pub fn run() {
             update_field_definition,
             delete_field_definition,
             reorder_field_definitions,
+            // Relation commands
+            search_entries_for_relation,
+            resolve_relations,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

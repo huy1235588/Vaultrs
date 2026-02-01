@@ -12,6 +12,7 @@ pub enum FieldType {
     Url,
     Boolean,
     Select,
+    Relation,
 }
 
 impl FieldType {
@@ -23,6 +24,7 @@ impl FieldType {
             FieldType::Url => "url",
             FieldType::Boolean => "boolean",
             FieldType::Select => "select",
+            FieldType::Relation => "relation",
         }
     }
 
@@ -34,6 +36,7 @@ impl FieldType {
             "url" => Some(FieldType::Url),
             "boolean" => Some(FieldType::Boolean),
             "select" => Some(FieldType::Select),
+            "relation" => Some(FieldType::Relation),
             _ => None,
         }
     }
@@ -55,6 +58,12 @@ pub struct FieldOptions {
     /// Available choices for select fields
     #[serde(skip_serializing_if = "Option::is_none")]
     pub choices: Option<Vec<String>>,
+    /// Target vault ID for relation fields
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_vault_id: Option<i32>,
+    /// Display fields from target entry for relation fields (default: ["title"])
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_fields: Option<Vec<String>>,
 }
 
 /// DTO for creating a new field definition.

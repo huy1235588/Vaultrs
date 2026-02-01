@@ -6,3 +6,5 @@ export * from './CustomFieldsSection';
 export * from './EditFieldDialog';
 export * from './FieldDefinitionManager';
 export * from './FieldDefinitionRow';
+export * from './RelationFieldEditor';
+export * from './RelationFieldDisplay';

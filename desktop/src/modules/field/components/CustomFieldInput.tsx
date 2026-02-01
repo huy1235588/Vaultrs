@@ -10,12 +10,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import type { FieldDefinition } from '../types';
+import type { FieldDefinition, RelationValue, EntryMetadataValue } from '../types';
+import { isRelationValue } from '../types';
+import { RelationFieldEditor } from './RelationFieldEditor';
 
 interface CustomFieldInputProps {
     field: FieldDefinition;
-    value: string | number | boolean | null;
-    onChange: (value: string | number | boolean | null) => void;
+    value: EntryMetadataValue;
+    onChange: (value: EntryMetadataValue) => void;
     error?: string;
 }
 
@@ -96,7 +98,7 @@ export function CustomFieldInput({
                 const choices = field.options?.choices || [];
                 return (
                     <Select
-                        value={value !== null ? String(value) : ''}
+                        value={value !== null && !isRelationValue(value) ? String(value) : ''}
                         onValueChange={(val) => onChange(val || null)}
                     >
                         <SelectTrigger
@@ -116,10 +118,28 @@ export function CustomFieldInput({
                     </Select>
                 );
 
+            case 'relation':
+                const targetVaultId = field.options?.targetVaultId;
+                if (!targetVaultId) {
+                    return (
+                        <div className="text-sm text-destructive">
+                            Relation field is not configured properly (missing targetVaultId)
+                        </div>
+                    );
+                }
+                return (
+                    <RelationFieldEditor
+                        targetVaultId={targetVaultId}
+                        value={isRelationValue(value) ? value : null}
+                        onChange={(newValue: RelationValue | null) => onChange(newValue)}
+                        error={error}
+                    />
+                );
+
             default:
                 return (
                     <Input
-                        value={value !== null ? String(value) : ''}
+                        value={value !== null && !isRelationValue(value) ? String(value) : ''}
                         onChange={(e) => onChange(e.target.value || null)}
                         className={error ? 'border-destructive' : ''}
                     />

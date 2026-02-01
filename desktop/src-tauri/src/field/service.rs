@@ -8,7 +8,7 @@ use crate::core::{AppError, AppResult};
 use crate::entities::field_definition::{self, ActiveModel, Entity as FieldDefinition};
 use crate::entities::vault::Entity as Vault;
 
-use super::{CreateFieldDto, FieldDefinitionDto, UpdateFieldDto};
+use super::{CreateFieldDto, FieldDefinitionDto, FieldOptions, FieldType, UpdateFieldDto};
 
 /// Service for field definition CRUD operations.
 pub struct FieldService;
@@ -29,6 +29,11 @@ impl FieldService {
             .one(conn)
             .await?
             .ok_or(AppError::VaultNotFound(dto.vault_id))?;
+
+        // Validate relation field options
+        if dto.field_type == FieldType::Relation {
+            Self::validate_relation_options(conn, dto.options.as_ref()).await?;
+        }
 
         // Check for duplicate field name in vault
         let existing = FieldDefinition::find()
@@ -224,6 +229,31 @@ impl FieldService {
 
         Ok(())
     }
+
+    /// Validates relation field options.
+    /// Ensures target_vault_id is provided and the target vault exists.
+    async fn validate_relation_options(
+        conn: &DatabaseConnection,
+        options: Option<&FieldOptions>,
+    ) -> AppResult<()> {
+        let options = options.ok_or_else(|| {
+            AppError::Validation("Relation field requires options with targetVaultId".to_string())
+        })?;
+
+        let target_vault_id = options.target_vault_id.ok_or_else(|| {
+            AppError::Validation("Relation field requires targetVaultId in options".to_string())
+        })?;
+
+        // Verify target vault exists
+        Vault::find_by_id(target_vault_id)
+            .one(conn)
+            .await?
+            .ok_or_else(|| {
+                AppError::Validation(format!("Target vault {} does not exist", target_vault_id))
+            })?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -253,7 +283,7 @@ mod tests {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 vault_id INTEGER NOT NULL REFERENCES vaults(id) ON DELETE CASCADE,
                 name TEXT NOT NULL,
-                field_type TEXT NOT NULL CHECK (field_type IN ('text', 'number', 'date', 'url', 'boolean', 'select')),
+                field_type TEXT NOT NULL CHECK (field_type IN ('text', 'number', 'date', 'url', 'boolean', 'select', 'relation')),
                 options TEXT,
                 position INTEGER NOT NULL DEFAULT 0,
                 required INTEGER NOT NULL DEFAULT 0,

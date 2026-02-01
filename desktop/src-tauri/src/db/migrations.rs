@@ -54,7 +54,7 @@ const MIGRATIONS: &[(&str, &str)] = &[
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             vault_id    INTEGER NOT NULL REFERENCES vaults(id) ON DELETE CASCADE,
             name        TEXT NOT NULL,
-            field_type  TEXT NOT NULL CHECK (field_type IN ('text', 'number', 'date', 'url', 'boolean', 'select')),
+            field_type  TEXT NOT NULL CHECK (field_type IN ('text', 'number', 'date', 'url', 'boolean', 'select', 'relation')),
             options     TEXT,
             position    INTEGER NOT NULL DEFAULT 0,
             required    INTEGER NOT NULL DEFAULT 0,
@@ -115,6 +115,38 @@ const MIGRATIONS: &[(&str, &str)] = &[
         
         -- Create index for querying entries with/without cover images
         CREATE INDEX IF NOT EXISTS idx_entries_cover_image ON entries(cover_image_path);
+        "#,
+    ),
+    (
+        "008_add_relation_field_type",
+        r#"
+        -- SQLite requires recreating the table to modify CHECK constraints
+        -- Step 1: Create new table with updated constraint
+        CREATE TABLE field_definitions_new (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            vault_id    INTEGER NOT NULL REFERENCES vaults(id) ON DELETE CASCADE,
+            name        TEXT NOT NULL,
+            field_type  TEXT NOT NULL CHECK (field_type IN ('text', 'number', 'date', 'url', 'boolean', 'select', 'relation')),
+            options     TEXT,
+            position    INTEGER NOT NULL DEFAULT 0,
+            required    INTEGER NOT NULL DEFAULT 0,
+            created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(vault_id, name)
+        );
+        
+        -- Step 2: Copy data from old table
+        INSERT INTO field_definitions_new (id, vault_id, name, field_type, options, position, required, created_at, updated_at)
+        SELECT id, vault_id, name, field_type, options, position, required, created_at, updated_at FROM field_definitions;
+        
+        -- Step 3: Drop old table
+        DROP TABLE field_definitions;
+        
+        -- Step 4: Rename new table
+        ALTER TABLE field_definitions_new RENAME TO field_definitions;
+        
+        -- Step 5: Recreate index
+        CREATE INDEX IF NOT EXISTS idx_field_definitions_vault ON field_definitions(vault_id);
         "#,
     ),
 ];

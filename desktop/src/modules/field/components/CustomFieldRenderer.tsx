@@ -2,14 +2,21 @@
 
 import { ExternalLink, Calendar, Check, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import type { FieldDefinition } from '../types';
+import type { FieldDefinition, EntryMetadataValue } from '../types';
+import { isRelationValue } from '../types';
+import { RelationFieldDisplay } from './RelationFieldDisplay';
 
 interface CustomFieldRendererProps {
     field: FieldDefinition;
-    value: string | number | boolean | null;
+    value: EntryMetadataValue;
+    onNavigateToEntry?: (entryId: number, vaultId: number) => void;
 }
 
-export function CustomFieldRenderer({ field, value }: CustomFieldRendererProps) {
+export function CustomFieldRenderer({ 
+    field, 
+    value,
+    onNavigateToEntry,
+}: CustomFieldRendererProps) {
     if (value === null || value === undefined || value === '') {
         return null;
     }
@@ -26,7 +33,7 @@ export function CustomFieldRenderer({ field, value }: CustomFieldRendererProps) 
                     <span className="text-sm font-mono">
                         {typeof value === 'number'
                             ? value.toLocaleString()
-                            : value}
+                            : String(value)}
                     </span>
                 );
 
@@ -76,6 +83,18 @@ export function CustomFieldRenderer({ field, value }: CustomFieldRendererProps) 
             case 'select':
                 return (
                     <Badge variant="outline">{String(value)}</Badge>
+                );
+
+            case 'relation':
+                if (!isRelationValue(value)) {
+                    return <span className="text-sm text-muted-foreground">Invalid relation</span>;
+                }
+                return (
+                    <RelationFieldDisplay
+                        value={value}
+                        onNavigate={onNavigateToEntry}
+                        compact={true}
+                    />
                 );
 
             default:

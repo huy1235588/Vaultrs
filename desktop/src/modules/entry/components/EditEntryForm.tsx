@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Save } from 'lucide-react';
 import type { Entry } from '../types';
-import type { FieldDefinition, EntryMetadata } from '@/modules/field';
+import type { FieldDefinition, EntryMetadata, EntryMetadataValue } from '@/modules/field';
 import { useEntryStore } from '../store';
 import { CustomFieldInput } from '@/modules/field/components/CustomFieldInput';
 import { CoverImageDisplay, CoverImageUploader } from './';
@@ -142,7 +142,7 @@ export function EditEntryForm({
     };
 
     // Use field.id as key for metadata
-    const handleFieldChange = (fieldId: number, value: string | number | boolean | null) => {
+    const handleFieldChange = (fieldId: number, value: EntryMetadataValue) => {
         const fieldKey = fieldId.toString();
         setMetadata((prev) => ({
             ...prev,
@@ -224,7 +224,7 @@ export function EditEntryForm({
                                     key={field.id}
                                     field={field}
                                     value={metadata[fieldKey] ?? null}
-                                    onChange={(value: string | number | boolean | null) =>
+                                    onChange={(value: EntryMetadataValue) =>
                                         handleFieldChange(field.id, value)
                                     }
                                     error={fieldErrors[fieldKey]}
