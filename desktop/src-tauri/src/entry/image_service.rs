@@ -8,7 +8,7 @@
 
 use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, Set};
 
-use crate::core::{AppError, AppResult};
+use crate::core::{AppError, AppResult, now_formatted};
 use crate::entities::entry::{ActiveModel, Entity as Entry};
 use crate::image::{ImageProcessor, ImageStorage};
 
@@ -40,7 +40,7 @@ impl EntryImageService {
         let relative_path = image_storage.save_local_image(entry.vault_id, entry_id, source_path)?;
 
         // Update entry
-        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let now = now_formatted();
         let mut active_model: ActiveModel = entry.into();
         active_model.cover_image_path = Set(Some(relative_path));
         active_model.updated_at = Set(now);
@@ -72,7 +72,7 @@ impl EntryImageService {
 
         // Store the URL directly without downloading
         // Update entry
-        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let now = now_formatted();
         let mut active_model: ActiveModel = entry.into();
         active_model.cover_image_path = Set(Some(url.to_string()));
         active_model.updated_at = Set(now);
@@ -102,7 +102,7 @@ impl EntryImageService {
         }
 
         // Update entry
-        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let now = now_formatted();
         let mut active_model: ActiveModel = entry.into();
         active_model.cover_image_path = Set(None);
         active_model.updated_at = Set(now);
@@ -189,7 +189,7 @@ mod tests {
         use crate::entities::entry::ActiveModel;
         use sea_orm::ActiveModelTrait;
 
-        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let now = now_formatted();
 
         let entry = ActiveModel {
             vault_id: Set(1),

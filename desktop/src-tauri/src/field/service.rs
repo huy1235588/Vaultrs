@@ -4,7 +4,7 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, Set,
 };
 
-use crate::core::{AppError, AppResult};
+use crate::core::{AppError, AppResult, now_formatted, find_vault_or_error};
 use crate::entities::field_definition::{self, ActiveModel, Entity as FieldDefinition};
 use crate::entities::vault::Entity as Vault;
 
@@ -25,10 +25,7 @@ impl FieldService {
         }
 
         // Verify vault exists
-        Vault::find_by_id(dto.vault_id)
-            .one(conn)
-            .await?
-            .ok_or(AppError::VaultNotFound(dto.vault_id))?;
+        find_vault_or_error(conn, dto.vault_id).await?;
 
         // Validate relation field options
         if dto.field_type == FieldType::Relation {
@@ -58,7 +55,7 @@ impl FieldService {
             .map(|f| f.position + 1)
             .unwrap_or(0);
 
-        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let now = now_formatted();
         let options_json = dto
             .options
             .as_ref()
@@ -103,10 +100,7 @@ impl FieldService {
         vault_id: i32,
     ) -> AppResult<Vec<FieldDefinitionDto>> {
         // Verify vault exists
-        Vault::find_by_id(vault_id)
-            .one(conn)
-            .await?
-            .ok_or(AppError::VaultNotFound(vault_id))?;
+        find_vault_or_error(conn, vault_id).await?;
 
         let fields = FieldDefinition::find()
             .filter(field_definition::Column::VaultId.eq(vault_id))
@@ -128,7 +122,7 @@ impl FieldService {
             .await?
             .ok_or(AppError::FieldNotFound(id))?;
 
-        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let now = now_formatted();
 
         let mut active_model: ActiveModel = field.clone().into();
 
@@ -199,12 +193,9 @@ impl FieldService {
     /// Reorders field definitions for a vault.
     pub async fn reorder(conn: &DatabaseConnection, vault_id: i32, ids: Vec<i32>) -> AppResult<()> {
         // Verify vault exists
-        Vault::find_by_id(vault_id)
-            .one(conn)
-            .await?
-            .ok_or(AppError::VaultNotFound(vault_id))?;
+        find_vault_or_error(conn, vault_id).await?;
 
-        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let now = now_formatted();
 
         for (position, id) in ids.into_iter().enumerate() {
             let field = FieldDefinition::find_by_id(id)

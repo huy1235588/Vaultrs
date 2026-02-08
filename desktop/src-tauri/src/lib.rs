@@ -24,11 +24,6 @@ use crate::commands::{
 };
 use crate::db::{run_migrations, Database};
 
-/// Application state containing database connection.
-pub struct AppState {
-    pub db: DatabaseConnection,
-}
-
 /// Initializes the database and returns the connection.
 async fn init_database(
     app_data_dir: PathBuf,

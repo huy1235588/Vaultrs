@@ -3,7 +3,7 @@
 use sea_orm::DatabaseConnection;
 use tauri::State;
 
-use crate::core::AppError;
+use crate::core::AppResult;
 use crate::vault::{CreateVaultDto, UpdateVaultDto, VaultDto, VaultService};
 
 /// Creates a new vault.
@@ -14,7 +14,7 @@ pub async fn create_vault(
     description: Option<String>,
     icon: Option<String>,
     color: Option<String>,
-) -> Result<VaultDto, AppError> {
+) -> AppResult<VaultDto> {
     let dto = CreateVaultDto {
         name,
         description,
@@ -27,13 +27,13 @@ pub async fn create_vault(
 
 /// Gets a vault by ID.
 #[tauri::command]
-pub async fn get_vault(db: State<'_, DatabaseConnection>, id: i32) -> Result<VaultDto, AppError> {
+pub async fn get_vault(db: State<'_, DatabaseConnection>, id: i32) -> AppResult<VaultDto> {
     VaultService::get(&db, id).await
 }
 
 /// Lists all vaults.
 #[tauri::command]
-pub async fn list_vaults(db: State<'_, DatabaseConnection>) -> Result<Vec<VaultDto>, AppError> {
+pub async fn list_vaults(db: State<'_, DatabaseConnection>) -> AppResult<Vec<VaultDto>> {
     VaultService::list(&db).await
 }
 
@@ -46,7 +46,7 @@ pub async fn update_vault(
     description: Option<String>,
     icon: Option<String>,
     color: Option<String>,
-) -> Result<VaultDto, AppError> {
+) -> AppResult<VaultDto> {
     let dto = UpdateVaultDto {
         name,
         description,
@@ -59,6 +59,6 @@ pub async fn update_vault(
 
 /// Deletes a vault.
 #[tauri::command]
-pub async fn delete_vault(db: State<'_, DatabaseConnection>, id: i32) -> Result<(), AppError> {
+pub async fn delete_vault(db: State<'_, DatabaseConnection>, id: i32) -> AppResult<()> {
     VaultService::delete(&db, id).await
 }

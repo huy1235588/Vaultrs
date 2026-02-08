@@ -40,14 +40,14 @@ rules:
     - Luôn bắt đầu bằng phần "Mục tiêu" (Goals) và "Phạm vi" (Scope).
     - Bắt buộc phải có sơ đồ (Mermaid diagram) cho các luồng dữ liệu phức tạp.
     - Định nghĩa rõ ràng interface giữa Frontend và Backend:
-      * Tauri Commands: Tên command, parameters, return type.
-      * Frontend API: Zustand store actions, React hooks, component props.
+      - Tauri Commands: Tên command, parameters, return type.
+      - Frontend API: Zustand store actions, React hooks, component props.
     - Định nghĩa database schema rõ ràng:
-      * SeaORM entities: struct fields, relations, indexes.
-      * SQLite queries: CREATE TABLE, indexes, migrations nếu cần.
+      - SeaORM entities: struct fields, relations, indexes.
+      - SQLite queries: CREATE TABLE, indexes, migrations nếu cần.
     - Đối với UI components:
-      * Component hierarchy, props interface, state management.
-      * Virtual scrolling strategy nếu handle large lists.
+      - Component hierarchy, props interface, state management.
+      - Virtual scrolling strategy nếu handle large lists.
     - Performance considerations: Đánh giá impact với 10M+ records.
 
   # Quy tắc khi AI chia nhỏ công việc (Tasks/Plan)
@@ -56,17 +56,17 @@ rules:
     - Task phải có tiêu chí hoàn thành (Acceptance Criteria) rõ ràng.
     - Phân chia rõ tasks cho Backend (Rust) và Frontend (React/TypeScript).
     - Luôn bao gồm tasks:
-      * Unit tests (Rust: #[cfg(test)], TypeScript: vitest/jest nếu có).
-      * Database migration (nếu thay đổi schema).
-      * Type safety: TS types phải match với Rust return types.
+      - Unit tests (Rust: #[cfg(test)], TypeScript: vitest/jest nếu có).
+      - Database migration (nếu thay đổi schema).
+      - Type safety: TS types phải match với Rust return types.
     - Ưu tiên theo thứ tự: Backend → Frontend → Integration → Testing.
 
   # Quy tắc chung khác
   general:
     - Không được tự ý xóa code cũ nếu không được yêu cầu.
     - Khi gợi ý thư viện mới (crate hoặc npm package), hãy giải thích:
-      * Lý do chọn thư viện này.
-      * Performance impact (quan trọng với desktop app).
-      * Bundle size (frontend) hoặc compile time (Rust).
+      - Lý do chọn thư viện này.
+      - Performance impact (quan trọng với desktop app).
+      - Bundle size (frontend) hoặc compile time (Rust).
     - Luôn xem xét impact với large datasets (10M+ records).
     - Ưu tiên local-first design: Không phụ thuộc external services.

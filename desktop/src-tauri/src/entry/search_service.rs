@@ -6,9 +6,7 @@
 
 use sea_orm::DatabaseConnection;
 
-use crate::core::{AppError, AppResult};
-use crate::entities::vault::Entity as Vault;
-use sea_orm::EntityTrait;
+use crate::core::{AppResult, find_vault_or_error};
 
 use super::{EntryDto, SearchResult};
 
@@ -25,10 +23,7 @@ impl EntrySearchService {
         limit: u64,
     ) -> AppResult<SearchResult> {
         // Verify vault exists
-        Vault::find_by_id(vault_id)
-            .one(conn)
-            .await?
-            .ok_or(AppError::VaultNotFound(vault_id))?;
+        find_vault_or_error(conn, vault_id).await?;
 
         let query = query.trim();
 

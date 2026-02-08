@@ -15,9 +15,9 @@ use sea_orm::{
     QueryOrder, Set,
 };
 
-use crate::core::{AppError, AppResult};
+use crate::core::{AppError, AppResult, now_formatted, find_vault_or_error};
 use crate::entities::entry::{self, ActiveModel, Entity as Entry};
-use crate::entities::vault::Entity as Vault;
+
 use crate::image::ImageStorage;
 
 use super::metadata_service::MetadataService;
@@ -37,10 +37,7 @@ impl EntryService {
         }
 
         // Verify vault exists
-        Vault::find_by_id(dto.vault_id)
-            .one(conn)
-            .await?
-            .ok_or(AppError::VaultNotFound(dto.vault_id))?;
+        find_vault_or_error(conn, dto.vault_id).await?;
 
         // Validate required fields if metadata is provided
         if dto.metadata.is_some() {
@@ -56,7 +53,7 @@ impl EntryService {
             }
         }
 
-        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let now = now_formatted();
 
         let active_model = ActiveModel {
             vault_id: Set(dto.vault_id),
@@ -97,10 +94,7 @@ impl EntryService {
         limit: u64,
     ) -> AppResult<PaginatedEntries> {
         // Verify vault exists
-        Vault::find_by_id(vault_id)
-            .one(conn)
-            .await?
-            .ok_or(AppError::VaultNotFound(vault_id))?;
+        find_vault_or_error(conn, vault_id).await?;
 
         let paginator = Entry::find()
             .filter(entry::Column::VaultId.eq(vault_id))
@@ -144,7 +138,7 @@ impl EntryService {
             .await?
             .ok_or(AppError::EntryNotFound(id))?;
 
-        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let now = now_formatted();
 
         let mut active_model: ActiveModel = entry.clone().into();
 

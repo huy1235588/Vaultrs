@@ -4,7 +4,7 @@ use sea_orm::{
     ActiveModelTrait, DatabaseConnection, EntityTrait, QueryOrder, Set,
 };
 
-use crate::core::{AppError, AppResult};
+use crate::core::{AppError, AppResult, now_formatted};
 use crate::entities::vault::{self, ActiveModel, Entity as Vault};
 
 use super::{CreateVaultDto, UpdateVaultDto, VaultDto};
@@ -20,7 +20,7 @@ impl VaultService {
             return Err(AppError::Validation("Name is required".to_string()));
         }
 
-        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let now = now_formatted();
 
         let active_model = ActiveModel {
             name: Set(dto.name.trim().to_string()),
@@ -69,7 +69,7 @@ impl VaultService {
             .await?
             .ok_or(AppError::VaultNotFound(id))?;
 
-        let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let now = now_formatted();
 
         let mut active_model: ActiveModel = vault.into();
 

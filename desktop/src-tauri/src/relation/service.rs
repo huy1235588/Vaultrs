@@ -132,10 +132,7 @@ impl RelationService {
         limit: i32,
     ) -> AppResult<Vec<EntryPickerItem>> {
         // Verify vault exists
-        Vault::find_by_id(vault_id)
-            .one(conn)
-            .await?
-            .ok_or_else(|| crate::core::AppError::VaultNotFound(vault_id))?;
+        crate::core::find_vault_or_error(conn, vault_id).await?;
 
         let query_trimmed = query.trim();
         let limit = limit.max(1).min(100) as u64; // Clamp between 1 and 100

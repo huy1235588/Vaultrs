@@ -7,8 +7,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { X, Link2, Search, FileText } from 'lucide-react';
-import { relationApi } from '../api';
-import type { RelationValue, EntryPickerItem, ResolvedRelation } from '../types';
+import { relationApi } from '@/modules/relation';
+import type { EntryPickerItem, ResolvedRelation } from '@/modules/relation';
+import type { RelationValue } from '../types';
 
 interface RelationFieldEditorProps {
     targetVaultId: number;

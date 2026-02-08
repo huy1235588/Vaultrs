@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, ExternalLink, FileText } from 'lucide-react';
-import { relationApi } from '../api';
-import type { RelationValue, ResolvedRelation } from '../types';
+import { relationApi } from '@/modules/relation';
+import type { ResolvedRelation } from '@/modules/relation';
+import type { RelationValue } from '../types';
 
 interface RelationFieldDisplayProps {
     value: RelationValue;

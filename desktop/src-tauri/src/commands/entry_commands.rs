@@ -4,7 +4,7 @@ use sea_orm::DatabaseConnection;
 use serde::Serialize;
 use tauri::State;
 
-use crate::core::AppError;
+use crate::core::AppResult;
 use crate::entry::{
     CreateEntryDto, EntryDto, EntrySearchService, EntryService, MetadataService, PaginatedEntries,
     SearchResult, UpdateEntryDto,
@@ -27,7 +27,7 @@ pub async fn create_entry(
     title: String,
     description: Option<String>,
     metadata: Option<String>,
-) -> Result<EntryDto, AppError> {
+) -> AppResult<EntryDto> {
     let dto = CreateEntryDto {
         vault_id,
         title,
@@ -40,7 +40,7 @@ pub async fn create_entry(
 
 /// Gets an entry by ID.
 #[tauri::command]
-pub async fn get_entry(db: State<'_, DatabaseConnection>, id: i32) -> Result<EntryDto, AppError> {
+pub async fn get_entry(db: State<'_, DatabaseConnection>, id: i32) -> AppResult<EntryDto> {
     EntryService::get(&db, id).await
 }
 
@@ -51,7 +51,7 @@ pub async fn list_entries(
     vault_id: i32,
     page: u64,
     limit: u64,
-) -> Result<PaginatedEntries, AppError> {
+) -> AppResult<PaginatedEntries> {
     EntryService::list(&db, vault_id, page, limit).await
 }
 
@@ -60,7 +60,7 @@ pub async fn list_entries(
 pub async fn count_entries(
     db: State<'_, DatabaseConnection>,
     vault_id: i32,
-) -> Result<i64, AppError> {
+) -> AppResult<i64> {
     EntryService::count(&db, vault_id).await
 }
 
@@ -72,7 +72,7 @@ pub async fn update_entry(
     title: Option<String>,
     description: Option<String>,
     metadata: Option<String>,
-) -> Result<EntryDto, AppError> {
+) -> AppResult<EntryDto> {
     let dto = UpdateEntryDto {
         title,
         description,
@@ -88,7 +88,7 @@ pub async fn delete_entry(
     db: State<'_, DatabaseConnection>,
     id: i32,
     app_data_dir: String,
-) -> Result<(), AppError> {
+) -> AppResult<()> {
     let image_storage = ImageStorage::new(std::path::Path::new(&app_data_dir));
     EntryService::delete(&db, id, Some(&image_storage)).await
 }
@@ -101,7 +101,7 @@ pub async fn search_entries(
     query: String,
     page: u64,
     limit: u64,
-) -> Result<SearchResult, AppError> {
+) -> AppResult<SearchResult> {
     EntrySearchService::search(&db, vault_id, &query, page, limit).await
 }
 
@@ -116,7 +116,7 @@ pub async fn validate_entry_metadata(
     db: State<'_, DatabaseConnection>,
     vault_id: i32,
     metadata: Option<String>,
-) -> Result<MetadataValidationResponse, AppError> {
+) -> AppResult<MetadataValidationResponse> {
     let result =
         MetadataService::validate_metadata(&db, vault_id, metadata.as_deref()).await?;
 
