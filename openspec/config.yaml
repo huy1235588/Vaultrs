@@ -1,0 +1,72 @@
+schema: spec-driven
+
+# 1. Context: Nơi khai báo Tech Stack và Kiến thức nền
+# AI sẽ đọc phần này TRƯỚC khi thực hiện bất kỳ lệnh nào.
+context: |
+  # Project Core
+  - Language: Tiếng Việt (Vietnamese) is mandatory for all documentation.
+  - Architecture: Desktop Application (Tauri v2), Modular Design, Local-First.
+  - Tech Stack: Rust + Tauri v2 + React 19 + TypeScript + SeaORM + SQLite (WAL mode).
+
+  # Frontend Stack
+  - UI: React 19, Shadcn UI, Tailwind CSS, Lucide Icons.
+  - State Management: Zustand stores (per-module).
+  - Performance: TanStack Table + TanStack Virtual cho virtual scrolling.
+  - Build: Vite, TypeScript strict mode.
+
+  # Backend Stack (Rust)
+  - Framework: Tauri v2 với IPC commands.
+  - Database: SeaORM + SQLite (WAL mode) cho embedded DB.
+  - Async Runtime: Tokio.
+  - Modules: vault, entry, field, image, relation, link, db, entities.
+
+  # Coding Standards
+  - Style: Clean Code, DRY, SOLID principles.
+  - Rust: Idiomatic Rust, error handling với Result/anyhow, async/await.
+  - React: Functional components, hooks, composition over inheritance.
+  - Commits: Follow "Conventional Commits" (feat:, fix:, refactor:, docs:, etc.).
+  - Database: Ưu tiên hiệu năng cho 10M+ records, indexed queries, virtual scrolling.
+
+  # Project Specifics
+  - Dự án: Personal Media Vault - Desktop app quản lý 10M+ records locally.
+  - Goal: Zero server dependencies, native performance, privacy-first.
+  - Features: Virtual scrolling, custom fields (EAV + JSON), full-text search, cover images.
+  - Architecture: Modular frontend/backend, type-safe IPC, async background tasks.
+
+# 2. Rules: Các luật lệ cụ thể cho từng loại tài liệu
+rules:
+  # Quy tắc khi AI viết tài liệu thiết kế (Spec/Design)
+  spec:
+    - Luôn bắt đầu bằng phần "Mục tiêu" (Goals) và "Phạm vi" (Scope).
+    - Bắt buộc phải có sơ đồ (Mermaid diagram) cho các luồng dữ liệu phức tạp.
+    - Định nghĩa rõ ràng interface giữa Frontend và Backend:
+      * Tauri Commands: Tên command, parameters, return type.
+      * Frontend API: Zustand store actions, React hooks, component props.
+    - Định nghĩa database schema rõ ràng:
+      * SeaORM entities: struct fields, relations, indexes.
+      * SQLite queries: CREATE TABLE, indexes, migrations nếu cần.
+    - Đối với UI components:
+      * Component hierarchy, props interface, state management.
+      * Virtual scrolling strategy nếu handle large lists.
+    - Performance considerations: Đánh giá impact với 10M+ records.
+
+  # Quy tắc khi AI chia nhỏ công việc (Tasks/Plan)
+  tasks:
+    - Mỗi task không được quá lớn (ước lượng dưới 4h code).
+    - Task phải có tiêu chí hoàn thành (Acceptance Criteria) rõ ràng.
+    - Phân chia rõ tasks cho Backend (Rust) và Frontend (React/TypeScript).
+    - Luôn bao gồm tasks:
+      * Unit tests (Rust: #[cfg(test)], TypeScript: vitest/jest nếu có).
+      * Database migration (nếu thay đổi schema).
+      * Type safety: TS types phải match với Rust return types.
+    - Ưu tiên theo thứ tự: Backend → Frontend → Integration → Testing.
+
+  # Quy tắc chung khác
+  general:
+    - Không được tự ý xóa code cũ nếu không được yêu cầu.
+    - Khi gợi ý thư viện mới (crate hoặc npm package), hãy giải thích:
+      * Lý do chọn thư viện này.
+      * Performance impact (quan trọng với desktop app).
+      * Bundle size (frontend) hoặc compile time (Rust).
+    - Luôn xem xét impact với large datasets (10M+ records).
+    - Ưu tiên local-first design: Không phụ thuộc external services.
