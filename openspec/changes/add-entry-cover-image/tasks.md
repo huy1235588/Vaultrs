@@ -100,8 +100,8 @@
 ## 8. Documentation
 - [x] 8.1 Update idea.md with completed feature (remove from TODO if present)
 - [x] 8.2 Add future consideration: multiple attachments and layout options
-- [ ] 8.3 Document image storage structure in architecture docs
-- [ ] 8.4 Document API endpoints and usage examples
+- [x] 8.3 Document image storage structure in architecture docs
+- [x] 8.4 Document API endpoints and usage examples
 
 ## Dependencies
 - Must complete database migration before service layer changes

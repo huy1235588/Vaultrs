@@ -238,6 +238,40 @@ impl ImageStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+    use std::io::Write;
+
+    /// Helper function to create a temporary test image file.
+    fn create_test_image(path: &Path, width: u32, height: u32, format: image::ImageFormat) -> std::io::Result<()> {
+        let img = image::DynamicImage::new_rgb8(width, height);
+        let mut file = fs::File::create(path)?;
+
+        match format {
+            image::ImageFormat::Jpeg => {
+                let mut buffer = std::io::Cursor::new(Vec::new());
+                img.write_to(&mut buffer, format).unwrap();
+                file.write_all(&buffer.into_inner())?;
+            }
+            image::ImageFormat::Png => {
+                let mut buffer = std::io::Cursor::new(Vec::new());
+                img.write_to(&mut buffer, format).unwrap();
+                file.write_all(&buffer.into_inner())?;
+            }
+            image::ImageFormat::WebP => {
+                let mut buffer = std::io::Cursor::new(Vec::new());
+                img.write_to(&mut buffer, format).unwrap();
+                file.write_all(&buffer.into_inner())?;
+            }
+            image::ImageFormat::Gif => {
+                let mut buffer = std::io::Cursor::new(Vec::new());
+                img.write_to(&mut buffer, format).unwrap();
+                file.write_all(&buffer.into_inner())?;
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
 
     #[test]
     fn test_get_image_path() {
@@ -248,5 +282,204 @@ mod tests {
         assert!(path.to_string_lossy().contains("images"));
         assert!(path.to_string_lossy().contains("1"));
         assert!(path.to_string_lossy().contains("42.jpg"));
+    }
+
+    #[test]
+    fn test_get_vault_dir() {
+        let temp_dir = std::env::temp_dir();
+        let storage = ImageStorage::new(&temp_dir);
+
+        let vault_dir = storage.get_vault_dir(5);
+        assert!(vault_dir.to_string_lossy().contains("images"));
+        assert!(vault_dir.to_string_lossy().ends_with("5"));
+    }
+
+    #[test]
+    fn test_ensure_vault_dir_creates_directory() {
+        let temp_dir = std::env::temp_dir().join("vaultrs_test_ensure_dir");
+        let storage = ImageStorage::new(&temp_dir);
+
+        // Clean up any existing test directory
+        let _ = fs::remove_dir_all(&temp_dir);
+
+        let vault_dir = storage.get_vault_dir(99);
+        assert!(!vault_dir.exists());
+
+        storage.ensure_vault_dir(99).unwrap();
+        assert!(vault_dir.exists());
+
+        // Clean up
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_detect_format_jpeg() {
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join("test_detect_jpeg.jpg");
+
+        create_test_image(&test_file, 100, 100, image::ImageFormat::Jpeg).unwrap();
+
+        let format = ImageStorage::detect_format(&test_file).unwrap();
+        assert_eq!(format, "jpg");
+
+        // Clean up
+        let _ = fs::remove_file(test_file);
+    }
+
+    #[test]
+    fn test_detect_format_png() {
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join("test_detect_png.png");
+
+        create_test_image(&test_file, 100, 100, image::ImageFormat::Png).unwrap();
+
+        let format = ImageStorage::detect_format(&test_file).unwrap();
+        assert_eq!(format, "png");
+
+        // Clean up
+        let _ = fs::remove_file(test_file);
+    }
+
+    #[test]
+    fn test_detect_format_webp() {
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join("test_detect_webp.webp");
+
+        create_test_image(&test_file, 100, 100, image::ImageFormat::WebP).unwrap();
+
+        let format = ImageStorage::detect_format(&test_file).unwrap();
+        assert_eq!(format, "webp");
+
+        // Clean up
+        let _ = fs::remove_file(test_file);
+    }
+
+    #[test]
+    fn test_detect_format_invalid_file() {
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join("test_invalid.txt");
+
+        fs::write(&test_file, b"not an image").unwrap();
+
+        let result = ImageStorage::detect_format(&test_file);
+        assert!(result.is_err());
+
+        // Clean up
+        let _ = fs::remove_file(test_file);
+    }
+
+    #[test]
+    fn test_validate_file_size_within_limit() {
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join("test_size_ok.jpg");
+
+        create_test_image(&test_file, 100, 100, image::ImageFormat::Jpeg).unwrap();
+
+        let result = ImageStorage::validate_file_size(&test_file);
+        assert!(result.is_ok());
+
+        // Clean up
+        let _ = fs::remove_file(test_file);
+    }
+
+    #[test]
+    fn test_save_local_image_success() {
+        let temp_dir = std::env::temp_dir().join("vaultrs_test_save");
+        let storage = ImageStorage::new(&temp_dir);
+
+        // Clean up any existing test directory
+        let _ = fs::remove_dir_all(&temp_dir);
+
+        // Create a test source image
+        let source_file = temp_dir.join("source.jpg");
+        fs::create_dir_all(&temp_dir).unwrap();
+        create_test_image(&source_file, 200, 200, image::ImageFormat::Jpeg).unwrap();
+
+        // Save the image
+        let result = storage.save_local_image(1, 100, &source_file);
+        assert!(result.is_ok());
+
+        let relative_path = result.unwrap();
+        assert_eq!(relative_path, "1/100.jpg");
+
+        // Verify the file exists at the destination
+        let dest_path = storage.get_full_path(&relative_path);
+        assert!(dest_path.exists());
+
+        // Clean up
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_delete_image_existing() {
+        let temp_dir = std::env::temp_dir().join("vaultrs_test_delete");
+        let storage = ImageStorage::new(&temp_dir);
+
+        // Clean up any existing test directory
+        let _ = fs::remove_dir_all(&temp_dir);
+
+        // Create a test image
+        let vault_dir = temp_dir.join("images").join("1");
+        fs::create_dir_all(&vault_dir).unwrap();
+        let test_file = vault_dir.join("42.jpg");
+        create_test_image(&test_file, 100, 100, image::ImageFormat::Jpeg).unwrap();
+
+        assert!(test_file.exists());
+
+        // Delete the image
+        let result = storage.delete_image("1/42.jpg");
+        assert!(result.is_ok());
+        assert!(!test_file.exists());
+
+        // Clean up
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_delete_image_non_existing() {
+        let temp_dir = std::env::temp_dir().join("vaultrs_test_delete_missing");
+        let storage = ImageStorage::new(&temp_dir);
+
+        // Clean up any existing test directory
+        let _ = fs::remove_dir_all(&temp_dir);
+
+        // Try to delete a non-existing image
+        let result = storage.delete_image("999/999.jpg");
+        assert!(result.is_ok()); // Should not error, just log a warning
+
+        // Clean up
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_image_exists() {
+        let temp_dir = std::env::temp_dir().join("vaultrs_test_exists");
+        let storage = ImageStorage::new(&temp_dir);
+
+        // Clean up any existing test directory
+        let _ = fs::remove_dir_all(&temp_dir);
+
+        // Create a test image
+        let vault_dir = temp_dir.join("images").join("2");
+        fs::create_dir_all(&vault_dir).unwrap();
+        let test_file = vault_dir.join("10.png");
+        create_test_image(&test_file, 50, 50, image::ImageFormat::Png).unwrap();
+
+        assert!(storage.image_exists("2/10.png"));
+        assert!(!storage.image_exists("2/99.png"));
+
+        // Clean up
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_get_full_path() {
+        let temp_dir = std::env::temp_dir();
+        let storage = ImageStorage::new(&temp_dir);
+
+        let full_path = storage.get_full_path("3/200.webp");
+        assert!(full_path.to_string_lossy().contains("images"));
+        assert!(full_path.to_string_lossy().contains("3"));
+        assert!(full_path.to_string_lossy().contains("200.webp"));
     }
 }

@@ -305,7 +305,198 @@ fn main() {
 
 ---
 
-## 5. 🔄 Background Processing
+## 5. 🖼️ Image Storage Architecture
+
+### File Storage Structure
+
+```
+<app_data_dir>/
+└── images/
+    ├── 1/                      # Vault ID
+    │   ├── 1.jpg              # Entry ID.extension
+    │   ├── 2.png
+    │   ├── 3.webp
+    │   └── ...
+    ├── 2/
+    │   ├── 1.jpg
+    │   └── ...
+    └── ...
+```
+
+### Image Storage Design
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                   IMAGE STORAGE MODULE                       │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│   ┌─────────────────────────────────────────────────────┐    │
+│   │            ImageStorage                             │    │
+│   ├─────────────────────────────────────────────────────┤    │
+│   │ - save_local_image()                                │    │
+│   │ - download_and_save_image()                         │    │
+│   │ - delete_image()                                    │    │
+│   │ - get_full_path()                                   │    │
+│   │ - image_exists()                                    │    │
+│   └─────────────────────────────────────────────────────┘    │
+│                           │                                  │
+│                           ▼                                  │
+│   ┌─────────────────────────────────────────────────────┐    │
+│   │         ImageProcessor                              │    │
+│   ├─────────────────────────────────────────────────────┤    │
+│   │ - generate_thumbnail()                              │    │
+│   │ - resize_image()                                    │    │
+│   │ - encode_jpeg()                                     │    │
+│   │ - to_base64()                                       │    │
+│   │ - to_data_url()                                     │    │
+│   └─────────────────────────────────────────────────────┘    │
+│                           │                                  │
+│                           ▼                                  │
+│   ┌─────────────────────────────────────────────────────┐    │
+│   │         EntryImageService                           │    │
+│   ├─────────────────────────────────────────────────────┤    │
+│   │ - set_cover_from_file()                             │    │
+│   │ - set_cover_from_url()                              │    │
+│   │ - remove_cover()                                    │    │
+│   │ - get_thumbnail()                                   │    │
+│   └─────────────────────────────────────────────────────┘    │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Key Design Decisions
+
+1. **File System Storage**
+
+    - Images stored in file system, not in database
+    - Database only stores relative paths
+    - Reduces database size and improves performance
+    - Easier to manage large binary files
+
+2. **Organized by Vault and Entry**
+
+    - Directory structure: `images/<vault_id>/<entry_id>.<ext>`
+    - One image per entry (cover image only)
+    - Easy cleanup when vault/entry is deleted
+    - Prevents ID collisions across vaults
+
+3. **Supported Formats**
+
+    - JPEG, PNG, WebP, GIF
+    - Format detection via image metadata
+    - File extension determined by image format
+    - Old images deleted when new image is uploaded
+
+4. **Image Sources**
+    - Local file upload: File copied to app data directory
+    - URL reference: URL stored directly in database (not downloaded)
+    - Helps reduce storage for external images
+
+### Image Processing Pipeline
+
+```rust
+// Upload from local file
+[User selects file]
+      ↓
+[Validate file size (max 10MB)]
+      ↓
+[Detect image format]
+      ↓
+[Copy to: images/<vault_id>/<entry_id>.<ext>]
+      ↓
+[Update entry.cover_image_path in DB]
+      ↓
+[Delete old image if exists]
+
+// Set from URL
+[User provides URL]
+      ↓
+[Validate URL format]
+      ↓
+[Store URL in entry.cover_image_path]
+      ↓
+[Delete old local image if exists]
+
+// Generate thumbnail
+[Request thumbnail for entry]
+      ↓
+[Load image from disk]
+      ↓
+[Resize to 300x300 (maintain aspect ratio)]
+      ↓
+[Encode as JPEG (quality: 85)]
+      ↓
+[Return as base64 data URL]
+```
+
+### Image Lifecycle
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                      IMAGE LIFECYCLE                         │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. UPLOAD                                                   │
+│     ┌────────────────────────────────────────────┐            │
+│     │ - User uploads image                       │            │
+│     │ - Validate size and format                 │            │
+│     │ - Save to file system                      │            │
+│     │ - Store path in database                   │            │
+│     └────────────────────────────────────────────┘            │
+│                                                              │
+│  2. USE                                                      │
+│     ┌────────────────────────────────────────────┐            │
+│     │ - Display in UI (lazy loading)             │            │
+│     │ - Generate thumbnails on demand            │            │
+│     │ - Cache thumbnails in memory               │            │
+│     └────────────────────────────────────────────┘            │
+│                                                              │
+│  3. UPDATE                                                   │
+│     ┌────────────────────────────────────────────┐            │
+│     │ - Upload new image                         │            │
+│     │ - Delete old image file                    │            │
+│     │ - Update database path                     │            │
+│     └────────────────────────────────────────────┘            │
+│                                                              │
+│  4. DELETE                                                   │
+│     ┌────────────────────────────────────────────┐            │
+│     │ - Entry deleted → delete image file        │            │
+│     │ - Vault deleted → delete entire directory  │            │
+│     │ - Orphan cleanup utility available         │            │
+│     └────────────────────────────────────────────┘            │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Performance Optimizations
+
+```typescript
+// Frontend: Lazy loading thumbnails
+const { data: thumbnail } = useQuery({
+    queryKey: ["thumbnail", entryId],
+    queryFn: () => api.getEntryThumbnail(entryId),
+    enabled: isInViewport, // Only load when visible
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+});
+
+// Virtual scrolling with image loading
+const virtualizer = useVirtualizer({
+    count: entries.length,
+    overscan: 5, // Preload nearby images
+});
+```
+
+### Storage Constraints
+
+-   **Max file size:** 10MB per image
+-   **Max dimensions:** No hard limit (resized for thumbnails)
+-   **Thumbnail size:** 300x300 pixels (maintains aspect ratio)
+-   **JPEG quality:** 85 for thumbnails
+-   **Supported formats:** JPEG, PNG, WebP, GIF
+
+---
+
+## 6. 🔄 Background Processing
 
 ### Crawler Worker Architecture
 
@@ -356,7 +547,7 @@ async fn process_crawl_task(task: CrawlTask, db: &DatabaseConnection) {
 
 ---
 
-## 6. 🔒 Security Considerations
+## 7. 🔒 Security Considerations
 
 ### Local-First Security
 
@@ -381,7 +572,7 @@ async fn process_crawl_task(task: CrawlTask, db: &DatabaseConnection) {
 
 ---
 
-## 7. 📈 Performance Design
+## 8. 📈 Performance Design
 
 ### Virtual Scrolling Implementation
 
@@ -430,7 +621,7 @@ CREATE VIRTUAL TABLE items_fts USING fts5(title, content);
 
 ---
 
-## 8. 🧪 Testing Strategy
+## 9. 🧪 Testing Strategy
 
 ### Test Levels
 

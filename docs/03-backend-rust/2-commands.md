@@ -263,7 +263,391 @@ pub async fn get_items_count(
 
 ---
 
-## 5. 🌐 Frontend Integration
+## 5. 🖼️ Image Commands
+
+### image_commands.rs
+
+```rust
+// src/commands/image_commands.rs
+use sea_orm::DatabaseConnection;
+use tauri::State;
+
+use crate::core::AppResult;
+use crate::entry::{EntryDto, EntryImageService, EntryService};
+use crate::image::{ImageProcessor, ImageStorage};
+
+/// Uploads an entry cover image from a local file.
+#[tauri::command]
+pub async fn upload_entry_cover_image(
+    db: State<'_, DatabaseConnection>,
+    entry_id: i32,
+    file_path: String,
+    app_data_dir: String,
+) -> AppResult<EntryDto> {
+    log::info!(
+        "Uploading cover image for entry {} from file: {}",
+        entry_id,
+        file_path
+    );
+
+    let image_storage = ImageStorage::new(std::path::Path::new(&app_data_dir));
+
+    EntryImageService::set_cover_from_file(&db, entry_id, &file_path, &image_storage).await
+}
+
+/// Sets an entry cover image from a URL.
+#[tauri::command]
+pub async fn set_entry_cover_url(
+    db: State<'_, DatabaseConnection>,
+    entry_id: i32,
+    url: String,
+    app_data_dir: String,
+) -> AppResult<EntryDto> {
+    log::info!(
+        "Setting cover image for entry {} from URL: {}",
+        entry_id,
+        url
+    );
+
+    let image_storage = ImageStorage::new(std::path::Path::new(&app_data_dir));
+
+    EntryImageService::set_cover_from_url(&db, entry_id, &url, &image_storage).await
+}
+
+/// Gets the thumbnail for an entry's cover image as a base64-encoded data URL.
+#[tauri::command]
+pub async fn get_entry_thumbnail(
+    db: State<'_, DatabaseConnection>,
+    entry_id: i32,
+    app_data_dir: String,
+) -> AppResult<String> {
+    log::debug!("Getting thumbnail for entry {}", entry_id);
+
+    let image_storage = ImageStorage::new(std::path::Path::new(&app_data_dir));
+
+    // Get entry
+    let entry = EntryService::get(&db, entry_id).await?;
+
+    // Generate thumbnail
+    let thumbnail_bytes = EntryImageService::get_thumbnail(&entry, &image_storage)?;
+
+    // Convert to data URL for frontend
+    Ok(ImageProcessor::to_data_url(&thumbnail_bytes))
+}
+
+/// Removes the cover image from an entry.
+#[tauri::command]
+pub async fn remove_entry_cover(
+    db: State<'_, DatabaseConnection>,
+    entry_id: i32,
+    app_data_dir: String,
+) -> AppResult<EntryDto> {
+    log::info!("Removing cover image from entry {}", entry_id);
+
+    let image_storage = ImageStorage::new(std::path::Path::new(&app_data_dir));
+
+    EntryImageService::remove_cover(&db, entry_id, &image_storage).await
+}
+```
+
+### Registration
+
+```rust
+// src-tauri/src/lib.rs
+.invoke_handler(tauri::generate_handler![
+    // ... other commands ...
+    commands::upload_entry_cover_image,
+    commands::set_entry_cover_url,
+    commands::get_entry_thumbnail,
+    commands::remove_entry_cover,
+])
+```
+
+### Frontend Integration
+
+#### TypeScript Types
+
+```typescript
+// src/modules/entry/types.ts
+export interface Entry {
+    id: number;
+    vault_id: number;
+    title: string;
+    description?: string;
+    metadata?: Record<string, unknown>;
+    cover_image_path?: string | null;  // New field!
+    created_at: string;
+    updated_at: string;
+}
+```
+
+#### API Service
+
+```typescript
+// src/modules/entry/api.ts
+import { invoke } from "@tauri-apps/api/core";
+import type { Entry } from "./types";
+
+export const entryApi = {
+    // ... other entry methods ...
+
+    /**
+     * Uploads a cover image from a local file
+     * @param entryId - The entry ID
+     * @param filePath - Absolute path to the image file
+     * @returns Updated entry with cover_image_path
+     */
+    uploadEntryCoverImage: (entryId: number, filePath: string) =>
+        invoke<Entry>("upload_entry_cover_image", {
+            entry_id: entryId,
+            file_path: filePath,
+            app_data_dir: await appDataDir(),
+        }),
+
+    /**
+     * Sets a cover image from a URL
+     * @param entryId - The entry ID
+     * @param url - URL to the image
+     * @returns Updated entry with cover_image_path
+     */
+    setEntryCoverUrl: (entryId: number, url: string) =>
+        invoke<Entry>("set_entry_cover_url", {
+            entry_id: entryId,
+            url,
+            app_data_dir: await appDataDir(),
+        }),
+
+    /**
+     * Gets the thumbnail for an entry's cover image
+     * @param entryId - The entry ID
+     * @returns Base64-encoded data URL (data:image/jpeg;base64,...)
+     */
+    getEntryThumbnail: (entryId: number) =>
+        invoke<string>("get_entry_thumbnail", {
+            entry_id: entryId,
+            app_data_dir: await appDataDir(),
+        }),
+
+    /**
+     * Removes the cover image from an entry
+     * @param entryId - The entry ID
+     * @returns Updated entry with cover_image_path = null
+     */
+    removeEntryCover: (entryId: number) =>
+        invoke<Entry>("remove_entry_cover", {
+            entry_id: entryId,
+            app_data_dir: await appDataDir(),
+        }),
+};
+```
+
+#### React Component Example
+
+```typescript
+// src/modules/entry/components/CoverImageUploader.tsx
+import { useState } from "react";
+import { open } from "@tauri-apps/plugin-dialog";
+import { entryApi } from "../api";
+
+interface Props {
+    entryId: number;
+    onSuccess: (entry: Entry) => void;
+}
+
+export function CoverImageUploader({ entryId, onSuccess }: Props) {
+    const [loading, setLoading] = useState(false);
+    const [url, setUrl] = useState("");
+
+    const handleFileUpload = async () => {
+        try {
+            setLoading(true);
+
+            // Open file picker
+            const file = await open({
+                multiple: false,
+                filters: [{
+                    name: "Image",
+                    extensions: ["jpg", "jpeg", "png", "webp", "gif"]
+                }]
+            });
+
+            if (file) {
+                const entry = await entryApi.uploadEntryCoverImage(entryId, file);
+                onSuccess(entry);
+            }
+        } catch (error) {
+            console.error("Failed to upload image:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUrlSubmit = async () => {
+        try {
+            setLoading(true);
+            const entry = await entryApi.setEntryCoverUrl(entryId, url);
+            onSuccess(entry);
+            setUrl("");
+        } catch (error) {
+            console.error("Failed to set cover URL:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div>
+            <button onClick={handleFileUpload} disabled={loading}>
+                Upload from file
+            </button>
+
+            <div>
+                <input
+                    type="url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="Or paste image URL"
+                />
+                <button onClick={handleUrlSubmit} disabled={loading || !url}>
+                    Set URL
+                </button>
+            </div>
+        </div>
+    );
+}
+```
+
+#### Display Thumbnail Example
+
+```typescript
+// src/modules/entry/components/EntryRow.tsx
+import { useQuery } from "@tanstack/react-query";
+import { entryApi } from "../api";
+
+interface Props {
+    entry: Entry;
+}
+
+export function EntryRow({ entry }: Props) {
+    const { data: thumbnail } = useQuery({
+        queryKey: ["thumbnail", entry.id],
+        queryFn: () => entryApi.getEntryThumbnail(entry.id),
+        enabled: !!entry.cover_image_path,  // Only load if cover exists
+        staleTime: 1000 * 60 * 5,  // Cache for 5 minutes
+    });
+
+    return (
+        <div className="entry-row">
+            {thumbnail ? (
+                <img src={thumbnail} alt={entry.title} className="thumbnail" />
+            ) : (
+                <div className="placeholder">No image</div>
+            )}
+            <span>{entry.title}</span>
+        </div>
+    );
+}
+```
+
+### Usage Examples
+
+#### Complete Flow: Create Entry with Cover
+
+```typescript
+// Create entry
+const entry = await entryApi.create({
+    vault_id: 1,
+    title: "The Matrix",
+    description: "A sci-fi classic",
+});
+
+// Upload cover image
+const updatedEntry = await entryApi.uploadEntryCoverImage(
+    entry.id,
+    "/path/to/matrix-poster.jpg"
+);
+
+// Or set from URL
+const updatedEntry = await entryApi.setEntryCoverUrl(
+    entry.id,
+    "https://example.com/matrix-poster.jpg"
+);
+```
+
+#### Update Cover Image
+
+```typescript
+// Replace existing cover with new one
+const entry = await entryApi.uploadEntryCoverImage(
+    existingEntry.id,
+    "/path/to/new-image.png"
+);
+// Old image is automatically deleted
+```
+
+#### Remove Cover Image
+
+```typescript
+// Remove cover completely
+const entry = await entryApi.removeEntryCover(entryId);
+console.log(entry.cover_image_path);  // null
+```
+
+#### Batch Load Thumbnails
+
+```typescript
+// Load thumbnails for multiple entries
+const thumbnails = await Promise.all(
+    entries
+        .filter(e => e.cover_image_path)
+        .map(e => entryApi.getEntryThumbnail(e.id))
+);
+```
+
+### Error Handling
+
+#### Common Errors
+
+```typescript
+try {
+    await entryApi.uploadEntryCoverImage(entryId, filePath);
+} catch (error) {
+    // "Image size exceeds 10MB limit"
+    // "Invalid image format. Supported: JPEG, PNG, WebP, GIF"
+    // "Failed to read image file"
+    // "Entry not found"
+    console.error(error);
+}
+```
+
+#### Validation
+
+**Backend** (automatic):
+- File size limit: 10MB
+- Format validation: JPEG, PNG, WebP, GIF only
+- Path sanitization
+- Entry existence check
+
+**Frontend** (recommended):
+```typescript
+function validateImageFile(file: File): string | null {
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+        return "Image must be less than 10MB";
+    }
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!validTypes.includes(file.type)) {
+        return "Invalid format. Use JPEG, PNG, WebP, or GIF";
+    }
+
+    return null;
+}
+```
+
+---
+
+## 6. 🌐 Frontend Integration
 
 ### TypeScript Types
 
@@ -367,7 +751,7 @@ export function useItems(collectionId: number) {
 
 ---
 
-## 6. ⚠️ Error Handling
+## 7. ⚠️ Error Handling
 
 ### Command Error Pattern
 
@@ -399,7 +783,7 @@ try {
 
 ---
 
-## 7. 🔔 Events (Backend → Frontend)
+## 8. 🔔 Events (Backend → Frontend)
 
 ### Emit Event from Backend
 

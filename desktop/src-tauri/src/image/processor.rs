@@ -104,10 +104,178 @@ impl ImageProcessor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+
+    /// Helper function to create a temporary test image file.
+    fn create_test_image(path: &Path, width: u32, height: u32) -> std::io::Result<()> {
+        let img = DynamicImage::new_rgb8(width, height);
+        img.save(path).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+    }
 
     #[test]
     fn test_thumbnail_max_size() {
         assert_eq!(THUMBNAIL_MAX_SIZE, 300);
         assert_eq!(THUMBNAIL_JPEG_QUALITY, 85);
+    }
+
+    #[test]
+    fn test_resize_image_landscape() {
+        // Create a landscape image (wider than tall)
+        let img = DynamicImage::new_rgb8(800, 600);
+
+        let resized = ImageProcessor::resize_image(img, THUMBNAIL_MAX_SIZE).unwrap();
+        let (width, height) = resized.dimensions();
+
+        assert_eq!(width, 300);
+        assert_eq!(height, 225); // Maintains aspect ratio (800:600 = 300:225)
+    }
+
+    #[test]
+    fn test_resize_image_portrait() {
+        // Create a portrait image (taller than wide)
+        let img = DynamicImage::new_rgb8(600, 800);
+
+        let resized = ImageProcessor::resize_image(img, THUMBNAIL_MAX_SIZE).unwrap();
+        let (width, height) = resized.dimensions();
+
+        assert_eq!(width, 225); // Maintains aspect ratio (600:800 = 225:300)
+        assert_eq!(height, 300);
+    }
+
+    #[test]
+    fn test_resize_image_square() {
+        // Create a square image
+        let img = DynamicImage::new_rgb8(1000, 1000);
+
+        let resized = ImageProcessor::resize_image(img, THUMBNAIL_MAX_SIZE).unwrap();
+        let (width, height) = resized.dimensions();
+
+        assert_eq!(width, 300);
+        assert_eq!(height, 300);
+    }
+
+    #[test]
+    fn test_resize_image_no_upscaling() {
+        // Create an image smaller than max size
+        let img = DynamicImage::new_rgb8(200, 150);
+
+        let resized = ImageProcessor::resize_image(img, THUMBNAIL_MAX_SIZE).unwrap();
+        let (width, height) = resized.dimensions();
+
+        // Should not upscale
+        assert_eq!(width, 200);
+        assert_eq!(height, 150);
+    }
+
+    #[test]
+    fn test_encode_jpeg_quality() {
+        let img = DynamicImage::new_rgb8(100, 100);
+
+        // Test with different quality levels
+        let high_quality = ImageProcessor::encode_jpeg(img.clone(), 95).unwrap();
+        let low_quality = ImageProcessor::encode_jpeg(img.clone(), 50).unwrap();
+
+        // Higher quality should result in larger file size
+        assert!(high_quality.len() > low_quality.len());
+    }
+
+    #[test]
+    fn test_encode_jpeg_valid_output() {
+        let img = DynamicImage::new_rgb8(100, 100);
+
+        let jpeg_bytes = ImageProcessor::encode_jpeg(img, 85).unwrap();
+
+        // JPEG files start with FF D8 (SOI marker)
+        assert_eq!(jpeg_bytes[0], 0xFF);
+        assert_eq!(jpeg_bytes[1], 0xD8);
+
+        // JPEG files should not be empty
+        assert!(!jpeg_bytes.is_empty());
+    }
+
+    #[test]
+    fn test_to_base64_encoding() {
+        let test_data = b"Hello, World!";
+        let base64 = ImageProcessor::to_base64(test_data);
+
+        // Verify base64 encoding
+        assert_eq!(base64, "SGVsbG8sIFdvcmxkIQ==");
+    }
+
+    #[test]
+    fn test_to_data_url_format() {
+        let test_data = b"test";
+        let data_url = ImageProcessor::to_data_url(test_data);
+
+        // Should start with the data URL prefix
+        assert!(data_url.starts_with("data:image/jpeg;base64,"));
+
+        // Should contain base64-encoded data
+        assert!(data_url.len() > "data:image/jpeg;base64,".len());
+    }
+
+    #[test]
+    fn test_generate_thumbnail_integration() {
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join("test_thumbnail_gen.jpg");
+
+        // Create a large test image
+        create_test_image(&test_file, 1920, 1080).unwrap();
+
+        // Generate thumbnail
+        let thumbnail_bytes = ImageProcessor::generate_thumbnail(&test_file).unwrap();
+
+        // Verify thumbnail is valid JPEG
+        assert_eq!(thumbnail_bytes[0], 0xFF);
+        assert_eq!(thumbnail_bytes[1], 0xD8);
+
+        // Verify thumbnail is smaller than original
+        let original_size = fs::metadata(&test_file).unwrap().len();
+        assert!((thumbnail_bytes.len() as u64) < original_size);
+
+        // Clean up
+        let _ = fs::remove_file(test_file);
+    }
+
+    #[test]
+    fn test_generate_thumbnail_various_formats() {
+        let temp_dir = std::env::temp_dir();
+
+        // Test PNG
+        let png_file = temp_dir.join("test_thumb_png.png");
+        create_test_image(&png_file, 500, 500).unwrap();
+        let png_result = ImageProcessor::generate_thumbnail(&png_file);
+        assert!(png_result.is_ok());
+        let _ = fs::remove_file(png_file);
+
+        // Test JPEG
+        let jpg_file = temp_dir.join("test_thumb_jpg.jpg");
+        create_test_image(&jpg_file, 500, 500).unwrap();
+        let jpg_result = ImageProcessor::generate_thumbnail(&jpg_file);
+        assert!(jpg_result.is_ok());
+        let _ = fs::remove_file(jpg_file);
+    }
+
+    #[test]
+    fn test_generate_thumbnail_invalid_file() {
+        let temp_dir = std::env::temp_dir();
+        let invalid_file = temp_dir.join("test_invalid_thumbnail.txt");
+
+        fs::write(&invalid_file, b"not an image").unwrap();
+
+        let result = ImageProcessor::generate_thumbnail(&invalid_file);
+        assert!(result.is_err());
+
+        // Clean up
+        let _ = fs::remove_file(invalid_file);
+    }
+
+    #[test]
+    fn test_generate_thumbnail_nonexistent_file() {
+        let temp_dir = std::env::temp_dir();
+        let nonexistent = temp_dir.join("does_not_exist.jpg");
+
+        let result = ImageProcessor::generate_thumbnail(&nonexistent);
+        assert!(result.is_err());
     }
 }
