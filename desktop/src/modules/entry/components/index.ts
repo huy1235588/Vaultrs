@@ -9,3 +9,5 @@ export * from './CoverImageDisplay';
 export * from './CoverImageUploader';
 export * from './SearchInput';
 export * from './HighlightText';
+export * from './EntryGridCard';
+export * from './EntryGridView';

@@ -1,74 +1,66 @@
-// Main App component
+// Main App component - redesigned with three-panel layout
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Archive } from 'lucide-react';
 import { MainLayout } from './components/layout';
-import { CreateVaultDialog, VaultHeader } from '@/modules/vault';
-import { EntryList, CreateEntryDialog } from '@/modules/entry';
+import { CreateVaultDialog } from '@/modules/vault';
+import { EntryList } from '@/modules/entry';
+import { EntryGridView } from '@/modules/entry/components/EntryGridView';
+import { CreateEntryDialog } from '@/modules/entry';
 import { FieldDefinitionManager } from '@/modules/field';
+import { CommandPalette } from '@/components/CommandPalette';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useVaultStore } from '@/modules/vault';
-import { useEntryStore } from '@/modules/entry';
-import './App.css';
+import { useUIStore } from '@/stores/uiStore';
+import { useGlobalShortcuts } from '@/hooks/useGlobalShortcuts';
 
 function App() {
-    const [showCreateVault, setShowCreateVault] = useState(false);
-    const [showCreateEntry, setShowCreateEntry] = useState(false);
-    const [showFieldManager, setShowFieldManager] = useState(false);
+    // Global keyboard shortcuts
+    useGlobalShortcuts();
 
     const { activeVaultId, vaults, deleteVault } = useVaultStore();
     const {
-        total,
-        searchQuery,
-        searchTotal,
-        isSearching,
-        searchEntries,
-        clearSearch
-    } = useEntryStore();
+        viewMode,
+        showCreateVault,
+        setShowCreateVault,
+        showCreateEntry,
+        setShowCreateEntry,
+        showFieldManager,
+        setShowFieldManager,
+        showDeleteVault,
+        setShowDeleteVault,
+        setSelectedEntryId,
+        setDetailPanelOpen,
+    } = useUIStore();
 
     const activeVault = vaults.find((v) => v.id === activeVaultId) ?? null;
 
-    const handleDeleteVault = async () => {
+    const handleDeleteVault = useCallback(async () => {
         if (!activeVault) return;
-
-        const confirmed = window.confirm(
-            `Are you sure you want to delete "${activeVault.name}"? This will also delete all entries in this vault.`
-        );
-
-        if (confirmed) {
-            await deleteVault(activeVault.id);
-        }
-    };
-
-    // Search handlers
-    const handleSearch = useCallback((query: string) => {
-        if (!activeVault) return;
-        searchEntries(activeVault.id, query);
-    }, [activeVault, searchEntries]);
-
-    const handleClearSearch = useCallback(() => {
-        clearSearch();
-    }, [clearSearch]);
+        await deleteVault(activeVault.id);
+        setShowDeleteVault(false);
+        setSelectedEntryId(null);
+        setDetailPanelOpen(false);
+    }, [activeVault, deleteVault, setShowDeleteVault, setSelectedEntryId, setDetailPanelOpen]);
 
     return (
         <>
-            <MainLayout onCreateVault={() => setShowCreateVault(true)}>
+            <MainLayout>
                 {activeVault ? (
-                    <>
-                        <VaultHeader
-                            vault={activeVault}
-                            entryCount={total}
-                            onCreateEntry={() => setShowCreateEntry(true)}
-                            onManageFields={() => setShowFieldManager(true)}
-                            onDeleteVault={handleDeleteVault}
-                            // Search props
-                            onSearch={handleSearch}
-                            onClearSearch={handleClearSearch}
-                            isSearching={isSearching}
-                            searchQuery={searchQuery}
-                            searchResultCount={searchTotal}
-                        />
+                    viewMode === 'grid' ? (
+                        <EntryGridView vaultId={activeVault.id} />
+                    ) : (
                         <EntryList vaultId={activeVault.id} />
-                    </>
+                    )
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center p-8">
                         <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6">
@@ -89,12 +81,16 @@ function App() {
                 )}
             </MainLayout>
 
-            {/* Dialogs */}
+            {/* Command Palette */}
+            <CommandPalette />
+
+            {/* Create Vault Dialog */}
             <CreateVaultDialog
                 open={showCreateVault}
                 onClose={() => setShowCreateVault(false)}
             />
 
+            {/* Create Entry Dialog */}
             {activeVault && (
                 <>
                     <CreateEntryDialog
@@ -110,6 +106,28 @@ function App() {
                     />
                 </>
             )}
+
+            {/* Delete Vault Confirmation */}
+            <AlertDialog open={showDeleteVault} onOpenChange={setShowDeleteVault}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Vault</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete &quot;{activeVault?.name}&quot;?
+                            This will also delete all entries in this vault. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteVault}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete Vault
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

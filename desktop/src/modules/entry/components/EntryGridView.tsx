@@ -1,25 +1,26 @@
-// Entry list with virtual scrolling using TanStack Virtual
+// Entry grid view with virtual scrolling using TanStack Virtual
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { FileText, SearchX } from 'lucide-react';
 import { useEntryStore } from '../store';
 import { useUIStore } from '@/stores/uiStore';
-import { EntryRow } from './EntryRow';
-import { EntryRowSkeleton } from './EntryRowSkeleton';
+import { EntryGridCard } from './EntryGridCard';
 import type { Entry } from '../types';
 
-interface EntryListProps {
+interface EntryGridViewProps {
     vaultId: number;
 }
 
-const ROW_HEIGHT = 72; // Estimated row height in pixels
-const OVERSCAN = 5; // Number of items to render outside viewport
+const MIN_CARD_WIDTH = 220;
+const ROW_HEIGHT = 280;
+const OVERSCAN = 3;
 
-export function EntryList({ vaultId }: EntryListProps) {
+export function EntryGridView({ vaultId }: EntryGridViewProps) {
     const parentRef = useRef<HTMLDivElement>(null);
+    const [columns, setColumns] = useState(4);
 
-    const { selectedEntryId, setSelectedEntryId, setDetailPanelOpen, viewMode } = useUIStore();
+    const { selectedEntryId, setSelectedEntryId, setDetailPanelOpen } = useUIStore();
 
     const {
         entries,
@@ -29,8 +30,6 @@ export function EntryList({ vaultId }: EntryListProps) {
         isLoadingMore,
         fetchEntries,
         loadMoreEntries,
-        deleteEntry,
-        // Search state
         searchQuery,
         searchResults,
         searchTotal,
@@ -47,17 +46,37 @@ export function EntryList({ vaultId }: EntryListProps) {
         fetchEntries(vaultId);
     }, [vaultId, fetchEntries]);
 
-    // Virtual list setup
+    // ResizeObserver for dynamic column count
+    useEffect(() => {
+        const el = parentRef.current;
+        if (!el) return;
+
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const width = entry.contentRect.width - 32; // subtract padding
+                const cols = Math.max(2, Math.floor(width / MIN_CARD_WIDTH));
+                setColumns(cols);
+            }
+        });
+
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    // Row count for virtualizer
+    const rowCount = Math.ceil(displayEntries.length / columns);
+
+    // Virtual grid setup
     const virtualizer = useVirtualizer({
-        count: displayEntries.length,
+        count: rowCount,
         getScrollElement: () => parentRef.current,
         estimateSize: () => ROW_HEIGHT,
         overscan: OVERSCAN,
     });
 
-    // Handle scroll to load more (only when not searching)
+    // Handle scroll to load more
     const handleScroll = useCallback(() => {
-        if (isSearchActive) return; // Don't load more while searching
+        if (isSearchActive) return;
 
         const scrollElement = parentRef.current;
         if (!scrollElement || isLoadingMore || !hasMore) return;
@@ -65,7 +84,6 @@ export function EntryList({ vaultId }: EntryListProps) {
         const { scrollTop, scrollHeight, clientHeight } = scrollElement;
         const scrollBottom = scrollHeight - scrollTop - clientHeight;
 
-        // Load more when within 200px of bottom
         if (scrollBottom < 200) {
             loadMoreEntries(vaultId);
         }
@@ -88,10 +106,12 @@ export function EntryList({ vaultId }: EntryListProps) {
     // Loading state
     if (isLoading) {
         return (
-            <div className="flex-1 p-4 space-y-2">
-                {Array.from({ length: 10 }).map((_, i) => (
-                    <EntryRowSkeleton key={i} />
-                ))}
+            <div className="flex-1 p-4">
+                <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="rounded-lg bg-muted animate-pulse aspect-[3/4]" />
+                    ))}
+                </div>
             </div>
         );
     }
@@ -99,15 +119,17 @@ export function EntryList({ vaultId }: EntryListProps) {
     // Search loading state
     if (isSearching) {
         return (
-            <div className="flex-1 p-4 space-y-2">
-                {Array.from({ length: 5 }).map((_, i) => (
-                    <EntryRowSkeleton key={i} />
-                ))}
+            <div className="flex-1 p-4">
+                <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="rounded-lg bg-muted animate-pulse aspect-[3/4]" />
+                    ))}
+                </div>
             </div>
         );
     }
 
-    // No search results state
+    // No search results
     if (isSearchActive && displayEntries.length === 0) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-8">
@@ -123,7 +145,7 @@ export function EntryList({ vaultId }: EntryListProps) {
         );
     }
 
-    // Empty state (no entries at all)
+    // Empty state
     if (entries.length === 0) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-8">
@@ -138,15 +160,6 @@ export function EntryList({ vaultId }: EntryListProps) {
         );
     }
 
-    // Grid view placeholder
-    if (viewMode === 'grid') {
-        return (
-            <div className="flex-1 flex items-center justify-center p-8 text-muted-foreground">
-                Grid view coming soon
-            </div>
-        );
-    }
-
     const virtualItems = virtualizer.getVirtualItems();
 
     return (
@@ -156,33 +169,45 @@ export function EntryList({ vaultId }: EntryListProps) {
             style={{ contain: 'strict' }}
         >
             <div
-                className="relative w-full p-4"
-                style={{ height: virtualizer.getTotalSize() }}
+                style={{
+                    height: virtualizer.getTotalSize(),
+                    width: '100%',
+                    position: 'relative',
+                }}
             >
                 {virtualItems.map((virtualRow) => {
-                    const entry = displayEntries[virtualRow.index];
+                    const startIndex = virtualRow.index * columns;
+                    const rowEntries = displayEntries.slice(startIndex, startIndex + columns);
                     return (
                         <div
-                            key={entry.id}
+                            key={virtualRow.key}
                             className="absolute top-0 left-0 w-full px-4"
                             style={{
                                 height: virtualRow.size,
                                 transform: `translateY(${virtualRow.start}px)`,
                             }}
                         >
-                            <EntryRow
-                                entry={entry}
-                                onClick={() => handleEntryClick(entry)}
-                                onDelete={() => deleteEntry(entry.id)}
-                                searchQuery={searchQuery}
-                                isSelected={entry.id === selectedEntryId}
-                            />
+                            <div
+                                className="grid gap-4"
+                                style={{
+                                    gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                                }}
+                            >
+                                {rowEntries.map((entry) => (
+                                    <EntryGridCard
+                                        key={entry.id}
+                                        entry={entry}
+                                        onClick={() => handleEntryClick(entry)}
+                                        isSelected={entry.id === selectedEntryId}
+                                    />
+                                ))}
+                            </div>
                         </div>
                     );
                 })}
             </div>
 
-            {/* Load more indicator (only when not searching) */}
+            {/* Load more indicator */}
             {!isSearchActive && isLoadingMore && (
                 <div className="flex items-center justify-center py-4">
                     <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
@@ -192,7 +217,7 @@ export function EntryList({ vaultId }: EntryListProps) {
                 </div>
             )}
 
-            {/* End of list indicator */}
+            {/* End of list */}
             {!isSearchActive && !hasMore && entries.length > 0 && (
                 <div className="text-center py-4 text-sm text-muted-foreground">
                     Showing all {total.toLocaleString()} entries

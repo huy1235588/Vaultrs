@@ -1,4 +1,4 @@
-// Vault list item component
+// Vault list item component with collapsed mode support
 
 import { Folder } from 'lucide-react';
 import type { Vault } from '../types';
@@ -8,9 +8,38 @@ interface VaultListItemProps {
     vault: Vault;
     isActive: boolean;
     onClick: () => void;
+    collapsed?: boolean;
 }
 
-export function VaultListItem({ vault, isActive, onClick }: VaultListItemProps) {
+export function VaultListItem({ vault, isActive, onClick, collapsed = false }: VaultListItemProps) {
+    if (collapsed) {
+        return (
+            <button
+                onClick={onClick}
+                title={vault.name}
+                className={cn(
+                    'w-full flex items-center justify-center p-1.5 rounded-lg transition-colors',
+                    'hover:bg-accent hover:text-accent-foreground',
+                    isActive && 'bg-accent text-accent-foreground'
+                )}
+            >
+                <div
+                    className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center"
+                    style={{
+                        backgroundColor: vault.color
+                            ? `${vault.color}20`
+                            : 'hsl(var(--primary) / 0.1)',
+                    }}
+                >
+                    <Folder
+                        className="h-3.5 w-3.5"
+                        style={{ color: vault.color || 'hsl(var(--primary))' }}
+                    />
+                </div>
+            </button>
+        );
+    }
+
     return (
         <button
             onClick={onClick}

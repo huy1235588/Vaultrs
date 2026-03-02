@@ -1,7 +1,18 @@
 // Create vault dialog component
 
 import { useState } from 'react';
-import { X, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useVaultStore } from '../store';
 
@@ -62,73 +73,47 @@ export function CreateVaultDialog({ open, onClose }: CreateVaultDialogProps) {
         onClose();
     };
 
-    if (!open) return null;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={handleClose}
-            />
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Create New Vault</DialogTitle>
+                    <DialogDescription>
+                        Add a new vault to organize your entries.
+                    </DialogDescription>
+                </DialogHeader>
 
-            {/* Dialog */}
-            <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-md mx-4 border border-border">
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-border">
-                    <h2 className="text-lg font-semibold">Create New Vault</h2>
-                    <button
-                        onClick={handleClose}
-                        className="p-1 rounded-md hover:bg-accent transition-colors"
-                    >
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
-
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-4 space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Name */}
-                    <div>
-                        <label
-                            htmlFor="name"
-                            className="block text-sm font-medium mb-1.5"
-                        >
+                    <div className="space-y-2">
+                        <Label htmlFor="name">
                             Name <span className="text-destructive">*</span>
-                        </label>
-                        <input
+                        </Label>
+                        <Input
                             id="name"
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g., Movies, Books, Photos"
-                            className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                             autoFocus
                         />
                     </div>
 
                     {/* Description */}
-                    <div>
-                        <label
-                            htmlFor="description"
-                            className="block text-sm font-medium mb-1.5"
-                        >
-                            Description
-                        </label>
-                        <textarea
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
                             id="description"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Optional description"
                             rows={2}
-                            className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                         />
                     </div>
 
                     {/* Color */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            Color
-                        </label>
+                    <div className="space-y-2">
+                        <Label>Color</Label>
                         <div className="flex gap-2 flex-wrap">
                             {COLORS.map((c) => (
                                 <button
@@ -154,7 +139,7 @@ export function CreateVaultDialog({ open, onClose }: CreateVaultDialogProps) {
                     )}
 
                     {/* Actions */}
-                    <div className="flex justify-end gap-2 pt-2">
+                    <DialogFooter>
                         <Button
                             type="button"
                             variant="ghost"
@@ -173,9 +158,9 @@ export function CreateVaultDialog({ open, onClose }: CreateVaultDialogProps) {
                                 </>
                             )}
                         </Button>
-                    </div>
+                    </DialogFooter>
                 </form>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 }

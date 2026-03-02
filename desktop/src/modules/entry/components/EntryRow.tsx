@@ -1,6 +1,7 @@
 // Entry row component
 
 import { Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { Entry } from '../types';
 import { HighlightText } from './HighlightText';
 import { CoverImageDisplay } from './CoverImageDisplay';
@@ -10,9 +11,10 @@ interface EntryRowProps {
     onClick?: () => void;
     onDelete?: () => void;
     searchQuery?: string;
+    isSelected?: boolean;
 }
 
-export function EntryRow({ entry, onClick, onDelete, searchQuery = '' }: EntryRowProps) {
+export function EntryRow({ entry, onClick, onDelete, searchQuery = '', isSelected }: EntryRowProps) {
     const createdDate = new Date(entry.created_at).toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'short',
@@ -21,7 +23,10 @@ export function EntryRow({ entry, onClick, onDelete, searchQuery = '' }: EntryRo
 
     return (
         <div
-            className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-accent transition-colors h-full cursor-pointer"
+            className={cn(
+                'group flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-accent transition-colors h-full cursor-pointer',
+                isSelected && 'border-primary/50 bg-primary/5'
+            )}
             onClick={onClick}
             role="button"
             tabIndex={0}

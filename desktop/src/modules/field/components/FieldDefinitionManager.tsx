@@ -8,6 +8,16 @@ import {
     DialogTitle,
     DialogDescription,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Plus, Settings2 } from 'lucide-react';
 import { useFieldStore } from '../store';
@@ -32,6 +42,8 @@ export function FieldDefinitionManager({
     const { fields, isLoading, fetchFields, deleteField, reorderFields } = useFieldStore();
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [editingField, setEditingField] = useState<FieldDefinition | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deletingFieldId, setDeletingFieldId] = useState<number | null>(null);
 
     // Fetch fields when dialog opens
     useEffect(() => {
@@ -54,9 +66,16 @@ export function FieldDefinitionManager({
         await reorderFields(vaultId, newOrder.map((f) => f.id));
     };
 
-    const handleDelete = async (id: number) => {
-        if (confirm('Are you sure you want to delete this field? This will remove the field definition but existing entry data will remain.')) {
-            await deleteField(id);
+    const handleDeleteClick = (id: number) => {
+        setDeletingFieldId(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (deletingFieldId !== null) {
+            await deleteField(deletingFieldId);
+            setShowDeleteConfirm(false);
+            setDeletingFieldId(null);
         }
     };
 
@@ -97,7 +116,7 @@ export function FieldDefinitionManager({
                                         key={field.id}
                                         field={field}
                                         onEdit={() => setEditingField(field)}
-                                        onDelete={() => handleDelete(field.id)}
+                                        onDelete={() => handleDeleteClick(field.id)}
                                         onMoveUp={index > 0 ? () => handleMoveUp(index) : undefined}
                                         onMoveDown={index < fields.length - 1 ? () => handleMoveDown(index) : undefined}
                                     />
@@ -134,6 +153,26 @@ export function FieldDefinitionManager({
                 isOpen={!!editingField}
                 onClose={() => setEditingField(null)}
             />
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this field? This will remove the field definition but existing entry data will remain.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setDeletingFieldId(null)}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmDelete}>
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

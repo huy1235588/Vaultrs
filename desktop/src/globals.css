@@ -336,4 +336,48 @@
     .focus-data {
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
     }
+
+    /* Resize Handle */
+    .resize-handle {
+        @apply w-1 cursor-col-resize bg-transparent hover:bg-primary/20 active:bg-primary/40 transition-colors;
+    }
+
+    /* Entry Card Hover */
+    .entry-card-hover {
+        @apply transition-all duration-150 hover:shadow-md hover:-translate-y-0.5;
+    }
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.detail-panel-enter {
+    animation: slideInRight 200ms ease-out;
+}
+
+.detail-panel-exit {
+    animation: slideOutRight 150ms ease-in;
 }
