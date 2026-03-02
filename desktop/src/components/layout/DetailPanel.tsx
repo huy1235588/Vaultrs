@@ -157,7 +157,7 @@ export function DetailPanel() {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border">
                 <h3 className="font-semibold text-foreground truncate pr-2">
-                    {mode === 'edit' ? 'Edit Entry' : 'Details'}
+                    {mode === 'edit' ? 'Edit Entry' : (entry?.title ?? 'Details')}
                 </h3>
                 <div className="flex items-center gap-1">
                     {mode === 'view' && (
@@ -206,7 +206,7 @@ export function DetailPanel() {
                         />
                     </div>
                 ) : (
-                    <div className="p-4 space-y-6">
+                    <div className="p-4 space-y-4">
                         {/* Cover image */}
                         {entry.cover_image_path && (
                             <CoverImageDisplay entry={entry} />

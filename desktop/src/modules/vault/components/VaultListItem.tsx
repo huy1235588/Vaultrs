@@ -20,7 +20,7 @@ export function VaultListItem({ vault, isActive, onClick, collapsed = false }: V
                 className={cn(
                     'w-full flex items-center justify-center p-1.5 rounded-lg transition-colors',
                     'hover:bg-accent hover:text-accent-foreground',
-                    isActive && 'bg-accent text-accent-foreground'
+                    isActive && 'bg-sidebar-accent ring-1 ring-sidebar-primary'
                 )}
             >
                 <div
@@ -44,9 +44,12 @@ export function VaultListItem({ vault, isActive, onClick, collapsed = false }: V
         <button
             onClick={onClick}
             className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 py-2 rounded-lg text-left transition-colors',
                 'hover:bg-accent hover:text-accent-foreground',
-                isActive && 'bg-accent text-accent-foreground'
+                'border-l-2 pl-[10px] pr-3',
+                isActive
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-primary'
+                    : 'border-transparent'
             )}
         >
             <div

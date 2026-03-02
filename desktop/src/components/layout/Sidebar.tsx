@@ -19,19 +19,19 @@ export function Sidebar() {
     return (
         <aside
             className={cn(
-                'h-full flex flex-col border-r border-border bg-card transition-[width] duration-200 ease-in-out',
+                'h-full flex flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-in-out',
                 sidebarCollapsed ? 'w-12' : 'w-64'
             )}
         >
             {/* Header */}
             <div className={cn(
-                'flex items-center border-b border-border',
+                'flex items-center border-b border-sidebar-border',
                 sidebarCollapsed ? 'flex-col gap-1 p-2' : 'justify-between p-4'
             )}>
                 {!sidebarCollapsed && (
                     <div className="flex items-center gap-2">
-                        <Archive className="h-5 w-5 text-primary" />
-                        <h1 className="font-semibold text-foreground">Vaultrs</h1>
+                        <Archive className="h-5 w-5 text-sidebar-primary" />
+                        <h1 className="font-semibold text-sidebar-foreground">Vaultrs</h1>
                     </div>
                 )}
 
@@ -39,17 +39,15 @@ export function Sidebar() {
                     'flex items-center',
                     sidebarCollapsed ? 'flex-col gap-1' : 'gap-1'
                 )}>
-                    {!sidebarCollapsed && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => setShowCreateVault(true)}
-                            title="Create new vault"
-                        >
-                            <Plus className="h-4 w-4" />
-                        </Button>
-                    )}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setShowCreateVault(true)}
+                        title="Create new vault"
+                    >
+                        <Plus className="h-4 w-4" />
+                    </Button>
                     <Button
                         variant="ghost"
                         size="icon"
@@ -89,17 +87,6 @@ export function Sidebar() {
                                 </p>
                             </>
                         )}
-                        {sidebarCollapsed && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => setShowCreateVault(true)}
-                                title="Create new vault"
-                            >
-                                <Plus className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                        )}
                     </div>
                 ) : (
                     <div className="space-y-1">
@@ -118,7 +105,7 @@ export function Sidebar() {
 
             {/* Footer */}
             <div className={cn(
-                'border-t border-border',
+                'border-t border-sidebar-border',
                 sidebarCollapsed ? 'p-1' : 'p-2'
             )}>
                 <ThemeToggle collapsed={sidebarCollapsed} />

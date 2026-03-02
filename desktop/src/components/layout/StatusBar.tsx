@@ -50,10 +50,25 @@ export function StatusBar() {
                     <kbd className="font-mono bg-muted px-1 py-0.5 rounded text-[10px]">Ctrl+K</kbd>
                     <span>Command</span>
                 </span>
-                <span className="flex items-center gap-1.5">
-                    <kbd className="font-mono bg-muted px-1 py-0.5 rounded text-[10px]">Ctrl+F</kbd>
-                    <span>Search</span>
-                </span>
+                {activeVault && (
+                    <>
+                        <span className="flex items-center gap-1.5">
+                            <kbd className="font-mono bg-muted px-1 py-0.5 rounded text-[10px]">Ctrl+N</kbd>
+                            <span>New Entry</span>
+                        </span>
+                        {searchQuery ? (
+                            <span className="flex items-center gap-1.5">
+                                <kbd className="font-mono bg-muted px-1 py-0.5 rounded text-[10px]">Esc</kbd>
+                                <span>Clear search</span>
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-1.5">
+                                <kbd className="font-mono bg-muted px-1 py-0.5 rounded text-[10px]">Ctrl+F</kbd>
+                                <span>Search</span>
+                            </span>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

@@ -7,11 +7,13 @@ import {
     LayoutList,
     Settings2,
     Command,
+    Archive,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUIStore } from '@/stores/uiStore';
 import { useVaultStore } from '@/modules/vault';
 import { useEntryStore, SearchInput } from '@/modules/entry';
+import { useShallow } from 'zustand/react/shallow';
 import { cn } from '@/lib/utils';
 
 export function Toolbar() {
@@ -23,7 +25,12 @@ export function Toolbar() {
         setCommandPaletteOpen,
     } = useUIStore();
 
-    const activeVaultId = useVaultStore((s) => s.activeVaultId);
+    const { activeVaultId, activeVaultName } = useVaultStore(
+        useShallow((s) => ({
+            activeVaultId: s.activeVaultId,
+            activeVaultName: s.vaults.find((v) => v.id === s.activeVaultId)?.name ?? null,
+        }))
+    );
     const { isSearching, searchEntries, clearSearch } = useEntryStore();
 
     const handleSearch = useCallback(
@@ -40,7 +47,7 @@ export function Toolbar() {
     }, [clearSearch]);
 
     return (
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-card/50">
+        <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-background">
             {/* Search section */}
             <div className="flex-1 max-w-md">
                 <SearchInput
@@ -52,8 +59,15 @@ export function Toolbar() {
                 />
             </div>
 
-            {/* Spacer */}
-            <div className="flex-1" />
+            {/* Center: Vault context breadcrumb */}
+            <div className="flex-1 flex items-center justify-center">
+                {activeVaultName && (
+                    <span className="flex items-center gap-1.5 text-sm text-muted-foreground select-none">
+                        <Archive className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span className="truncate max-w-[200px]">{activeVaultName}</span>
+                    </span>
+                )}
+            </div>
 
             {/* View mode toggle */}
             <div className="flex items-center rounded-md border border-border">
@@ -82,6 +96,9 @@ export function Toolbar() {
                     <LayoutGrid className="h-4 w-4" />
                 </Button>
             </div>
+
+            {/* Visual separator */}
+            <div className="w-px h-5 bg-border flex-shrink-0" aria-hidden="true" />
 
             {/* Action buttons */}
             <Button
