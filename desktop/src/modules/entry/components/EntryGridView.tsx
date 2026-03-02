@@ -2,10 +2,17 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { FileText, SearchX } from 'lucide-react';
+import { FileText, SearchX, Eye, Pencil, Trash2 } from 'lucide-react';
 import { useEntryStore } from '../store';
 import { useUIStore } from '@/stores/uiStore';
 import { EntryGridCard } from './EntryGridCard';
+import {
+    ContextMenu,
+    ContextMenuTrigger,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuSeparator,
+} from '@/components/ui/context-menu';
 import type { Entry } from '../types';
 
 interface EntryGridViewProps {
@@ -20,7 +27,7 @@ export function EntryGridView({ vaultId }: EntryGridViewProps) {
     const parentRef = useRef<HTMLDivElement>(null);
     const [columns, setColumns] = useState(4);
 
-    const { selectedEntryId, setSelectedEntryId, setDetailPanelOpen } = useUIStore();
+    const { selectedEntryId, setSelectedEntryId, setDetailPanelOpen, setAutoEditMode } = useUIStore();
 
     const {
         entries,
@@ -30,6 +37,7 @@ export function EntryGridView({ vaultId }: EntryGridViewProps) {
         isLoadingMore,
         fetchEntries,
         loadMoreEntries,
+        deleteEntry,
         searchQuery,
         searchResults,
         searchTotal,
@@ -194,12 +202,36 @@ export function EntryGridView({ vaultId }: EntryGridViewProps) {
                                 }}
                             >
                                 {rowEntries.map((entry) => (
-                                    <EntryGridCard
-                                        key={entry.id}
-                                        entry={entry}
-                                        onClick={() => handleEntryClick(entry)}
-                                        isSelected={entry.id === selectedEntryId}
-                                    />
+                                    <ContextMenu key={entry.id}>
+                                        <ContextMenuTrigger className="block">
+                                            <EntryGridCard
+                                                entry={entry}
+                                                onClick={() => handleEntryClick(entry)}
+                                                isSelected={entry.id === selectedEntryId}
+                                            />
+                                        </ContextMenuTrigger>
+                                        <ContextMenuContent>
+                                            <ContextMenuItem onClick={() => handleEntryClick(entry)}>
+                                                <Eye className="h-4 w-4" />
+                                                Open Details
+                                            </ContextMenuItem>
+                                            <ContextMenuItem onClick={() => {
+                                                setAutoEditMode(true);
+                                                handleEntryClick(entry);
+                                            }}>
+                                                <Pencil className="h-4 w-4" />
+                                                Edit Entry
+                                            </ContextMenuItem>
+                                            <ContextMenuSeparator />
+                                            <ContextMenuItem
+                                                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                                                onClick={() => deleteEntry(entry.id)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                                Delete Entry
+                                            </ContextMenuItem>
+                                        </ContextMenuContent>
+                                    </ContextMenu>
                                 ))}
                             </div>
                         </div>

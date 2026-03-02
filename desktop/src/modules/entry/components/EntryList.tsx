@@ -2,11 +2,18 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { FileText, SearchX } from 'lucide-react';
+import { FileText, SearchX, Eye, Pencil, Trash2 } from 'lucide-react';
 import { useEntryStore } from '../store';
 import { useUIStore } from '@/stores/uiStore';
 import { EntryRow } from './EntryRow';
 import { EntryRowSkeleton } from './EntryRowSkeleton';
+import {
+    ContextMenu,
+    ContextMenuTrigger,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuSeparator,
+} from '@/components/ui/context-menu';
 import type { Entry } from '../types';
 
 interface EntryListProps {
@@ -19,7 +26,7 @@ const OVERSCAN = 5; // Number of items to render outside viewport
 export function EntryList({ vaultId }: EntryListProps) {
     const parentRef = useRef<HTMLDivElement>(null);
 
-    const { selectedEntryId, setSelectedEntryId, setDetailPanelOpen, viewMode } = useUIStore();
+    const { selectedEntryId, setSelectedEntryId, setDetailPanelOpen, setAutoEditMode, viewMode } = useUIStore();
 
     const {
         entries,
@@ -170,13 +177,38 @@ export function EntryList({ vaultId }: EntryListProps) {
                                 transform: `translateY(${virtualRow.start}px)`,
                             }}
                         >
-                            <EntryRow
-                                entry={entry}
-                                onClick={() => handleEntryClick(entry)}
-                                onDelete={() => deleteEntry(entry.id)}
-                                searchQuery={searchQuery}
-                                isSelected={entry.id === selectedEntryId}
-                            />
+                            <ContextMenu>
+                                <ContextMenuTrigger className="h-full block">
+                                    <EntryRow
+                                        entry={entry}
+                                        onClick={() => handleEntryClick(entry)}
+                                        onDelete={() => deleteEntry(entry.id)}
+                                        searchQuery={searchQuery}
+                                        isSelected={entry.id === selectedEntryId}
+                                    />
+                                </ContextMenuTrigger>
+                                <ContextMenuContent>
+                                    <ContextMenuItem onClick={() => handleEntryClick(entry)}>
+                                        <Eye className="h-4 w-4" />
+                                        Open Details
+                                    </ContextMenuItem>
+                                    <ContextMenuItem onClick={() => {
+                                        setAutoEditMode(true);
+                                        handleEntryClick(entry);
+                                    }}>
+                                        <Pencil className="h-4 w-4" />
+                                        Edit Entry
+                                    </ContextMenuItem>
+                                    <ContextMenuSeparator />
+                                    <ContextMenuItem
+                                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                                        onClick={() => deleteEntry(entry.id)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                        Delete Entry
+                                    </ContextMenuItem>
+                                </ContextMenuContent>
+                            </ContextMenu>
                         </div>
                     );
                 })}

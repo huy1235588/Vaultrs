@@ -1,16 +1,22 @@
 // Collapsible sidebar component showing vault list
 
 import { useEffect } from 'react';
-import { Plus, Archive, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Archive, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { useVaultStore, VaultListItem } from '@/modules/vault';
 import { useUIStore } from '@/stores/uiStore';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import {
+    ContextMenu,
+    ContextMenuTrigger,
+    ContextMenuContent,
+    ContextMenuItem,
+} from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
 
 export function Sidebar() {
     const { vaults, activeVaultId, isLoading, fetchVaults, setActiveVault } = useVaultStore();
-    const { sidebarCollapsed, toggleSidebar, setShowCreateVault } = useUIStore();
+    const { sidebarCollapsed, toggleSidebar, setShowCreateVault, setShowDeleteVault } = useUIStore();
 
     useEffect(() => {
         fetchVaults();
@@ -91,13 +97,28 @@ export function Sidebar() {
                 ) : (
                     <div className="space-y-1">
                         {vaults.map((vault) => (
-                            <VaultListItem
-                                key={vault.id}
-                                vault={vault}
-                                isActive={vault.id === activeVaultId}
-                                onClick={() => setActiveVault(vault.id)}
-                                collapsed={sidebarCollapsed}
-                            />
+                            <ContextMenu key={vault.id}>
+                                <ContextMenuTrigger className="block">
+                                    <VaultListItem
+                                        vault={vault}
+                                        isActive={vault.id === activeVaultId}
+                                        onClick={() => setActiveVault(vault.id)}
+                                        collapsed={sidebarCollapsed}
+                                    />
+                                </ContextMenuTrigger>
+                                <ContextMenuContent>
+                                    <ContextMenuItem
+                                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                                        onClick={() => {
+                                            setActiveVault(vault.id);
+                                            setShowDeleteVault(true);
+                                        }}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                        Delete Vault
+                                    </ContextMenuItem>
+                                </ContextMenuContent>
+                            </ContextMenu>
                         ))}
                     </div>
                 )}

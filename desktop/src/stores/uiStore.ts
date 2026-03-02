@@ -31,6 +31,10 @@ interface UIState {
     selectedEntryId: number | null;
     setSelectedEntryId: (id: number | null) => void;
 
+    // Auto edit mode — set before opening detail panel to start in edit mode
+    autoEditMode: boolean;
+    setAutoEditMode: (value: boolean) => void;
+
     // Dialog state
     showCreateVault: boolean;
     setShowCreateVault: (show: boolean) => void;
@@ -87,6 +91,10 @@ export const useUIStore = create<UIState>()(
             // Selected entry
             selectedEntryId: null,
             setSelectedEntryId: (id) => set({ selectedEntryId: id }),
+
+            // Auto edit mode
+            autoEditMode: false,
+            setAutoEditMode: (value) => set({ autoEditMode: value }),
 
             // Dialogs
             showCreateVault: false,

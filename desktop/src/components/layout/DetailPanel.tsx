@@ -34,6 +34,8 @@ export function DetailPanel() {
         setSelectedEntryId,
         setDetailPanelOpen,
         detailPanelWidth,
+        autoEditMode,
+        setAutoEditMode,
     } = useUIStore();
 
     const { entries, searchResults, searchQuery, deleteEntry } = useEntryStore();
@@ -50,9 +52,14 @@ export function DetailPanel() {
         return allEntries.find((e) => e.id === selectedEntryId) ?? null;
     }, [selectedEntryId, entries, searchResults, searchQuery]);
 
-    // Reset mode when entry changes
+    // Reset mode when entry changes, or switch to edit if autoEditMode is set
     useEffect(() => {
-        setMode('view');
+        if (autoEditMode) {
+            setMode('edit');
+            setAutoEditMode(false);
+        } else {
+            setMode('view');
+        }
     }, [selectedEntryId]);
 
     // Parse metadata
