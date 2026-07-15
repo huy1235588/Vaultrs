@@ -312,8 +312,8 @@ fn main() {
 ```
 <app_data_dir>/
 └── images/
-    ├── 1/                      # Vault ID
-    │   ├── 1.jpg              # Entry ID.extension
+    ├── 1/                      # Collection ID
+    │   ├── 1.jpg              # Item ID.extension
     │   ├── 2.png
     │   ├── 3.webp
     │   └── ...
@@ -373,12 +373,12 @@ fn main() {
     - Reduces database size and improves performance
     - Easier to manage large binary files
 
-2. **Organized by Vault and Entry**
+2. **Organized by Collection and Item**
 
-    - Directory structure: `images/<vault_id>/<entry_id>.<ext>`
-    - One image per entry (cover image only)
-    - Easy cleanup when vault/entry is deleted
-    - Prevents ID collisions across vaults
+    - Directory structure: `images/<collection_id>/<item_id>.<ext>`
+    - One image per item (cover image only)
+    - Easy cleanup when collection/item is deleted
+    - Prevents ID collisions across collections
 
 3. **Supported Formats**
 
@@ -402,9 +402,9 @@ fn main() {
       ↓
 [Detect image format]
       ↓
-[Copy to: images/<vault_id>/<entry_id>.<ext>]
+[Copy to: images/<collection_id>/<item_id>.<ext>]
       ↓
-[Update entry.cover_image_path in DB]
+[Update item.cover_image_path in DB]
       ↓
 [Delete old image if exists]
 
@@ -413,12 +413,12 @@ fn main() {
       ↓
 [Validate URL format]
       ↓
-[Store URL in entry.cover_image_path]
+[Store URL in item.cover_image_path]
       ↓
 [Delete old local image if exists]
 
 // Generate thumbnail
-[Request thumbnail for entry]
+[Request thumbnail for item]
       ↓
 [Load image from disk]
       ↓
@@ -461,7 +461,7 @@ fn main() {
 │  4. DELETE                                                   │
 │     ┌────────────────────────────────────────────┐            │
 │     │ - Entry deleted → delete image file        │            │
-│     │ - Vault deleted → delete entire directory  │            │
+│     │ - Collection deleted → delete entire dir   │            │
 │     │ - Orphan cleanup utility available         │            │
 │     └────────────────────────────────────────────┘            │
 │                                                              │
@@ -473,8 +473,8 @@ fn main() {
 ```typescript
 // Frontend: Lazy loading thumbnails
 const { data: thumbnail } = useQuery({
-    queryKey: ["thumbnail", entryId],
-    queryFn: () => api.getEntryThumbnail(entryId),
+    queryKey: ["thumbnail", itemId],
+    queryFn: () => api.getItemThumbnail(itemId),
     enabled: isInViewport, // Only load when visible
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
 });
@@ -659,10 +659,8 @@ src-tauri/src/services/
 
 -   [Kiến trúc Tổng quan](./1-overview.md)
 -   [Tech Stack](./3-tech-stack.md)
--   [Data Flow](./4-data-flow.md)
--   [Design Patterns](./5-design-patterns.md)
 -   [Database Schema](../02-database/)
 
 ---
 
-_Cập nhật: 2026-01-08_
+_Cập nhật: 2026-07-16_

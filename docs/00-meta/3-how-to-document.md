@@ -37,11 +37,11 @@ Ví dụ:
 
 ```mermaid
 graph LR
-    A[Master Password] --> B[Argon2 Key Derivation]
-    B --> C[Decrypt Vault]
-    C --> D{OK?}
-    D -->|Yes| E[Show Passwords]
-    D -->|No| F[Auth Error]
+    A[User tạo Collection] --> B[Định nghĩa Attributes]
+    B --> C[Thêm Items]
+    C --> D{Cần search?}
+    D -->|Có| E[FTS5 Full-Text Search]
+    D -->|Không| F[Browse với Virtual Scrolling]
 ```
 
 ### Bước 3: Liên kết Tài liệu
@@ -165,10 +165,10 @@ Xóa hoặc archive
 Áp dụng **"5 Whys"** - hỏi "tại sao" cho đến nguyên nhân gốc:
 
 ```
-❓ Decrypt fail? → Key sai
-  ❓ Key sai? → Salt sai
-    ❓ Salt sai? → Không đọc từ header
-      ❓ Không đọc? → 🎯 KHÔNG ĐỌC DOCS FORMAT
+❓ Item không hiển thị? → Query trả về rỗng
+  ❓ Query rỗng? → collection_id sai
+    ❓ collection_id sai? → Frontend gửi slug thay vì ID
+      ❓ Gửi slug? → 🎯 API CHƯA HỖ TRỢ LOOKUP BY SLUG
 ```
 
 **Template debug note:**
@@ -218,4 +218,4 @@ docs/
 
 ---
 
-_Cập nhật: 2025-12-21_
+_Cập nhật: 2026-07-16_

@@ -1,6 +1,8 @@
 # 🔄 Database Migrations - Vaultrs
 
 > **Mục tiêu:** Hướng dẫn quản lý schema migrations với SeaORM.
+>
+> 🆕 **Cập nhật 2026-07-15 — SeaORM 2.0:** SeaORM đã có bản ổn định 2.0 (thay cho dòng `0.12.x` trước đây), bổ sung **Entity First Workflow**: chỉ cần định nghĩa/sửa entity, SeaORM tự phát hiện và tạo bảng/cột/khóa tương ứng (`db.get_schema_registry(...).sync(db)`), không cần viết migration thủ công. Cú pháp `sea-orm-cli migrate ...` và các ví dụ bên dưới **vẫn hoạt động bình thường** trên SeaORM 2.0 (tương thích ngược). Vaultrs nên **tiếp tục dùng quy trình migration thủ công** đã mô tả trong tài liệu này, vì dataset 10M+ dòng cần kiểm soát tường minh về index/thứ tự thay đổi schema — Entity First phù hợp hơn cho prototype nhanh, không phải cho schema đã ổn định ở quy mô lớn.
 
 ---
 

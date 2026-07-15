@@ -6,26 +6,26 @@
 
 ## 📋 TL;DR - Bảng Tóm tắt
 
-| Loại                 | Convention                      | Ví dụ                                       |
-| -------------------- | ------------------------------- | ------------------------------------------- |
-| **Rust**             |                                 |                                             |
-| Module               | `snake_case`                    | `crypto_utils`, `vault_manager`             |
-| Struct/Enum          | `PascalCase`                    | `VaultEntry`, `EncryptionAlgorithm`         |
-| Function/Method      | `snake_case`                    | `encrypt_password()`, `get_vault_entries()` |
-| Constant             | `SCREAMING_SNAKE_CASE`          | `MAX_PASSWORD_LENGTH`, `DEFAULT_ITERATIONS` |
-| Variable             | `snake_case`                    | `master_password`, `vault_data`             |
-| **React/TypeScript** |                                 |                                             |
-| Component            | `PascalCase`                    | `PasswordList`, `VaultHeader`               |
-| Hook                 | `camelCase` với prefix `use`    | `useVault()`, `useEncryption()`             |
-| Function             | `camelCase`                     | `handleSubmit()`, `validatePassword()`      |
-| Variable             | `camelCase`                     | `masterPassword`, `vaultEntries`            |
-| Constant             | `SCREAMING_SNAKE_CASE`          | `API_BASE_URL`, `MAX_RETRIES`               |
-| Interface/Type       | `PascalCase`                    | `VaultEntry`, `EncryptionConfig`            |
-| **Files**            |                                 |                                             |
-| Rust file            | `snake_case.rs`                 | `vault_manager.rs`, `crypto_utils.rs`       |
-| React component      | `PascalCase.tsx`                | `PasswordList.tsx`, `VaultHeader.tsx`       |
-| Hook                 | `camelCase.ts` với prefix `use` | `useVault.ts`, `useAuth.ts`                 |
-| Utility              | `camelCase.ts`                  | `encryption.ts`, `validation.ts`            |
+| Loại                 | Convention                      | Ví dụ                                           |
+| -------------------- | ------------------------------- | ----------------------------------------------- |
+| **Rust**             |                                 |                                                 |
+| Module               | `snake_case`                    | `custom_fields`, `collection_service`           |
+| Struct/Enum          | `PascalCase`                    | `Collection`, `AttributeType`                   |
+| Function/Method      | `snake_case`                    | `create_item()`, `get_collections()`            |
+| Constant             | `SCREAMING_SNAKE_CASE`          | `MAX_ITEMS_PER_PAGE`, `DEFAULT_PAGE_SIZE`       |
+| Variable             | `snake_case`                    | `collection_id`, `item_data`                    |
+| **React/TypeScript** |                                 |                                                 |
+| Component            | `PascalCase`                    | `ItemList`, `CollectionHeader`                  |
+| Hook                 | `camelCase` với prefix `use`    | `useCollection()`, `useItems()`                 |
+| Function             | `camelCase`                     | `handleSubmit()`, `validateTitle()`             |
+| Variable             | `camelCase`                     | `collectionId`, `itemEntries`                   |
+| Constant             | `SCREAMING_SNAKE_CASE`          | `API_BASE_URL`, `MAX_RETRIES`                   |
+| Interface/Type       | `PascalCase`                    | `Collection`, `AttributeConfig`                 |
+| **Files**            |                                 |                                                 |
+| Rust file            | `snake_case.rs`                 | `collection_service.rs`, `item_repo.rs`         |
+| React component      | `PascalCase.tsx`                | `ItemList.tsx`, `CollectionHeader.tsx`           |
+| Hook                 | `camelCase.ts` với prefix `use` | `useCollection.ts`, `useItems.ts`               |
+| Utility              | `camelCase.ts`                  | `validation.ts`, `formatting.ts`                |
 
 ---
 
@@ -37,14 +37,14 @@
 
 ```rust
 // ✅ ĐÚNG
-mod crypto_utils;
-mod vault_manager;
-mod password_generator;
+mod custom_fields;
+mod collection_service;
+mod item_repository;
 
 // ❌ SAI
-mod CryptoUtils;      // Không dùng PascalCase
-mod vault-manager;    // Không dùng kebab-case
-mod pwdgen;           // Quá ngắn, không rõ nghĩa
+mod CustomFields;      // Không dùng PascalCase
+mod collection-service; // Không dùng kebab-case
+mod colsvc;            // Quá ngắn, không rõ nghĩa
 ```
 
 ### 1.2 Structs & Enums
@@ -53,22 +53,30 @@ mod pwdgen;           // Quá ngắn, không rõ nghĩa
 
 ```rust
 // ✅ ĐÚNG
-struct VaultEntry {
-    id: String,
-    title: String,
-    username: String,
-    encrypted_password: Vec<u8>,
+struct Collection {
+    id: i32,
+    name: String,
+    slug: String,
+    description: Option<String>,
 }
 
-enum EncryptionAlgorithm {
-    Aes256Gcm,
-    ChaCha20Poly1305,
+enum AttributeType {
+    Text,
+    Number,
+    Decimal,
+    Select,
+    MultiSelect,
+    Date,
+    Checkbox,
+    Url,
+    Image,
+    Reference,
 }
 
 // ❌ SAI
-struct vault_entry { }     // Không dùng snake_case
-struct VE { }              // Quá ngắn
-enum encryption_algo { }   // Không dùng snake_case
+struct collection { }      // Không dùng snake_case
+struct Col { }             // Quá ngắn
+enum attribute_type { }    // Không dùng snake_case
 ```
 
 ### 1.3 Functions & Methods
@@ -77,14 +85,15 @@ enum encryption_algo { }   // Không dùng snake_case
 
 ```rust
 // ✅ ĐÚNG
-fn encrypt_password(password: &str, key: &[u8]) -> Vec<u8> { }
-fn get_vault_entries() -> Vec<VaultEntry> { }
-fn validate_master_password(password: &str) -> bool { }
+fn create_item(collection_id: i32, title: &str) -> Result<Item, Error> { }
+fn get_collections() -> Vec<Collection> { }
+fn update_attribute(id: i32, name: &str) -> Result<(), Error> { }
+fn delete_items_by_collection(collection_id: i32) -> Result<u64, Error> { }
 
 // ❌ SAI
-fn EncryptPassword() { }        // Không dùng PascalCase
-fn getVaultEntries() { }        // Không dùng camelCase
-fn pwd_encrypt() { }            // Tên không rõ nghĩa
+fn CreateItem() { }            // Không dùng PascalCase
+fn getCollections() { }        // Không dùng camelCase
+fn col_del() { }               // Tên không rõ nghĩa
 ```
 
 ### 1.4 Constants
@@ -93,13 +102,13 @@ fn pwd_encrypt() { }            // Tên không rõ nghĩa
 
 ```rust
 // ✅ ĐÚNG
-const MAX_PASSWORD_LENGTH: usize = 128;
-const DEFAULT_ARGON2_ITERATIONS: u32 = 100_000;
-const VAULT_FILE_EXTENSION: &str = ".vault";
+const MAX_ITEMS_PER_PAGE: usize = 100;
+const DEFAULT_PAGE_SIZE: u64 = 50;
+const MAX_TITLE_LENGTH: usize = 255;
 
 // ❌ SAI
-const maxPasswordLength: usize = 128;    // Không dùng camelCase
-const Max_Password_Length: usize = 128;  // Không nhất quán
+const maxItemsPerPage: usize = 100;    // Không dùng camelCase
+const Max_Items_Per_Page: usize = 100; // Không nhất quán
 ```
 
 ### 1.5 Variables
@@ -108,14 +117,14 @@ const Max_Password_Length: usize = 128;  // Không nhất quán
 
 ```rust
 // ✅ ĐÚNG
-let master_password = "secret123";
-let vault_entries = vec![];
-let encrypted_data = encrypt(&data, &key);
+let collection_id = 42;
+let item_count = items.len();
+let search_results = search_items(&query).await?;
 
 // ❌ SAI
-let MasterPassword = "secret123";  // Không dùng PascalCase
-let mp = "secret123";              // Quá ngắn
-let data1 = vec![];                // Tên không có nghĩa
+let CollectionId = 42;   // Không dùng PascalCase
+let cid = 42;            // Quá ngắn
+let data1 = vec![];      // Tên không có nghĩa
 ```
 
 ---
@@ -128,22 +137,22 @@ let data1 = vec![];                // Tên không có nghĩa
 
 ```tsx
 // ✅ ĐÚNG
-// File: PasswordList.tsx
-export function PasswordList() {
+// File: ItemList.tsx
+export function ItemList() {
     return <div>...</div>;
 }
 
-// File: VaultHeader.tsx
-export function VaultHeader() {
+// File: CollectionHeader.tsx
+export function CollectionHeader() {
     return <header>...</header>;
 }
 
 // ❌ SAI
-// File: passwordList.tsx
-export function password_list() {} // Không dùng snake_case
+// File: itemList.tsx
+export function item_list() {} // Không dùng snake_case
 
-// File: PwdList.tsx
-export function PL() {} // Tên quá ngắn
+// File: ColHdr.tsx
+export function CH() {} // Tên quá ngắn
 ```
 
 ### 2.2 Custom Hooks
@@ -152,24 +161,24 @@ export function PL() {} // Tên quá ngắn
 
 ```tsx
 // ✅ ĐÚNG
-// File: useVault.ts
-export function useVault() {
-    const [vault, setVault] = useState<Vault | null>(null);
+// File: useCollection.ts
+export function useCollection(id: number) {
+    const [collection, setCollection] = useState<Collection | null>(null);
     // ...
-    return { vault, setVault };
+    return { collection, setCollection };
 }
 
-// File: useEncryption.ts
-export function useEncryption() {
+// File: useItems.ts
+export function useItems(collectionId: number) {
     // ...
 }
 
 // ❌ SAI
-// File: vault.ts
-export function vaultHook() {} // Thiếu prefix 'use'
+// File: collection.ts
+export function collectionHook() {} // Thiếu prefix 'use'
 
-// File: UseVault.ts
-export function UseVault() {} // Không dùng PascalCase cho hook
+// File: UseCollection.ts
+export function UseCollection() {} // Không dùng PascalCase cho hook
 ```
 
 ### 2.3 Functions
@@ -179,12 +188,12 @@ export function UseVault() {} // Không dùng PascalCase cho hook
 ```tsx
 // ✅ ĐÚNG
 function handleSubmit(event: FormEvent) {}
-function validatePassword(password: string): boolean {}
+function validateTitle(title: string): boolean {}
 function formatDate(date: Date): string {}
 
 // ❌ SAI
 function HandleSubmit() {} // Không dùng PascalCase
-function validate_password() {} // Không dùng snake_case
+function validate_title() {} // Không dùng snake_case
 function submit() {} // Tên quá chung chung
 ```
 
@@ -194,14 +203,14 @@ function submit() {} // Tên quá chung chung
 
 ```tsx
 // ✅ ĐÚNG
-const [masterPassword, setMasterPassword] = useState("");
-const [vaultEntries, setVaultEntries] = useState<VaultEntry[]>([]);
+const [collectionName, setCollectionName] = useState("");
+const [items, setItems] = useState<Item[]>([]);
 const isLoading = false;
 
 // ❌ SAI
-const [MasterPassword, setMasterPassword] = useState(""); // PascalCase
-const [master_password, set_master_password] = useState(""); // snake_case
-const [mp, setMp] = useState(""); // Quá ngắn
+const [CollectionName, setCollectionName] = useState(""); // PascalCase
+const [collection_name, set_collection_name] = useState(""); // snake_case
+const [cn, setCn] = useState(""); // Quá ngắn
 ```
 
 ### 2.5 Interfaces & Types
@@ -210,21 +219,22 @@ const [mp, setMp] = useState(""); // Quá ngắn
 
 ```tsx
 // ✅ ĐÚNG
-interface VaultEntry {
-    id: string;
-    title: string;
-    username: string;
-    encryptedPassword: string;
+interface Collection {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string;
 }
 
-type EncryptionConfig = {
-    algorithm: "AES-256-GCM" | "ChaCha20-Poly1305";
-    iterations: number;
+type AttributeConfig = {
+    type: "text" | "number" | "select" | "multiselect";
+    required: boolean;
+    options?: string[];
 };
 
 // ❌ SAI
-interface vaultEntry {} // Không dùng snake_case
-type encryption_config = {}; // Không dùng snake_case
+interface collection {} // Không dùng camelCase
+type attribute_config = {}; // Không dùng snake_case
 ```
 
 ### 2.6 Constants
@@ -233,12 +243,12 @@ type encryption_config = {}; // Không dùng snake_case
 
 ```tsx
 // ✅ ĐÚNG
-const API_BASE_URL = "http://localhost:8080";
+const DEFAULT_PAGE_SIZE = 50;
 const MAX_RETRIES = 3;
-const DEFAULT_TIMEOUT_MS = 5000;
+const SEARCH_DEBOUNCE_MS = 300;
 
 // ❌ SAI
-const apiBaseUrl = "http://localhost:8080"; // camelCase
+const defaultPageSize = 50; // camelCase
 const MaxRetries = 3; // PascalCase
 ```
 
@@ -254,19 +264,19 @@ const MaxRetries = 3; // PascalCase
 ✅ ĐÚNG
 src/
 ├── main.rs
-├── vault_manager.rs
-├── crypto_utils.rs
-├── password_generator.rs
+├── collection_service.rs
+├── item_repository.rs
+├── search_engine.rs
 └── models/
     ├── mod.rs
-    ├── vault_entry.rs
-    └── encryption_config.rs
+    ├── collection.rs
+    └── attribute.rs
 
 ❌ SAI
 src/
-├── VaultManager.rs      // PascalCase
-├── crypto-utils.rs      // kebab-case
-└── pwdgen.rs            // Tên không rõ nghĩa
+├── CollectionService.rs  // PascalCase
+├── item-repository.rs    // kebab-case
+└── srcheng.rs            // Tên không rõ nghĩa
 ```
 
 ### 3.2 React/TypeScript Files
@@ -281,27 +291,27 @@ src/
 ✅ ĐÚNG
 src/
 ├── components/
-│   ├── PasswordList.tsx
-│   ├── VaultHeader.tsx
-│   └── LoginForm.tsx
+│   ├── ItemList.tsx
+│   ├── CollectionHeader.tsx
+│   └── AttributeEditor.tsx
 ├── hooks/
-│   ├── useVault.ts
-│   ├── useAuth.ts
-│   └── useEncryption.ts
+│   ├── useCollection.ts
+│   ├── useItems.ts
+│   └── useSearch.ts
 ├── utils/
-│   ├── encryption.ts
 │   ├── validation.ts
-│   └── formatting.ts
+│   ├── formatting.ts
+│   └── dateUtils.ts
 └── types/
-    └── vault.ts
+    └── collection.ts
 
 ❌ SAI
 src/
 ├── components/
-│   ├── password-list.tsx    // kebab-case
-│   └── passwordList.tsx     // camelCase
+│   ├── item-list.tsx       // kebab-case
+│   └── itemList.tsx        // camelCase
 └── hooks/
-    └── vault.ts             // Thiếu prefix 'use'
+    └── collection.ts       // Thiếu prefix 'use'
 ```
 
 ### 3.3 Folders
@@ -318,9 +328,9 @@ docs/
 
 ✅ ĐÚNG (snake_case)
 src/
-├── crypto_utils/
-├── vault_manager/
-└── password_generator/
+├── custom_fields/
+├── collection_service/
+└── item_repository/
 
 ❌ SAI
 docs/
@@ -339,14 +349,14 @@ Prefix: `is`, `has`, `should`, `can`
 
 ```rust
 // ✅ ĐÚNG
-let is_valid = true;
-let has_permission = false;
-let should_encrypt = true;
-let can_decrypt = check_key();
+let is_required = true;
+let has_items = false;
+let should_index = true;
+let can_delete = check_permission();
 
 // ❌ SAI
-let valid = true;           // Không rõ là boolean
-let permission = false;     // Có thể nhầm với object
+let required = true;       // Không rõ là boolean
+let items = false;         // Có thể nhầm với collection
 ```
 
 ```tsx
@@ -366,15 +376,15 @@ const error = true;
 
 ```rust
 // ✅ ĐÚNG
-fn get_vault_entry(id: &str) -> Option<VaultEntry> { }
-fn create_vault(name: &str) -> Vault { }
-fn delete_password(id: &str) -> Result<(), Error> { }
-fn validate_input(input: &str) -> bool { }
+fn get_collection(id: i32) -> Option<Collection> { }
+fn create_item(data: CreateItemDto) -> Result<Item, Error> { }
+fn delete_attribute(id: i32) -> Result<(), Error> { }
+fn search_items(query: &str) -> Vec<Item> { }
 
 // ❌ SAI
-fn vault_entry(id: &str) { }      // Thiếu động từ
-fn entry(id: &str) { }            // Quá chung chung
-fn do_stuff() { }                 // Không rõ nghĩa
+fn collection(id: i32) { }      // Thiếu động từ
+fn item(id: i32) { }            // Quá chung chung
+fn do_stuff() { }               // Không rõ nghĩa
 ```
 
 ### 4.3 Tên Collection
@@ -383,23 +393,23 @@ Dùng số nhiều
 
 ```rust
 // ✅ ĐÚNG
-let vault_entries = vec![];
-let passwords = vec![];
-let users = vec![];
+let collections = vec![];
+let items = vec![];
+let attributes = vec![];
 
 // ❌ SAI
-let vault_entry_list = vec![];    // Dài dòng
-let password_array = vec![];      // Không cần suffix 'array'
+let collection_list = vec![];    // Dài dòng
+let item_array = vec![];        // Không cần suffix 'array'
 ```
 
 ```tsx
 // ✅ ĐÚNG
-const vaultEntries = [];
-const passwords = [];
+const collections = [];
+const items = [];
 
 // ❌ SAI
-const vaultEntryList = [];
-const passwordArr = [];
+const collectionList = [];
+const itemArr = [];
 ```
 
 ### 4.4 Tránh Abbreviations
@@ -410,45 +420,34 @@ Trừ khi abbreviation rất phổ biến
 // ✅ ĐÚNG
 let configuration = Config::new();
 let identifier = "abc123";
-let maximum_length = 128;
+let collection_name = "Movies";
 
 // ⚠️ OK (abbreviation phổ biến)
 let id = "abc123";
 let url = "https://example.com";
-let html = "<div></div>";
+let fts = FullTextSearch::new();
 
 // ❌ SAI
 let cfg = Config::new();          // Không rõ nghĩa
-let max_len = 128;                // Dùng đầy đủ
-let pwd = "secret";               // Dùng 'password'
+let col_nm = "Movies";           // Dùng đầy đủ
+let attr = get_attribute();       // Dùng 'attribute'
 ```
 
 ---
 
-## 5. 🔒 Security-Related Naming
+## 5. 🔗 Ánh xạ Thuật ngữ: Module Code ↔ Domain
 
-Đặt tên rõ ràng cho security-sensitive data:
+Tên module trong code có thể khác với thuật ngữ domain do lý do lịch sử. Bảng dưới thống nhất:
 
-```rust
-// ✅ ĐÚNG
-let encrypted_password: Vec<u8> = encrypt(&password);
-let plaintext_data: String = decrypt(&encrypted_data);
-let master_key_hash: [u8; 32] = hash(&master_key);
+| Module code (Rust) | Module code (React) | Thuật ngữ Domain | Mô tả                          |
+| ------------------- | -------------------- | ----------------- | -------------------------------- |
+| `collections/`      | `modules/vault/`     | **Collection**    | Quản lý bộ sưu tập              |
+| `items/`            | `modules/entry/`     | **Item**          | Quản lý bản ghi                  |
+| `custom_fields/`    | —                    | **Attribute**     | Quản lý trường dữ liệu tuỳ chỉnh |
+| `relations/`        | —                    | **Relation**      | Liên kết cross-collection        |
+| `search/`           | —                    | **Search**        | FTS5 indexing và query           |
 
-// ❌ SAI
-let password: Vec<u8> = encrypt(&password);  // Không rõ đã encrypt
-let data: String = decrypt(&encrypted_data); // Không rõ là plaintext
-```
-
-```tsx
-// ✅ ĐÚNG
-const encryptedPassword: string = "...";
-const plaintextPassword: string = "...";
-const hashedMasterKey: string = "...";
-
-// ❌ SAI
-const password: string = "..."; // Không rõ trạng thái
-```
+> 💡 **Khi đặt tên:** Ưu tiên dùng thuật ngữ domain (`Collection`, `Item`, `Attribute`) trong tài liệu, comments, và variable names. Tên module/thư mục giữ nguyên để tránh breaking changes.
 
 ---
 
@@ -467,4 +466,4 @@ const password: string = "..."; // Không rõ trạng thái
 
 ---
 
-_Cập nhật: 2025-12-21_
+_Cập nhật: 2026-07-16_

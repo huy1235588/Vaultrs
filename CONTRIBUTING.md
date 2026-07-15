@@ -1,32 +1,12 @@
-# Development Notes
+# Contributing Guide
 
-> **Note:** This is a personal learning project. The content below represents planned development guidelines and architectural decisions for reference purposes.
+> **Note:** This is a personal learning project. The content below represents development guidelines and conventions for reference purposes.
 
 ## Project Status
 
-**Current Phase:** Planning & Design  
-**Development Status:** Not yet implemented  
+**Current Phase:** Planning & Design
+**Development Status:** Not yet implemented
 **Purpose:** Personal learning and exploration
-
----
-
-## Learning Objectives
-
-### Technical Skills
-
--   Master Rust for systems programming
--   Explore Tauri framework for desktop applications
--   Advanced React patterns and performance optimization
--   Database design and optimization at scale
--   Async programming with Tokio
-
-### Architecture Patterns
-
--   Repository pattern in Rust
--   Service layer design
--   IPC communication (Tauri commands)
--   Virtual scrolling implementation
--   Background worker patterns
 
 ---
 
@@ -70,73 +50,23 @@ Testable components
 
 ---
 
-## Planned Technology Decisions
-
-### Why Rust + Tauri?
-
-**Advantages:**
-
--   Native performance
--   Memory safety without GC
--   Small binary size (~8MB vs Electron's ~150MB)
--   Security through sandboxing
--   Cross-platform support
-
-**Trade-offs:**
-
--   Steeper learning curve
--   Longer compile times
--   Smaller ecosystem than Node.js
-
-### Why SQLite?
-
-**Advantages:**
-
--   Zero configuration
--   Single file storage
--   Excellent read performance
--   ACID compliance
--   Portable
-
-**Trade-offs:**
-
--   Limited concurrent writes
--   No network access
--   Single-user only (perfect for this use case)
-
-### Why EAV + JSON Schema?
-
-**Advantages:**
-
--   Flexible schema changes
--   No migrations for new fields
--   Fast indexed queries on common fields
--   JSON for custom attributes
-
-**Trade-offs:**
-
--   More complex queries
--   Larger database size
--   Need to validate JSON data
-
----
-
-## Development Workflow (Planned)
+## Development Workflow
 
 ### Local Setup
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/vaultrs.git
+git clone https://github.com/huy1235588/vaultrs.git
 cd vaultrs
 
-# Install dependencies
-cd src-ui && npm install
-cd ../src-tauri && cargo build
+# Install frontend dependencies
+npm install
 
-# Run development server
-npm run tauri dev
+# Start the development build
+cargo tauri dev
 ```
+
+> **Note:** On first run, Vaultrs automatically creates the SQLite database file and applies all schema migrations via the embedded migration runner.
 
 ### Testing Strategy
 
@@ -158,13 +88,15 @@ npm run tauri dev
 -   Test with large datasets
 -   Profile memory usage
 
-### Code Standards
+---
 
-**Rust:**
+## Code Standards
+
+### Rust
 
 ```rust
 // Use descriptive names
-pub struct ItemService { }
+pub struct CollectionService { }
 
 // Document public APIs
 /// Creates a new item in the collection.
@@ -177,7 +109,7 @@ fn process() -> Result<Item, Error> { }
 let item = fetch_item()?;
 ```
 
-**TypeScript:**
+### TypeScript
 
 ```typescript
 // Explicit types
@@ -193,137 +125,53 @@ interface ItemCardProps {
 export function ItemCard({ item, onClick }: ItemCardProps) {}
 ```
 
----
-
-## Architecture Decisions
-
-### ADR 001: Use SQLite Instead of PostgreSQL
-
-**Status:** Accepted
-
-**Context:**
-Need embedded database for single-user desktop app.
-
-**Decision:**
-Use SQLite with WAL mode.
-
-**Consequences:**
-
--   ✅ Zero configuration
--   ✅ Single file backup
--   ✅ Fast local reads
--   ❌ No concurrent writes
--   ❌ No network access
-
-### ADR 002: Hybrid EAV + JSON Schema
-
-**Status:** Accepted
-
-**Context:**
-Need flexible schema for custom fields while maintaining query performance.
-
-**Decision:**
-Store common fields (title, created_at) as columns, custom fields in JSON.
-
-**Consequences:**
-
--   ✅ Flexible custom fields
--   ✅ Fast queries on indexed columns
--   ✅ No migrations for new attributes
--   ❌ More complex queries
--   ❌ Larger database size
-
-### ADR 003: Virtual Scrolling for UI
-
-**Status:** Accepted
-
-**Context:**
-Need to display 10M+ rows without performance issues.
-
-**Decision:**
-Use TanStack Virtual for row virtualization.
-
-**Consequences:**
-
--   ✅ Constant memory usage
--   ✅ Smooth 60 FPS scrolling
--   ✅ Handles infinite data
--   ❌ Complexity in row rendering
--   ❌ Requires fixed row heights
+> See [Naming Conventions](docs/00-meta/2-naming-convention.md) for full naming rules across Rust, React, and file naming.
 
 ---
 
-## Learning Resources
+## Branch & Commit Conventions
 
-### Rust
+### Branch Naming
 
--   [The Rust Book](https://doc.rust-lang.org/book/)
--   [Rust by Example](https://doc.rust-lang.org/rust-by-example/)
--   [Async Rust](https://rust-lang.github.io/async-book/)
+```
+feature/<short-description>    # New features
+fix/<short-description>        # Bug fixes
+docs/<short-description>       # Documentation changes
+refactor/<short-description>   # Code refactoring
+```
 
-### Tauri
+### Commit Messages
 
--   [Tauri Documentation](https://tauri.app/v1/guides/)
--   [Tauri Examples](https://github.com/tauri-apps/tauri/tree/dev/examples)
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-### Performance
-
--   [SQLite Performance Tuning](https://www.sqlite.org/optoverview.html)
--   [React Performance](https://react.dev/learn/render-and-commit)
-
----
-
-## Development Log
-
-### 2024-11 - Initial Planning
-
--   ✅ Defined project scope
--   ✅ Designed architecture
--   ✅ Documented database schema
--   ✅ Planned API structure
--   ✅ Created comprehensive documentation
-
-### Next Steps
-
--   [ ] Setup development environment
--   [ ] Create project scaffolding
--   [ ] Implement basic database layer
--   [ ] Build minimal UI
+```
+feat: add Collection CRUD operations
+fix: correct pagination offset for filtered queries
+docs: update database schema documentation
+refactor: extract FTS5 indexing into search module
+perf: optimize virtual scrolling for 1M+ items
+```
 
 ---
 
-## Personal Notes
+## Pull Request Process
 
-**What I Want to Learn:**
-
--   Rust ownership and lifetimes in practice
--   Async programming patterns
--   Performance optimization techniques
--   Desktop app distribution
-
-**Challenges Expected:**
-
--   Handling 10M+ records efficiently
--   Managing complex async operations
--   Virtual scrolling edge cases
--   Cross-platform compatibility
-
-**Success Criteria:**
-
--   Can manage 10M records smoothly
--   60 FPS scrolling
--   Sub-100ms search queries
--   Clean, maintainable code
+1. Create a feature branch from `main`
+2. Make changes and write tests
+3. Update relevant documentation
+4. Submit PR using the [PR template](.github/PULL_REQUEST_TEMPLATE.md)
+5. Address review feedback
+6. Merge after approval
 
 ---
 
 ## Related Documentation
 
--   [Architecture Overview](.docs/ARCHITECTURE.md) - System design
--   [Database Schema](.docs/DATABASE.md) - Data structure
--   [API Reference](.docs/API.md) - Planned commands
--   [Performance Guide](.docs/PERFORMANCE.md) - Optimization strategies
+-   [Architecture Overview](docs/01-architecture/1-overview.md) — System design
+-   [Database Schema](docs/02-database/2-schema.md) — Data structure
+-   [Naming Conventions](docs/00-meta/2-naming-convention.md) — Code style
+-   [Versioning](docs/00-meta/5-versioning.md) — Release process
 
 ---
 
-**Remember:** This is a learning journey. Take time to understand concepts deeply rather than rushing to implementation.
+**Last Updated:** 2026-07

@@ -7,12 +7,14 @@
 ## 📋 TL;DR
 
 | Thành phần   | Công nghệ/Cách tiếp cận | Lý do                              |
-| ------------ | ----------------------- | ---------------------------------- |
-| **Database** | SQLite 3.x              | Embedded, zero-config, portable    |
-| **Mode**     | WAL (Write-Ahead Log)   | Better concurrency, crash recovery |
-| **Schema**   | Hybrid EAV + JSON       | Flexibility + Performance          |
-| **ORM**      | SeaORM                  | Async-first, type-safe             |
-| **Target**   | 10M+ records            | Virtual scrolling + indexing       |
+| ------------ | ------------------------ | ----------------------------------- |
+| **Database** | SQLite 3.53.x             | Embedded, zero-config, portable    |
+| **Mode**     | WAL (Write-Ahead Log)     | Better concurrency, crash recovery |
+| **Schema**   | Hybrid EAV + JSON          | Flexibility + Performance          |
+| **ORM**      | SeaORM 2.0                 | Async-first, type-safe             |
+| **Target**   | 10M+ records                | Virtual scrolling + indexing       |
+
+> 🆕 SQLite tối thiểu nên là **3.53.0+** — bản này sửa một lỗi hỏng dữ liệu liên quan đến WAL-reset đã tồn tại nhiều năm, ảnh hưởng trực tiếp tới chế độ WAL mà Vaultrs dùng làm trọng tâm hiệu năng. SeaORM đã lên bản **2.0 ổn định** (từ 0.12.x cũ) — xem chi tiết migration ở [Tech Stack](../01-architecture/3-tech-stack.md).
 
 ---
 
@@ -36,20 +38,20 @@
 ### SQLite Advantages cho Vaultrs
 
 | Ưu điểm                | Giải thích                              |
-| ---------------------- | --------------------------------------- |
+| ---------------------- | ---------------------------------------- |
 | **Zero Configuration** | Không cần install, setup server         |
 | **Single File**        | Dễ backup (copy file), portable         |
 | **Read Performance**   | Cực nhanh cho read-heavy workloads      |
 | **ACID Transactions**  | Data integrity đầy đủ                   |
-| **Mature & Stable**    | 20+ năm development, tested extensively |
+| **Mature & Stable**    | 26+ năm development, tested extensively |
 
 ### SQLite Limitations (và cách xử lý)
 
 | Limitation          | Mitigation trong Vaultrs       |
-| ------------------- | ------------------------------ |
-| Single-writer       | WAL mode cho concurrent reads  |
-| No network access   | OK - desktop app, single user  |
-| Limited concurrency | OK - single user, mainly reads |
+| -------------------- | -------------------------------- |
+| Single-writer        | WAL mode cho concurrent reads   |
+| No network access    | OK - desktop app, single user   |
+| Limited concurrency  | OK - single user, mainly reads  |
 
 ---
 
@@ -148,7 +150,7 @@ CREATE TABLE items (
 ### Relationships
 
 | Relationship            | Type | Description                            |
-| ----------------------- | ---- | -------------------------------------- |
+| ------------------------ | ---- | ---------------------------------------- |
 | Collection → Items      | 1:N  | Một collection có nhiều items          |
 | Collection → Attributes | 1:N  | Một collection có nhiều attributes     |
 | Attribute → Item        | Meta | Attributes định nghĩa schema cho items |
@@ -209,7 +211,7 @@ vaultrs/
 ### File Descriptions
 
 | File             | Purpose                       | Size      |
-| ---------------- | ----------------------------- | --------- |
+| ----------------- | ------------------------------ | --------- |
 | `vaultrs.db`     | Main database                 | Variable  |
 | `vaultrs.db-wal` | Pending writes (WAL mode)     | Up to 1GB |
 | `vaultrs.db-shm` | Shared memory for concurrency | 32KB      |
@@ -221,7 +223,7 @@ vaultrs/
 ### Query Performance Goals
 
 | Operation          | Target  | Notes             |
-| ------------------ | ------- | ----------------- |
+| -------------------- | ------- | ------------------ |
 | Single item lookup | < 1ms   | By primary key    |
 | Collection list    | < 50ms  | With pagination   |
 | Title search       | < 100ms | Using LIKE or FTS |
@@ -232,7 +234,7 @@ vaultrs/
 ### Scale Targets
 
 | Metric          | Target         |
-| --------------- | -------------- |
+| ---------------- | -------------- |
 | Max items       | 10,000,000+    |
 | Max collections | 10,000         |
 | Max attributes  | 100/collection |
@@ -247,7 +249,8 @@ vaultrs/
 -   [Queries](./4-queries.md)
 -   [Migrations](./5-migrations.md)
 -   [Backup & Recovery](./6-backup.md)
+-   [Field Data Handling](./7-field-data-handling.md)
 
 ---
 
-_Cập nhật: 2026-01-08_
+_Cập nhật: 2026-07-16_

@@ -2,6 +2,8 @@
 
 > **Mục tiêu:** Mô tả logic xử lý dữ liệu khi người dùng thao tác với field definition, sử dụng chiến lược **ID-based key**.
 
+> ⚠️ **Ghi chú nhất quán (rà soát 2026-07-15):** Chiến lược ID-based key ở file này (`{"1": "Nolan", "2": 2010}`) **mâu thuẫn** với các ví dụ JSON trong [`2-schema.md`](./2-schema.md) và [`1-overview.md`](./1-overview.md), vốn dùng tên field làm key (`{"director": "Nolan", "rating": 8.8}`). Vì file này có ngày cập nhật mới hơn (2026-01-13 so với 2026-01-08), khả năng cao đây là quyết định thiết kế **mới hơn và đúng hơn** — nhưng `2-schema.md` chưa được cập nhật theo. Cần đồng bộ lại DDL/ví dụ ở `2-schema.md` (cột `properties`) cho khớp với chiến lược ID-based key này.
+
 ---
 
 ## 📋 Tóm tắt quyết định

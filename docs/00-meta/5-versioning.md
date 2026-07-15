@@ -2,6 +2,8 @@
 
 > **Mục tiêu:** Định nghĩa cách đánh version, quản lý changelog, và quy trình release cho dự án Vaultrs.
 
+
+
 ---
 
 ## 📋 TL;DR - Tóm tắt Nhanh
@@ -122,10 +124,7 @@ Tuân theo [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ```markdown
 # Changelog
 
-Tất cả thay đổi đáng chú ý của dự án sẽ được ghi lại ở đây.
-
-Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+...
 
 ## [Unreleased]
 
@@ -137,32 +136,32 @@ và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
--   Thêm dark mode (#123)
--   Thêm password strength indicator (#145)
+-   Thêm field type `reference` cho cross-collection linking (#123)
+-   Thêm FTS5 search theo custom field values (#145)
 
 ### Changed
 
--   Cải thiện UI vault list
--   Tăng default Argon2 iterations
+-   Cải thiện tốc độ virtual scrolling khi load 1M+ items
+-   Nâng SeaORM lên 2.0
 
 ### Fixed
 
--   Fix lỗi copy password trên macOS (#156)
--   Fix memory leak khi unlock vault (#160)
+-   Fix lỗi pagination bị sai offset khi filter theo collection (#156)
+-   Fix memory leak khi thumbnail cache quá lớn (#160)
 
 ### Security
 
--   Cập nhật AES-GCM library để fix CVE-2025-XXXX
+-   Cập nhật SQLite lên 3.53.0 để fix lỗi WAL-reset
 
 ## [1.1.0] - 2025-11-15
 
 ### Added
 
--   Thêm tính năng export CSV
+-   Thêm tính năng export Collection ra JSON/CSV
 
 ### Deprecated
 
--   `generate_password_simple()` sẽ bị xóa ở v2.0
+-   `get_items_legacy()` sẽ bị xóa ở v2.0
 ```
 
 ### Categories
@@ -289,33 +288,46 @@ git push origin --tags
 
 ---
 
-## 4. 🗂️ Vault File Versioning
+## 4. 🗂️ Database Schema Versioning
 
-### Schema Version
+### Migration-based Versioning
 
-Vault file có version riêng để track format changes:
+Vaultrs sử dụng **SeaORM migrations** để quản lý version của database schema:
 
 ```rust
-struct VaultHeader {
-    magic: [u8; 4],           // "VLTR"
-    schema_version: u16,      // 1, 2, 3...
-    // ...
+// migrations/m20260108_000001_create_collections.rs
+use sea_orm_migration::prelude::*;
+
+#[derive(DeriveMigrationName)]
+pub struct Migration;
+
+#[async_trait::async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // Tạo bảng collections
+        manager.create_table(/* ... */).await
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager.drop_table(/* ... */).await
+    }
 }
 ```
 
 ### Migration Rules
 
-| App Version | Schema Version | Compatibility               |
-| ----------- | -------------- | --------------------------- |
-| 1.x.x       | 1              | Read/Write                  |
-| 2.0.0       | 2              | Read v1 (migrate), Write v2 |
-| 2.1.0       | 2              | Read v1 & v2, Write v2      |
+| App Version | Migration              | Compatibility                         |
+| ----------- | ---------------------- | ------------------------------------- |
+| 0.1.x       | `m001_initial_schema`  | Baseline                              |
+| 0.2.0       | `m002_add_attributes`  | Additive, backward compatible         |
+| 1.0.0       | `m003_add_fts5`        | Additive, rebuild FTS index if needed |
 
 ```
 Quy tắc:
-- Luôn đọc được schema version cũ hơn
-- Migrate tự động khi mở file cũ
-- Backup file gốc trước khi migrate
+- Migrations chạy tự động theo thứ tự timestamp khi khởi động app
+- Mỗi migration có cả `up()` và `down()` để rollback
+- Không bao giờ sửa migration đã release — tạo migration mới
+- Bảng `seaql_migrations` track các migration đã chạy
 ```
 
 ---
@@ -399,4 +411,4 @@ v1.5.2 → v2.0.0 (dù là security fix)
 
 ---
 
-_Cập nhật: 2025-12-26_
+_Cập nhật: 2026-07-16_

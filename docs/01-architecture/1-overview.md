@@ -6,12 +6,14 @@
 
 ## 📋 TL;DR
 
-| Thành phần       | Công nghệ          | Vai trò                          |
-| ---------------- | ------------------ | -------------------------------- |
-| **Frontend**     | React + TypeScript | Giao diện người dùng             |
-| **Backend**      | Rust + Tauri v2    | Xử lý logic, quản lý dữ liệu     |
-| **Database**     | SQLite (WAL Mode)  | Lưu trữ dữ liệu nhúng            |
-| **Architecture** | Modular Monolith   | Tổ chức code theo module/feature |
+| Thành phần       | Công nghệ                    | Vai trò                          |
+| ---------------- | ----------------------------- | --------------------------------- |
+| **Frontend**     | React 19 + TypeScript 7        | Giao diện người dùng             |
+| **Backend**      | Rust + Tauri v2                | Xử lý logic, quản lý dữ liệu     |
+| **Database**     | SQLite 3.53.x (WAL Mode)       | Lưu trữ dữ liệu nhúng            |
+| **Architecture** | Modular Monolith               | Tổ chức code theo module/feature |
+
+> Chi tiết version đầy đủ (Vite, Tailwind, SeaORM, TanStack...) xem tại [Tech Stack](./3-tech-stack.md).
 
 ---
 
@@ -54,7 +56,7 @@ Vaultrs sử dụng kiến trúc **Modular Monolith** - tất cả components tr
 ├────────────────────────────────────────────────────────────┤
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │              PRESENTATION LAYER                     │   │
-│  │  React 18 + TypeScript + Vite + TanStack            │   │
+│  │  React 19 + TypeScript 7 + Vite 8 + TanStack         │   │
 │  └─────────────────────────────────────────────────────┘   │
 │                           ↕ IPC                            │
 │  ┌─────────────────────────────────────────────────────┐   │
@@ -64,7 +66,7 @@ Vaultrs sử dụng kiến trúc **Modular Monolith** - tất cả components tr
 │                           ↕ ORM                            │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │                DATA LAYER                           │   │
-│  │  SQLite (WAL Mode) + SeaORM                         │   │
+│  │  SQLite (WAL Mode) + SeaORM 2.0                      │   │
 │  └─────────────────────────────────────────────────────┘   │
 └────────────────────────────────────────────────────────────┘
 ```
@@ -72,7 +74,7 @@ Vaultrs sử dụng kiến trúc **Modular Monolith** - tất cả components tr
 ### Tại sao Modular Monolith?
 
 | Ưu điểm                 | Giải thích                              |
-| ----------------------- | --------------------------------------- |
+| ----------------------- | ---------------------------------------- |
 | **Đơn giản để deploy**  | Một file executable duy nhất            |
 | **Performance tốt**     | Không có network overhead giữa services |
 | **Dễ debug**            | Tất cả code trong một process           |
@@ -164,11 +166,12 @@ Sử dụng **Tauri IPC** - giao tiếp type-safe giữa JavaScript và Rust.
 ```
 src-tauri/src/
 ├── core/          # Utilities, errors, config
-├── crypto/        # Encryption, hashing (nếu cần)
-├── auth/          # Authentication (tùy chọn)
-├── vault/         # Collection/vault management
-├── entry/         # Item CRUD operations
-├── generator/     # ID generation, utilities
+├── db/            # Database connection, migrations
+├── collections/   # Collection CRUD, schema management
+├── items/         # Item lifecycle, bulk operations
+├── custom_fields/ # EAV engine — field definitions & typed values
+├── relations/     # Cross-collection Item link resolution
+├── search/        # FTS5 indexing and query coordination
 └── crawler/       # Background metadata fetching
 ```
 
@@ -176,11 +179,12 @@ src-tauri/src/
 
 ```
 src/modules/
-├── auth/          # Login, unlock screens
-├── vault/         # Collection management
-├── entry/         # Item list, details, forms
-└── generator/     # Utility components
+├── vault/         # Collection management (module name = legacy, domain = Collection)
+├── entry/         # Item list, details, forms (module name = legacy, domain = Item)
+└── crawler/       # Metadata fetcher UI
 ```
+
+> 💡 **Ánh xạ thuật ngữ:** Module code `vault/` = quản lý **Collection**, module `entry/` = quản lý **Item**. Tên module giữ nguyên để tránh breaking changes, nhưng tài liệu và comments nên dùng thuật ngữ domain (`Collection`/`Item`/`Attribute`).
 
 ---
 
@@ -265,10 +269,8 @@ crawler/  → Fetch metadata
 
 -   [Thiết kế Hệ thống Chi tiết](./2-system-design.md)
 -   [Công nghệ Sử dụng](./3-tech-stack.md)
--   [Luồng Dữ liệu](./4-data-flow.md)
--   [Design Patterns](./5-design-patterns.md)
 -   [Database Schema](../02-database/)
 
 ---
 
-_Cập nhật: 2026-01-08_
+_Cập nhật: 2026-07-16_

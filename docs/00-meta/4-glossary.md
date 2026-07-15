@@ -6,267 +6,194 @@
 
 ## 📋 TL;DR - Thuật ngữ Quan trọng Nhất
 
-| Thuật ngữ           | Định nghĩa ngắn                                       |
-| ------------------- | ----------------------------------------------------- |
-| **Vault**           | Kho lưu trữ mã hóa chứa tất cả entries                |
-| **Entry**           | Một bản ghi thông tin đăng nhập (username, password)  |
-| **Master Password** | Mật khẩu chính duy nhất để mở vault                   |
-| **Encryption Key**  | Khóa được derive từ master password để mã hóa dữ liệu |
+| Thuật ngữ        | Định nghĩa ngắn                                                    |
+| ---------------- | ------------------------------------------------------------------- |
+| **Collection**   | Bộ sưu tập dữ liệu có schema riêng (Movies, Books, Games...)      |
+| **Item**         | Một bản ghi trong Collection (một bộ phim, một cuốn sách...)       |
+| **Attribute**    | Định nghĩa một trường dữ liệu tuỳ chỉnh trong Collection          |
+| **Properties**   | Cột JSON trong bảng `items` lưu giá trị các Attributes             |
+| **EAV**          | Entity–Attribute–Value — mô hình lưu trữ linh hoạt cho custom fields |
 
 ---
 
-## 🔐 Thuật ngữ Mật mã học (Cryptography)
+## 🗄️ Thuật ngữ Dữ liệu (Data Model)
 
-### AES-256-GCM
+### Collection
 
-**Advanced Encryption Standard - 256 bit - Galois/Counter Mode**
-
--   **Định nghĩa:** Thuật toán mã hóa đối xứng 256-bit với chế độ authenticated encryption
--   **Đặc điểm:** Vừa mã hóa vừa xác thực tính toàn vẹn dữ liệu
--   **Sử dụng trong Vaultrs:** Mã hóa vault data và entries
-
-```
-Plaintext + Key + Nonce → AES-256-GCM → Ciphertext + Auth Tag
-```
-
-### Argon2
-
--   **Định nghĩa:** Thuật toán Key Derivation Function (KDF) thắng cuộc thi Password Hashing Competition 2015
--   **Đặc điểm:** Memory-hard, chống GPU/ASIC attack
--   **Sử dụng trong Vaultrs:** Derive encryption key từ master password
-
-```
-Master Password + Salt → Argon2id → Encryption Key (256-bit)
-```
-
-### Ciphertext
-
--   **Định nghĩa:** Dữ liệu đã được mã hóa, không thể đọc được nếu không có key
--   **Ngược lại:** Plaintext (dữ liệu chưa mã hóa)
-
-### Encryption Key
-
--   **Định nghĩa:** Khóa bí mật dùng để mã hóa/giải mã dữ liệu
--   **Trong Vaultrs:** Được derive từ Master Password qua Argon2
--   **Lưu ý:** Không bao giờ lưu trực tiếp, chỉ tồn tại trong memory
-
-### Hash
-
--   **Định nghĩa:** Hàm một chiều chuyển đổi input thành output có độ dài cố định
--   **Đặc điểm:** Không thể reverse, input khác nhau tạo hash khác nhau
--   **Thuật toán phổ biến:** SHA-256, BLAKE3
-
-### IV (Initialization Vector) / Nonce
-
--   **Định nghĩa:** Giá trị ngẫu nhiên được dùng một lần cho mỗi lần mã hóa
--   **Mục đích:** Đảm bảo cùng plaintext + key tạo ra ciphertext khác nhau
--   **Kích thước:** Thường 12-16 bytes
-
-### KDF (Key Derivation Function)
-
--   **Định nghĩa:** Hàm tạo khóa mã hóa từ password hoặc secret khác
--   **Đặc điểm:** Chậm có chủ đích để chống brute-force
--   **Ví dụ:** Argon2, PBKDF2, scrypt
-
-### Plaintext
-
--   **Định nghĩa:** Dữ liệu chưa mã hóa, có thể đọc được
--   **Ngược lại:** Ciphertext (dữ liệu đã mã hóa)
-
-### Salt
-
--   **Định nghĩa:** Giá trị ngẫu nhiên được thêm vào password trước khi hash/derive key
--   **Mục đích:** Chống rainbow table attack, đảm bảo cùng password tạo ra key khác nhau
--   **Kích thước:** Thường 16-32 bytes
-
----
-
-## 🗄️ Thuật ngữ Ứng dụng (Application)
-
-### Category
-
--   **Định nghĩa:** Danh mục để phân loại entries (Login, Credit Card, Note, Identity)
--   **Mục đích:** Tổ chức và tìm kiếm entries dễ dàng hơn
-
-### Entry
-
--   **Định nghĩa:** Một bản ghi trong vault, chứa thông tin đăng nhập hoặc dữ liệu nhạy cảm
--   **Thành phần:**
-    -   Title (tên hiển thị)
-    -   Username
-    -   Password (encrypted)
-    -   URL
-    -   Notes
-    -   Custom fields
-
-### Favorite
-
--   **Định nghĩa:** Entry được đánh dấu yêu thích để truy cập nhanh
--   **Hiển thị:** Danh sách riêng ở đầu giao diện
-
-### Master Password
-
--   **Định nghĩa:** Mật khẩu chính duy nhất mà user phải nhớ
+-   **Định nghĩa:** Đơn vị tổ chức cấp cao nhất — đại diện cho một loại dữ liệu do user tự định nghĩa
+-   **Ví dụ:** Movies, TV Shows, Books, Games, Anime
 -   **Đặc điểm:**
-    -   Dùng để derive encryption key
-    -   Không được lưu trữ ở bất kỳ đâu
-    -   Nếu mất = mất toàn bộ dữ liệu
+    -   Mỗi Collection có schema riêng (danh sách Attributes)
+    -   Chứa nhiều Items
+    -   Có `slug` duy nhất để identify trong URL/code
 
-### Password Generator
+### Item
 
--   **Định nghĩa:** Tính năng tạo mật khẩu ngẫu nhiên mạnh
--   **Options:** Độ dài, uppercase, lowercase, numbers, symbols
+-   **Định nghĩa:** Một bản ghi dữ liệu trong Collection
+-   **Ví dụ:** Phim "Inception", sách "Dune", game "Elden Ring"
+-   **Đặc điểm:**
+    -   Thuộc về đúng một Collection
+    -   Có `title` (indexed) và cột `properties` (JSON) chứa giá trị các Attributes
+    -   Bảng `items` là bảng lớn nhất — target 10M+ rows
 
-### Vault
+### Attribute
 
--   **Định nghĩa:** Container chính chứa tất cả entries của user
--   **Cấu trúc file:**
-    -   Header (metadata, salt, IV)
-    -   Encrypted body (entries)
--   **Trạng thái:** Locked (đã khóa) / Unlocked (đã mở)
+-   **Định nghĩa:** Định nghĩa một trường dữ liệu tuỳ chỉnh cho Collection
+-   **Ví dụ:** "Director" (text), "Rating" (decimal), "Genre" (multiselect)
+-   **Đặc điểm:**
+    -   Thuộc về đúng một Collection
+    -   Có `key` duy nhất trong Collection — dùng làm key trong JSON `properties`
+    -   Có `type` xác định kiểu dữ liệu và component UI tương ứng
 
-### Vault File
+### Properties (JSON)
 
--   **Định nghĩa:** File vật lý lưu trữ vault trên disk
--   **Extension:** `.vault`
--   **Format:** Binary (header) + Encrypted JSON (body)
+-   **Định nghĩa:** Cột TEXT trong bảng `items` lưu giá trị các Attributes dưới dạng JSON object
+-   **Ví dụ:**
+    ```json
+    {
+        "director": "Christopher Nolan",
+        "rating": 8.8,
+        "genre": ["Sci-Fi", "Thriller"]
+    }
+    ```
+-   **Đặc điểm:** Cho phép mỗi Collection có schema riêng mà không cần migration
+
+### EAV (Entity–Attribute–Value)
+
+-   **Định nghĩa:** Mô hình lưu trữ cho phép thêm trường dữ liệu tuỳ ý mà không cần thay đổi schema bảng
+-   **Trong Vaultrs:** Kết hợp EAV (bảng `attributes` định nghĩa schema) với JSON column (`properties`) để đạt cả flexibility và query performance
+-   **Lợi ích:** User tạo field mới cho Collection mà không cần database migration
+
+### Relation (Cross-Collection Link)
+
+-   **Định nghĩa:** Liên kết giữa Items thuộc các Collections khác nhau
+-   **Ví dụ:** Item "Inception" (Movies) liên kết tới Item "Christopher Nolan" (Directors)
+-   **Đặc điểm:**
+    -   Sử dụng Attribute type `reference` để lưu ID của Item đích
+    -   Cho phép xây dựng Knowledge Graph cá nhân
+    -   Được resolve tại thời điểm query
+
+### Slug
+
+-   **Định nghĩa:** Chuỗi URL-friendly, duy nhất, được tạo từ tên Collection
+-   **Ví dụ:** `"Movies"` → `"movies"`, `"TV Shows"` → `"tv-shows"`
+-   **Mục đích:** Dùng để identify Collection trong URL, API calls, và code
 
 ---
 
 ## 🏗️ Thuật ngữ Kiến trúc (Architecture)
 
-### Backend (Rust/Tauri)
+### Tauri
 
--   **Định nghĩa:** Phần xử lý logic phía server/native của ứng dụng
--   **Công nghệ:** Rust + Tauri framework
--   **Trách nhiệm:** Cryptography, file I/O, system calls
+-   **Định nghĩa:** Framework phát triển ứng dụng desktop đa nền tảng, dùng Rust cho backend và WebView cho frontend
+-   **Phiên bản:** v2
+-   **So với Electron:** Binary nhỏ hơn (~8MB vs ~150MB), memory thấp hơn, bảo mật tốt hơn
 
 ### Command (Tauri)
 
--   **Định nghĩa:** Function được expose từ Rust để frontend có thể gọi
+-   **Định nghĩa:** Function Rust được expose cho frontend gọi qua IPC
 -   **Syntax:** `#[tauri::command]`
 
 ```rust
 #[tauri::command]
-fn unlock_vault(password: String) -> Result<Vault, String> { }
+async fn get_items(collection_id: i32) -> Result<Vec<Item>, String> { }
 ```
-
-### Frontend (React)
-
--   **Định nghĩa:** Giao diện người dùng của ứng dụng
--   **Công nghệ:** React + TypeScript + TailwindCSS
--   **Trách nhiệm:** UI rendering, user interaction
 
 ### IPC (Inter-Process Communication)
 
--   **Định nghĩa:** Cơ chế giao tiếp giữa frontend (webview) và backend (Rust)
--   **Trong Tauri:** `invoke()` function
+-   **Định nghĩa:** Cơ chế giao tiếp giữa frontend (WebView) và backend (Rust process)
+-   **Trong Tauri:** Sử dụng `invoke()` function
 
 ```typescript
-const vault = await invoke("unlock_vault", { password: "..." });
+const items = await invoke("get_items", { collectionId: 1 });
 ```
 
 ### Module
 
 -   **Định nghĩa:** Đơn vị tổ chức code theo feature/domain
--   **Ví dụ:** `auth/`, `vault/`, `entry/`, `generator/`
+-   **Backend:** `collections/`, `items/`, `custom_fields/`, `relations/`, `search/`
+-   **Frontend:** `modules/vault/` (Collections), `modules/entry/` (Items)
+
+### Modular Monolith
+
+-   **Định nghĩa:** Kiến trúc ứng dụng — tất cả components trong một process duy nhất nhưng được tổ chức theo module rõ ràng với ranh giới tường minh
+-   **Lợi ích:** Đơn giản deploy (một file executable), dễ debug, phù hợp single-user desktop app
 
 ### State Management
 
 -   **Định nghĩa:** Cách quản lý và chia sẻ dữ liệu trong ứng dụng
--   **Frontend:** React Context, Zustand
--   **Backend:** Tauri State
+-   **Frontend:** React Context, URL state, TanStack Query
+-   **Backend:** Tauri Managed State (`AppState`)
 
 ---
 
-## 🔒 Thuật ngữ Bảo mật (Security)
+## 💾 Thuật ngữ Database
 
-### Authentication
+### SQLite
 
--   **Định nghĩa:** Xác thực danh tính user (verify master password)
--   **Khác với:** Authorization (phân quyền)
+-   **Định nghĩa:** Hệ quản trị cơ sở dữ liệu nhúng, lưu trong một file duy nhất
+-   **Trong Vaultrs:** Database chính, lưu tại `<app_data_dir>/vaultrs.db`
+-   **Phiên bản tối thiểu:** 3.53.0+ (bản vá lỗi WAL-reset quan trọng)
 
-### Auto-lock
+### WAL Mode (Write-Ahead Logging)
 
--   **Định nghĩa:** Tự động khóa vault sau thời gian không hoạt động
--   **Mục đích:** Bảo vệ khi user quên lock
+-   **Định nghĩa:** Chế độ ghi của SQLite cho phép đọc đồng thời trong khi đang ghi
+-   **Lợi ích cho Vaultrs:**
+    -   UI không bị block khi background crawler đang write
+    -   Crash recovery tốt hơn
+    -   Hiệu năng ghi nhanh hơn
 
-### Clipboard Clear
+### FTS5 (Full-Text Search 5)
 
--   **Định nghĩa:** Tự động xóa password khỏi clipboard sau X giây
--   **Mục đích:** Tránh password bị paste nhầm hoặc bị đánh cắp
+-   **Định nghĩa:** Extension của SQLite hỗ trợ tìm kiếm toàn văn có xếp hạng
+-   **Trong Vaultrs:** Virtual table `items_fts` index `title` và `properties` của Items
+-   **Sử dụng:** `SELECT * FROM items_fts WHERE items_fts MATCH 'nolan AND thriller'`
 
-### Memory Protection
+### SeaORM
 
--   **Định nghĩa:** Kỹ thuật bảo vệ dữ liệu nhạy cảm trong RAM
--   **Phương pháp:**
-    -   Zero memory sau khi sử dụng
-    -   Sử dụng secure string types
-    -   Tránh swap to disk
+-   **Định nghĩa:** ORM (Object-Relational Mapping) async-first cho Rust
+-   **Phiên bản:** 2.0
+-   **Vai trò:** Truy vấn database type-safe, quản lý migration, entity modeling
 
-### Zero-Knowledge
+### Migration
 
--   **Định nghĩa:** Kiến trúc mà server/app không biết master password
--   **Đặc điểm:** Mọi encryption/decryption xảy ra locally
-
----
-
-## 📁 Thuật ngữ File Format
-
-### Header (Vault)
-
--   **Định nghĩa:** Phần đầu của vault file chứa metadata
--   **Nội dung:** Version, salt, IV, encryption algorithm
-
-### Magic Bytes
-
--   **Định nghĩa:** Bytes đặc biệt ở đầu file để identify file type
--   **Ví dụ:** `VLTR` (0x564C5452) cho Vaultrs vault file
-
-### Schema Version
-
--   **Định nghĩa:** Version của vault file format
--   **Mục đích:** Backward compatibility, migration
+-   **Định nghĩa:** Script thay đổi schema database có version control
+-   **Công cụ:** `sea-orm-cli migrate`
+-   **Đặc điểm:** Chạy tự động khi khởi động app, theo thứ tự timestamp
 
 ---
 
-## 🔗 Thuật ngữ Liên quan
+## ⚡ Thuật ngữ Hiệu năng (Performance)
 
-### CSPRNG (Cryptographically Secure Pseudo-Random Number Generator)
+### Virtual Scrolling
 
--   **Định nghĩa:** Bộ sinh số ngẫu nhiên an toàn cho cryptography
--   **Sử dụng:** Tạo salt, IV, random passwords
+-   **Định nghĩa:** Kỹ thuật chỉ render các row đang nhìn thấy trên viewport, thay vì render toàn bộ danh sách
+-   **Thư viện:** TanStack Virtual
+-   **Lợi ích:** Memory usage O(1) thay vì O(n) — render ~50 rows thay vì 10M
 
-### TOTP (Time-based One-Time Password)
+### Pagination
 
--   **Định nghĩa:** Mã OTP thay đổi theo thời gian (mỗi 30 giây)
--   **Ví dụ:** Google Authenticator codes
--   **Tương lai:** Vaultrs có thể hỗ trợ lưu TOTP secrets
-
-### URI (Uniform Resource Identifier)
-
--   **Định nghĩa:** Chuỗi định danh tài nguyên (thường là URL)
--   **Sử dụng:** Lưu website URL trong entry
+-   **Định nghĩa:** Chia kết quả truy vấn thành các "trang" nhỏ (offset + limit)
+-   **Kết hợp với:** Virtual scrolling để chỉ fetch dữ liệu cần thiết từ database
 
 ---
 
 ## 📚 Viết tắt Thường dùng
 
-| Viết tắt | Đầy đủ                                   |
-| -------- | ---------------------------------------- |
-| AES      | Advanced Encryption Standard             |
-| API      | Application Programming Interface        |
-| CRUD     | Create, Read, Update, Delete             |
-| DTO      | Data Transfer Object                     |
-| GCM      | Galois/Counter Mode                      |
-| IPC      | Inter-Process Communication              |
-| IV       | Initialization Vector                    |
-| KDF      | Key Derivation Function                  |
-| OTP      | One-Time Password                        |
-| PBKDF2   | Password-Based Key Derivation Function 2 |
-| TOTP     | Time-based One-Time Password             |
-| UI       | User Interface                           |
-| UX       | User Experience                          |
+| Viết tắt | Đầy đủ                            |
+| -------- | ---------------------------------- |
+| API      | Application Programming Interface |
+| CRUD     | Create, Read, Update, Delete       |
+| DTO      | Data Transfer Object               |
+| EAV      | Entity–Attribute–Value             |
+| FK       | Foreign Key                        |
+| FTS      | Full-Text Search                   |
+| IPC      | Inter-Process Communication        |
+| ORM      | Object-Relational Mapping          |
+| PK       | Primary Key                        |
+| UI       | User Interface                     |
+| UX       | User Experience                    |
+| WAL      | Write-Ahead Logging                |
 
 ---
 
@@ -278,4 +205,4 @@ const vault = await invoke("unlock_vault", { password: "..." });
 
 ---
 
-_Cập nhật: 2025-12-26_
+_Cập nhật: 2026-07-16_

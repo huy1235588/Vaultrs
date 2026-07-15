@@ -45,9 +45,7 @@ vaultrs/
 │   ├── public/              # Static assets
 │   ├── package.json         # Node config & scripts
 │   ├── pnpm-lock.yaml       # Lock file (pnpm)
-│   ├── vite.config.ts       # Vite bundler config
-│   ├── tailwind.config.ts   # TailwindCSS config
-│   ├── postcss.config.mjs   # PostCSS config
+│   ├── vite.config.ts       # Vite bundler config (Tailwind v4 via plugin)
 │   ├── tsconfig.json        # TypeScript config
 │   ├── .eslintrc.cjs        # ESLint config
 │   └── components.json      # shadcn/ui config
@@ -68,8 +66,7 @@ vaultrs/
 | `desktop/`                     | Chứa toàn bộ Tauri desktop app           |
 | `desktop/package.json`         | Quản lý dependencies và scripts frontend |
 | `desktop/src-tauri/Cargo.toml` | Quản lý dependencies Rust                |
-| `desktop/vite.config.ts`       | Cấu hình bundler Vite                    |
-| `desktop/tailwind.config.ts`   | Cấu hình TailwindCSS                     |
+| `desktop/vite.config.ts`       | Cấu hình bundler Vite (bao gồm Tailwind v4 plugin) |
 | `desktop/tsconfig.json`        | Cấu hình TypeScript                      |
 | `docs/`                        | Tài liệu kỹ thuật dự án                  |
 
@@ -84,19 +81,27 @@ docs/
 ├── 00-meta/                 # Meta docs (hướng dẫn viết docs)
 │   ├── 1-folder-structure.md    # 📁 File này
 │   ├── 2-naming-convention.md   # 📝 Quy ước đặt tên
-│   └── 3-how-to-document.md     # 📘 Cách viết tài liệu
+│   ├── 3-how-to-document.md     # 📘 Cách viết tài liệu
+│   ├── 4-glossary.md            # 📖 Từ điển thuật ngữ
+│   ├── 5-versioning.md          # 🏷️ Quy ước versioning
+│   └── 6-docs-index.md          # 📚 Mục lục tài liệu
 │
 ├── 01-architecture/         # Kiến trúc hệ thống
-│   └── *.md                 # Sơ đồ & giải thích kiến trúc
+│   ├── 1-overview.md            # Tổng quan kiến trúc
+│   ├── 2-system-design.md       # Thiết kế hệ thống chi tiết
+│   └── 3-tech-stack.md          # Công nghệ sử dụng
 │
 ├── 02-database/             # Database & storage
-│   └── *.md                 # Schema, format, migrations
+│   ├── 1-overview.md            # Tổng quan database
+│   ├── 2-schema.md              # Schema chi tiết
+│   ├── 3-indexes.md             # Indexes & performance
+│   ├── 4-queries.md             # Queries
+│   ├── 5-migrations.md          # Migrations
+│   ├── 6-backup.md              # Backup & recovery
+│   └── 7-field-data-handling.md # JSON properties format
 │
-├── 03-backend-rust/         # Tài liệu Backend Rust
-│   └── *.md                 # API specs, crypto, security
-│
-├── 04-frontend-react/       # Tài liệu Frontend React
-│   └── *.md                 # Components, UI flows, state
+├── 03-backend-rust/         # Tài liệu Backend Rust (chưa viết)
+├── 04-frontend-react/       # Tài liệu Frontend React (chưa viết)
 │
 └── 99-dev-notes/            # Ghi chép developer
     └── idea.md              # Ý tưởng & features mới
@@ -140,42 +145,41 @@ desktop/src-tauri/
     │   ├── result.rs        # Result type aliases
     │   └── config.rs        # App configuration
     │
-    ├── crypto/              # 🔐 Module: Cryptography (shared)
+    ├── db/                  # 💾 Database connection & migrations
     │   ├── mod.rs
-    │   ├── encryption.rs    # AES-256-GCM encryption/decryption
-    │   ├── kdf.rs           # Argon2 key derivation
-    │   ├── hash.rs          # Hashing utilities
-    │   └── random.rs        # Secure random generation
+    │   ├── connection.rs    # SQLite connection (WAL mode)
+    │   └── migrations/      # SeaORM migration files
     │
-    ├── auth/                # 🔑 Module: Authentication
+    ├── collections/         # 📂 Module: Collection Management
     │   ├── mod.rs           # Module root
-    │   ├── commands.rs      # Tauri commands (login, logout, verify)
+    │   ├── commands.rs      # Tauri commands (CRUD collections)
     │   ├── service.rs       # Business logic
-    │   ├── models.rs        # Auth-specific models
+    │   ├── models.rs        # Collection entity & DTOs
     │   └── tests.rs         # Unit tests
     │
-    ├── vault/               # 🗄️ Module: Vault Management
+    ├── items/               # 📝 Module: Item Management
     │   ├── mod.rs           # Module root
-    │   ├── commands.rs      # Tauri commands (create, open, lock, unlock)
+    │   ├── commands.rs      # Tauri commands (CRUD items)
     │   ├── service.rs       # Business logic
-    │   ├── models.rs        # Vault model & DTOs
-    │   ├── storage.rs       # Vault file I/O
+    │   ├── models.rs        # Item entity & DTOs
     │   └── tests.rs         # Unit tests
     │
-    ├── entry/               # 📝 Module: Password Entries
+    ├── custom_fields/       # 🏷️ Module: Attribute Definitions
     │   ├── mod.rs           # Module root
-    │   ├── commands.rs      # Tauri commands (CRUD entries)
-    │   ├── service.rs       # Business logic
-    │   ├── models.rs        # Entry, Category models
-    │   ├── search.rs        # Search & filter logic
+    │   ├── commands.rs      # Tauri commands (field CRUD)
+    │   ├── service.rs       # EAV engine — field definitions & typed values
+    │   ├── models.rs        # Attribute entity & field types
     │   └── tests.rs         # Unit tests
     │
-    └── generator/           # 🎲 Module: Password Generator
-        ├── mod.rs           # Module root
-        ├── commands.rs      # Tauri commands (generate password)
-        ├── service.rs       # Generation algorithms
-        ├── models.rs        # GeneratorConfig, GeneratedPassword
-        ├── patterns.rs      # Pattern-based generation
+    ├── relations/           # 🔗 Module: Cross-Collection Links
+    │   ├── mod.rs
+    │   ├── service.rs       # Reference field resolution
+    │   └── models.rs        # Relation models
+    │
+    └── search/              # 🔍 Module: Full-Text Search
+        ├── mod.rs
+        ├── commands.rs      # Tauri commands (search)
+        ├── service.rs       # FTS5 indexing & query coordination
         └── tests.rs         # Unit tests
 ```
 
@@ -637,4 +641,4 @@ desktop/src/
 
 ---
 
-_Cập nhật: 2025-12-26_
+_Cập nhật: 2026-07-16_

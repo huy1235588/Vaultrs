@@ -18,8 +18,6 @@
 │
 ├── 📁 01-architecture/      ← Kiến trúc hệ thống
 ├── 📁 02-database/          ← Database & storage
-├── 📁 03-backend-rust/      ← Backend Rust/Tauri
-├── 📁 04-frontend-react/    ← Frontend React
 └── 📁 99-dev-notes/         ← Ghi chép developer
 ```
 
@@ -36,7 +34,7 @@ Hướng dẫn cách tổ chức, viết và maintain tài liệu dự án.
 | 1   | [📁 Cấu trúc Thư mục](./1-folder-structure.md)   | Mô tả chi tiết cấu trúc thư mục dự án     |
 | 2   | [📝 Quy ước Đặt tên](./2-naming-convention.md)   | Naming conventions cho Rust, React, files |
 | 3   | [📘 Hướng dẫn Viết Docs](./3-how-to-document.md) | Cách viết, đọc và maintain tài liệu       |
-| 4   | [📖 Từ điển Thuật ngữ](./4-glossary.md)          | Định nghĩa các thuật ngữ chuyên ngành     |
+| 4   | [📖 Từ điển Thuật ngữ](./4-glossary.md)          | Định nghĩa các thuật ngữ dự án            |
 | 5   | [🏷️ Quy ước Versioning](./5-versioning.md)       | Semantic versioning, changelog, release   |
 | 6   | [📚 Mục lục Tài liệu](./6-docs-index.md)         | File này — danh mục tổng hợp              |
 
@@ -46,16 +44,11 @@ Hướng dẫn cách tổ chức, viết và maintain tài liệu dự án.
 
 Sơ đồ và giải thích kiến trúc tổng quan của Vaultrs.
 
-| #   | Tài liệu             | Mô tả |
-| --- | -------------------- | ----- |
-|     | _Đang phát triển..._ |       |
-
-**Nên có:**
-
--   [ ] Kiến trúc tổng quan (Tauri + React)
--   [ ] Data flow diagram
--   [ ] Security architecture
--   [ ] Deployment architecture
+| #   | Tài liệu                                                  | Mô tả                                                       |
+| --- | ---------------------------------------------------------- | ------------------------------------------------------------ |
+| 1   | [🏗️ Tổng quan Kiến trúc](../01-architecture/1-overview.md) | Modular Monolith, three-layer, module overview               |
+| 2   | [🔧 Thiết kế Hệ thống](../01-architecture/2-system-design.md) | Components, state management, image storage, testing     |
+| 3   | [🛠️ Tech Stack](../01-architecture/3-tech-stack.md)        | Công nghệ, phiên bản, ghi chú nâng cấp                      |
 
 ---
 
@@ -63,16 +56,15 @@ Sơ đồ và giải thích kiến trúc tổng quan của Vaultrs.
 
 Schema, format và cách lưu trữ dữ liệu.
 
-| #   | Tài liệu             | Mô tả |
-| --- | -------------------- | ----- |
-|     | _Đang phát triển..._ |       |
-
-**Nên có:**
-
--   [ ] Vault file format specification
--   [ ] Entry schema & fields
--   [ ] Migration guide
--   [ ] Backup & restore
+| #   | Tài liệu                                                        | Mô tả                                    |
+| --- | ---------------------------------------------------------------- | ---------------------------------------- |
+| 1   | [💾 Tổng quan Database](../02-database/1-overview.md)             | SQLite, WAL mode, EAV + JSON, targets    |
+| 2   | [📋 Database Schema](../02-database/2-schema.md)                 | DDL, columns, FTS5, schema diagram       |
+| 3   | [⚡ Indexes & Performance](../02-database/3-indexes.md)           | Index strategy, query optimization       |
+| 4   | [🔍 Queries](../02-database/4-queries.md)                        | Common queries, pagination, FTS5 search  |
+| 5   | [🔄 Migrations](../02-database/5-migrations.md)                  | SeaORM migration quy trình               |
+| 6   | [💾 Backup & Recovery](../02-database/6-backup.md)               | Backup strategies, restore               |
+| 7   | [📊 Field Data Handling](../02-database/7-field-data-handling.md) | JSON properties format, field types      |
 
 ---
 
@@ -82,12 +74,11 @@ Tài liệu cho phần backend viết bằng Rust với Tauri framework.
 
 | #   | Tài liệu             | Mô tả |
 | --- | -------------------- | ----- |
-|     | _Đang phát triển..._ |       |
+|     | _Chưa viết_          |       |
 
 **Nên có:**
 
 -   [ ] Tauri commands API reference
--   [ ] Cryptography implementation
 -   [ ] Error handling guide
 -   [ ] Module documentation
 -   [ ] Testing guide
@@ -100,7 +91,7 @@ Tài liệu cho phần frontend viết bằng React + TypeScript.
 
 | #   | Tài liệu             | Mô tả |
 | --- | -------------------- | ----- |
-|     | _Đang phát triển..._ |       |
+|     | _Chưa viết_          |       |
 
 **Nên có:**
 
@@ -108,7 +99,6 @@ Tài liệu cho phần frontend viết bằng React + TypeScript.
 -   [ ] State management guide
 -   [ ] UI/UX patterns
 -   [ ] Accessibility (a11y) guide
--   [ ] Testing guide
 
 ---
 
@@ -128,7 +118,7 @@ Tài liệu cho phần frontend viết bằng React + TypeScript.
 
 ```
 1. README.md (root)           → Tổng quan dự án
-2. CONTRIBUTING.md            → Hướng dẫn đóng góp
+2. CONTRIBUTING.md            → Hướng dẫn phát triển
 3. docs/00-meta/1-folder-structure.md → Hiểu cấu trúc code
 4. docs/00-meta/2-naming-convention.md → Quy ước đặt tên
 5. docs/01-architecture/...   → Hiểu kiến trúc
@@ -141,10 +131,9 @@ Tài liệu cho phần frontend viết bằng React + TypeScript.
 | Hiểu cấu trúc project     | [1-folder-structure.md](./1-folder-structure.md)   |
 | Viết code đúng convention | [2-naming-convention.md](./2-naming-convention.md) |
 | Viết/cập nhật tài liệu    | [3-how-to-document.md](./3-how-to-document.md)     |
-| Hiểu thuật ngữ crypto     | [4-glossary.md](./4-glossary.md)                   |
+| Hiểu thuật ngữ dự án      | [4-glossary.md](./4-glossary.md)                   |
 | Hiểu cách đánh version    | [5-versioning.md](./5-versioning.md)               |
-| Làm backend Rust          | `docs/03-backend-rust/`                            |
-| Làm frontend React        | `docs/04-frontend-react/`                          |
+| Hiểu database schema      | `docs/02-database/`                                |
 | Ghi ý tưởng mới           | [99-dev-notes/idea.md](../99-dev-notes/idea.md)    |
 
 ---
@@ -157,44 +146,21 @@ Các file quan trọng ở thư mục gốc:
 | ---------------------------------------------- | ---------------------------------- |
 | [README.md](../../README.md)                   | Giới thiệu dự án, cài đặt, sử dụng |
 | [CHANGELOG.md](../../CHANGELOG.md)             | Lịch sử thay đổi qua các version   |
-| [CONTRIBUTING.md](../../CONTRIBUTING.md)       | Hướng dẫn đóng góp code            |
-| [CODE_OF_CONDUCT.md](../../CODE_OF_CONDUCT.md) | Quy tắc ứng xử cộng đồng           |
-
----
-
-## 🔍 Tìm kiếm Nhanh
-
-### Theo Công nghệ
-
-| Công nghệ        | Tài liệu liên quan                                     |
-| ---------------- | ------------------------------------------------------ |
-| **Rust**         | `03-backend-rust/`, `00-meta/2-naming-convention.md`   |
-| **Tauri**        | `03-backend-rust/`, `01-architecture/`                 |
-| **React**        | `04-frontend-react/`, `00-meta/2-naming-convention.md` |
-| **TypeScript**   | `04-frontend-react/`, `00-meta/2-naming-convention.md` |
-| **Cryptography** | `03-backend-rust/`, `00-meta/4-glossary.md`            |
-
-### Theo Chủ đề
-
-| Chủ đề      | Tài liệu liên quan                       |
-| ----------- | ---------------------------------------- |
-| **Bảo mật** | `03-backend-rust/`, `01-architecture/`   |
-| **UI/UX**   | `04-frontend-react/`                     |
-| **Testing** | `03-backend-rust/`, `04-frontend-react/` |
-| **DevOps**  | `01-architecture/`                       |
+| [CONTRIBUTING.md](../../CONTRIBUTING.md)       | Hướng dẫn phát triển               |
+| [CODE_OF_CONDUCT.md](../../CODE_OF_CONDUCT.md) | Quy tắc ứng xử                     |
 
 ---
 
 ## 📊 Trạng thái Tài liệu
 
-| Thư mục              | Trạng thái  | Độ hoàn thiện  |
-| -------------------- | ----------- | -------------- |
-| `00-meta/`           | ✅ Có       | ████████░░ 80% |
-| `01-architecture/`   | 🔄 Đang làm | ██░░░░░░░░ 20% |
-| `02-database/`       | 🔄 Đang làm | ██░░░░░░░░ 20% |
-| `03-backend-rust/`   | 🔄 Đang làm | ██░░░░░░░░ 20% |
-| `04-frontend-react/` | 🔄 Đang làm | ██░░░░░░░░ 20% |
-| `99-dev-notes/`      | ✅ Có       | ████████░░ 80% |
+| Thư mục              | Trạng thái     | Ghi chú |
+| --------------------- | --------------- | -------- |
+| `00-meta/`            | ✅ Hoàn chỉnh   | 6 files — đã cập nhật khớp sản phẩm hiện tại (personal metadata vault). |
+| `01-architecture/`    | ✅ Có nội dung  | 3 files: overview, system-design, tech-stack. Thiếu data-flow và design-patterns. |
+| `02-database/`        | ✅ Đầy đủ       | 7 files: overview → schema → indexes → queries → migrations → backup → field-data-handling. |
+| `03-backend-rust/`    | ❌ Chưa có     | Chưa có file nào — viết khi bắt đầu implement. |
+| `04-frontend-react/`  | ❌ Chưa có     | Chưa có file nào — viết khi bắt đầu implement. |
+| `99-dev-notes/`       | ✅ Có          | `idea.md` — ý tưởng cũ (password manager) đã được archive. |
 
 ---
 
@@ -210,4 +176,4 @@ Xem thêm: [3-how-to-document.md](./3-how-to-document.md)
 
 ---
 
-_Cập nhật: 2025-12-26_
+_Cập nhật: 2026-07-16_
