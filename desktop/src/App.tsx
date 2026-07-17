@@ -1,29 +1,37 @@
 /**
- * App — Root component with collection context and conditional routing.
+ * App — Root component with collection context, item context, and conditional routing.
  *
- * Renders HomePage when no collection is selected, or CollectionPage
- * when a collection is active. Wraps everything in CollectionProvider.
+ * Renders HomePage when no collection is selected, CollectionPage when a collection
+ * is active, and ItemDetailPage when a specific item is selected.
  */
 import { useCallback, useRef } from "react";
 import { CollectionProvider, useCollections } from "@/core/context/CollectionContext";
+import { ItemProvider, useItem } from "@/core/context/ItemContext";
 import MainLayout from "@/components/Layout/MainLayout";
 import HomePage from "@/pages/HomePage";
 import CollectionPage from "@/pages/CollectionPage";
+import ItemDetailPage from "@/pages/ItemDetailPage";
 
 /**
- * Inner app content that has access to the collection context.
+ * Inner app content that has access to the collection and item contexts.
  */
 function AppContent() {
     const { selectedCollection } = useCollections();
+    const { selectedItem } = useItem();
     const addItemRef = useRef<(() => void) | null>(null);
 
     const handleAddItem = useCallback(() => {
         addItemRef.current?.();
     }, []);
 
+    // Only show "Add Item" button in header if a collection is selected AND we are NOT in item detail view
+    const showAddAction = selectedCollection && !selectedItem;
+
     return (
-        <MainLayout onAddItem={selectedCollection ? handleAddItem : undefined}>
-            {selectedCollection ? (
+        <MainLayout onAddItem={showAddAction ? handleAddItem : undefined}>
+            {selectedItem ? (
+                <ItemDetailPage />
+            ) : selectedCollection ? (
                 <CollectionPage onAddItemRef={addItemRef} />
             ) : (
                 <HomePage />
@@ -35,9 +43,12 @@ function AppContent() {
 function App() {
     return (
         <CollectionProvider>
-            <AppContent />
+            <ItemProvider>
+                <AppContent />
+            </ItemProvider>
         </CollectionProvider>
     );
 }
 
 export default App;
+

@@ -2,10 +2,12 @@
  * ItemTable — Table displaying items in a collection with pagination.
  */
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, Trash2 } from "lucide-react";
 import * as itemService from "@/core/api/itemService";
 import type { Item, PaginatedResponse } from "@/core/types/common";
 import { Button } from "@/components/ui/button";
+import { useItem } from "@/core/context/ItemContext";
+import { DeleteItemDialog } from "./DeleteItemDialog";
 
 interface ItemTableProps {
     collectionId: number;
@@ -25,10 +27,13 @@ function formatDate(timestamp: number): string {
 }
 
 function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
+    const { selectItem } = useItem();
     const [data, setData] = useState<PaginatedResponse<Item> | null>(null);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
+
 
     const fetchItems = useCallback(async () => {
         setLoading(true);
@@ -106,7 +111,7 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
     // --- Table ---
     return (
         <div>
-            <div className="overflow-hidden rounded-lg border border-border">
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-border bg-muted/50">
@@ -119,22 +124,35 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
                             <th className="hidden w-36 px-4 py-3 text-left font-medium text-muted-foreground sm:table-cell">
                                 Updated
                             </th>
+                            <th className="w-16 px-4 py-3 text-right font-medium text-muted-foreground"></th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                         {data.data.map((item) => (
                             <tr
                                 key={item.id}
-                                className="transition-colors hover:bg-accent/50 cursor-pointer"
+                                className="group transition-colors hover:bg-accent/40 cursor-pointer"
+                                onClick={() => selectItem(item.id)}
                             >
-                                <td className="px-4 py-3 font-medium text-foreground">
+                                <td className="px-4 py-3 font-semibold text-foreground">
                                     {item.title}
                                 </td>
-                                <td className="hidden w-36 px-4 py-3 text-muted-foreground sm:table-cell">
+                                <td className="hidden w-36 px-4 py-3 text-muted-foreground sm:table-cell text-xs">
                                     {formatDate(item.created_at)}
                                 </td>
-                                <td className="hidden w-36 px-4 py-3 text-muted-foreground sm:table-cell">
+                                <td className="hidden w-36 px-4 py-3 text-muted-foreground sm:table-cell text-xs">
                                     {formatDate(item.updated_at)}
+                                </td>
+                                <td className="w-16 px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon-xs"
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
+                                        onClick={() => setDeleteTarget(item)}
+                                        title="Delete Item"
+                                    >
+                                        <Trash2 className="size-3.5" />
+                                    </Button>
                                 </td>
                             </tr>
                         ))}
@@ -174,8 +192,23 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            {deleteTarget && (
+                <DeleteItemDialog
+                    itemId={deleteTarget.id}
+                    itemTitle={deleteTarget.title}
+                    open={!!deleteTarget}
+                    onOpenChange={(open) => !open && setDeleteTarget(null)}
+                    onDeleted={() => {
+                        setDeleteTarget(null);
+                        fetchItems();
+                    }}
+                />
+            )}
         </div>
     );
 }
 
 export default ItemTable;
+

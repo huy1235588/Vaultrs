@@ -2,14 +2,16 @@
  * Sidebar — Navigation sidebar showing the collection list and management controls.
  */
 import { useState } from "react";
-import { Plus, MoreHorizontal, Pencil, Trash2, Database } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil, Trash2, Database, Settings } from "lucide-react";
 import { useCollections } from "@/core/context/CollectionContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CreateCollectionDialog } from "@/components/Collection/CreateCollectionDialog";
 import { EditCollectionDialog } from "@/components/Collection/EditCollectionDialog";
 import { DeleteCollectionDialog } from "@/components/Collection/DeleteCollectionDialog";
+import { AttributeManager } from "@/components/Attribute/AttributeManager";
 import type { Collection } from "@/core/types/common";
+
 
 function Sidebar() {
     const { collections, selectedCollection, selectCollection, loading } =
@@ -19,6 +21,8 @@ function Sidebar() {
     const [editTarget, setEditTarget] = useState<Collection | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Collection | null>(null);
     const [contextMenuId, setContextMenuId] = useState<number | null>(null);
+    const [attrManagerOpen, setAttrManagerOpen] = useState(false);
+
 
     return (
         <aside className="flex w-64 flex-col border-r border-border bg-card">
@@ -132,6 +136,19 @@ function Sidebar() {
                                         </button>
                                         <button
                                             type="button"
+                                            className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                selectCollection(collection.id);
+                                                setAttrManagerOpen(true);
+                                                setContextMenuId(null);
+                                            }}
+                                        >
+                                            <Settings className="size-3.5" />
+                                            Manage Fields
+                                        </button>
+                                        <button
+                                            type="button"
                                             className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -169,6 +186,14 @@ function Sidebar() {
                     collection={deleteTarget}
                     open={!!deleteTarget}
                     onOpenChange={(open) => !open && setDeleteTarget(null)}
+                />
+            )}
+
+            {/* Attribute Manager */}
+            {selectedCollection && (
+                <AttributeManager
+                    open={attrManagerOpen}
+                    onOpenChange={setAttrManagerOpen}
                 />
             )}
         </aside>

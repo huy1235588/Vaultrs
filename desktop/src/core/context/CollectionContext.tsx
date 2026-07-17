@@ -2,7 +2,8 @@
  * CollectionContext — Global state for collection management.
  *
  * Provides the list of collections, the currently selected collection,
- * and CRUD actions that synchronize with the Tauri backend.
+ * attributes for the selected collection, and CRUD actions that
+ * synchronize with the Tauri backend.
  */
 import {
     createContext,
@@ -12,12 +13,17 @@ import {
     useMemo,
     useState,
 } from "react";
-import type { Collection } from "@/core/types/common";
+import type { Attribute, Collection } from "@/core/types/common";
 import * as collectionService from "@/core/api/collectionService";
+import * as attributeService from "@/core/api/attributeService";
 import type {
     CreateCollectionDto,
     UpdateCollectionDto,
 } from "@/core/api/collectionService";
+import type {
+    CreateAttributeDto,
+    UpdateAttributeDto,
+} from "@/core/api/attributeService";
 
 // --- Types ---
 
@@ -30,6 +36,10 @@ interface CollectionState {
     loading: boolean;
     /** Last error message, if any. */
     error: string | null;
+    /** Attributes (custom fields) for the selected collection. */
+    attributes: Attribute[];
+    /** Whether attributes are being loaded. */
+    attributesLoading: boolean;
 }
 
 interface CollectionActions {
@@ -46,6 +56,14 @@ interface CollectionActions {
     ) => Promise<Collection>;
     /** Delete a collection and refresh the list. */
     removeCollection: (id: number) => Promise<void>;
+    /** Reload attributes for the selected collection. */
+    loadAttributes: () => Promise<void>;
+    /** Create a new attribute for the selected collection. */
+    addAttribute: (dto: CreateAttributeDto) => Promise<Attribute>;
+    /** Update an existing attribute. */
+    editAttribute: (id: number, dto: UpdateAttributeDto) => Promise<Attribute>;
+    /** Delete an attribute. */
+    removeAttribute: (id: number) => Promise<void>;
 }
 
 type CollectionContextValue = CollectionState & CollectionActions;
@@ -66,6 +84,8 @@ export function CollectionProvider({
         useState<Collection | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [attributes, setAttributes] = useState<Attribute[]>([]);
+    const [attributesLoading, setAttributesLoading] = useState(false);
 
     // Load collections from backend
     const loadCollections = useCallback(async () => {
@@ -134,10 +154,66 @@ export function CollectionProvider({
         [loadCollections],
     );
 
+    // --- Attribute Actions ---
+
+    // Load attributes for the selected collection
+    const loadAttributes = useCallback(async () => {
+        if (!selectedCollection) {
+            setAttributes([]);
+            return;
+        }
+        setAttributesLoading(true);
+        try {
+            const data = await attributeService.getAttributes(
+                selectedCollection.id,
+            );
+            setAttributes(data);
+        } catch (err) {
+            console.error("Failed to load attributes:", err);
+            setAttributes([]);
+        } finally {
+            setAttributesLoading(false);
+        }
+    }, [selectedCollection]);
+
+    // Create a new attribute
+    const addAttribute = useCallback(
+        async (dto: CreateAttributeDto): Promise<Attribute> => {
+            const created = await attributeService.createAttribute(dto);
+            await loadAttributes();
+            return created;
+        },
+        [loadAttributes],
+    );
+
+    // Update an existing attribute
+    const editAttribute = useCallback(
+        async (id: number, dto: UpdateAttributeDto): Promise<Attribute> => {
+            const updated = await attributeService.updateAttribute(id, dto);
+            await loadAttributes();
+            return updated;
+        },
+        [loadAttributes],
+    );
+
+    // Delete an attribute
+    const removeAttribute = useCallback(
+        async (id: number): Promise<void> => {
+            await attributeService.deleteAttribute(id);
+            await loadAttributes();
+        },
+        [loadAttributes],
+    );
+
     // Initial load
     useEffect(() => {
         loadCollections();
     }, [loadCollections]);
+
+    // Fetch attributes when selected collection changes
+    useEffect(() => {
+        loadAttributes();
+    }, [loadAttributes]);
 
     const value = useMemo<CollectionContextValue>(
         () => ({
@@ -145,22 +221,34 @@ export function CollectionProvider({
             selectedCollection,
             loading,
             error,
+            attributes,
+            attributesLoading,
             loadCollections,
             selectCollection,
             addCollection,
             editCollection,
             removeCollection,
+            loadAttributes,
+            addAttribute,
+            editAttribute,
+            removeAttribute,
         }),
         [
             collections,
             selectedCollection,
             loading,
             error,
+            attributes,
+            attributesLoading,
             loadCollections,
             selectCollection,
             addCollection,
             editCollection,
             removeCollection,
+            loadAttributes,
+            addAttribute,
+            editAttribute,
+            removeAttribute,
         ],
     );
 

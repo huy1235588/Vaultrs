@@ -130,13 +130,15 @@ impl MigrationTrait for Migration {
                 END;
 
                 CREATE TRIGGER IF NOT EXISTS items_fts_delete AFTER DELETE ON items BEGIN
-                    DELETE FROM items_fts WHERE rowid = OLD.id;
+                    INSERT INTO items_fts(items_fts, rowid, title, properties)
+                    VALUES('delete', OLD.id, OLD.title, OLD.properties);
                 END;
 
                 CREATE TRIGGER IF NOT EXISTS items_fts_update AFTER UPDATE ON items BEGIN
-                    UPDATE items_fts
-                    SET title = NEW.title, properties = NEW.properties
-                    WHERE rowid = NEW.id;
+                    INSERT INTO items_fts(items_fts, rowid, title, properties)
+                    VALUES('delete', OLD.id, OLD.title, OLD.properties);
+                    INSERT INTO items_fts(rowid, title, properties)
+                    VALUES(NEW.id, NEW.title, NEW.properties);
                 END;
                 "#,
             )
