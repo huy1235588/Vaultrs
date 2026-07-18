@@ -7,6 +7,7 @@
 import { useCallback, useRef } from "react";
 import { CollectionProvider, useCollections } from "@/core/context/CollectionContext";
 import { ItemProvider, useItem } from "@/core/context/ItemContext";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import MainLayout from "@/components/Layout/MainLayout";
 import HomePage from "@/pages/HomePage";
 import CollectionPage from "@/pages/CollectionPage";
@@ -44,7 +45,9 @@ function App() {
     return (
         <CollectionProvider>
             <ItemProvider>
-                <AppContent />
+                <TooltipProvider delayDuration={300}>
+                    <AppContent />
+                </TooltipProvider>
             </ItemProvider>
         </CollectionProvider>
     );

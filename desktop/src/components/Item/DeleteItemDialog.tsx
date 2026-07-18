@@ -2,7 +2,7 @@
  * DeleteItemDialog — Modal confirmation for deleting an item.
  */
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import * as itemService from "@/core/api/itemService";
 import {
     Dialog,
@@ -32,6 +32,11 @@ export function DeleteItemDialog({
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    function handleOpenChange(next: boolean) {
+        if (!next) setError(null);
+        onOpenChange(next);
+    }
+
     async function handleDelete() {
         setSubmitting(true);
         setError(null);
@@ -49,28 +54,23 @@ export function DeleteItemDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive sm:mx-0 sm:size-10">
                         <AlertTriangle className="size-6" />
                     </div>
                     <DialogTitle className="pt-4 text-center sm:text-left">
-                        Delete Item
+                        Delete item
                     </DialogTitle>
                     <DialogDescription className="text-center sm:text-left">
-                        Are you sure you want to delete &ldquo;
+                        This permanently deletes &ldquo;
                         <span className="font-semibold text-foreground">
                             {itemTitle}
                         </span>
-                        &rdquo;?
+                        &rdquo; and all of its custom field data. This can&apos;t be undone.
                     </DialogDescription>
                 </DialogHeader>
-
-                <p className="text-sm text-muted-foreground">
-                    This action is permanent and cannot be undone. All custom fields and data
-                    saved for this item will be lost.
-                </p>
 
                 {error && (
                     <p className="text-sm font-medium text-destructive mt-2">{error}</p>
@@ -80,7 +80,7 @@ export function DeleteItemDialog({
                     <Button
                         type="button"
                         variant="outline"
-                        onClick={() => onOpenChange(false)}
+                        onClick={() => handleOpenChange(false)}
                         disabled={submitting}
                     >
                         Cancel
@@ -90,8 +90,10 @@ export function DeleteItemDialog({
                         variant="destructive"
                         onClick={handleDelete}
                         disabled={submitting}
+                        className="gap-1.5 min-w-[110px]"
                     >
-                        {submitting ? "Deleting..." : "Delete Item"}
+                        {submitting && <Loader2 className="size-3.5 animate-spin" />}
+                        {submitting ? "Deleting..." : "Delete item"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

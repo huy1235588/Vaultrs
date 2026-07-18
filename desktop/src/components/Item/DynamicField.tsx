@@ -2,7 +2,20 @@
  * DynamicField — Component for rendering and editing a single custom field value based on its type.
  */
 import { useEffect, useState } from "react";
-import { Link, ExternalLink } from "lucide-react";
+import {
+    Link,
+    ExternalLink,
+    Type,
+    AlignLeft,
+    Hash,
+    Sigma,
+    Calendar,
+    CalendarClock,
+    ToggleLeft,
+    List,
+    ListChecks,
+    type LucideIcon,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -25,6 +38,20 @@ interface DynamicFieldProps {
     onChange: (value: any) => void;
     className?: string;
 }
+
+/** Small glyph shown next to each field's label so its type is recognizable at a glance. */
+const FIELD_ICONS: Partial<Record<FieldType, LucideIcon>> = {
+    text: Type,
+    textarea: AlignLeft,
+    number: Hash,
+    decimal: Sigma,
+    date: Calendar,
+    datetime: CalendarClock,
+    checkbox: ToggleLeft,
+    select: List,
+    multiselect: ListChecks,
+    url: Link,
+};
 
 export function DynamicField({ attribute, value, onChange, className }: DynamicFieldProps) {
     const [choices, setChoices] = useState<string[]>([]);
@@ -90,7 +117,7 @@ export function DynamicField({ attribute, value, onChange, className }: DynamicF
                             onChange(val === "" ? null : parseInt(val, 10));
                         }}
                         placeholder="0"
-                        className="bg-background/50"
+                        className="bg-background/50 tabular-nums"
                     />
                 );
 
@@ -105,7 +132,7 @@ export function DynamicField({ attribute, value, onChange, className }: DynamicF
                             onChange(val === "" ? null : parseFloat(val));
                         }}
                         placeholder="0.00"
-                        className="bg-background/50"
+                        className="bg-background/50 tabular-nums"
                     />
                 );
 
@@ -131,19 +158,19 @@ export function DynamicField({ attribute, value, onChange, className }: DynamicF
 
             case "checkbox":
                 return (
-                    <div className="flex items-center h-9">
+                    <Label
+                        htmlFor={`switch-${attribute.id}`}
+                        className="flex h-9 cursor-pointer items-center justify-between rounded-md border bg-background/50 px-3 transition-colors hover:bg-accent/40"
+                    >
+                        <span className="text-xs font-medium text-muted-foreground">
+                            {value ? "Enabled" : "Disabled"}
+                        </span>
                         <Switch
                             id={`switch-${attribute.id}`}
                             checked={!!value}
                             onCheckedChange={(checked) => onChange(checked)}
                         />
-                        <Label
-                            htmlFor={`switch-${attribute.id}`}
-                            className="ml-2.5 text-xs text-muted-foreground cursor-pointer"
-                        >
-                            {value ? "Enabled / Yes" : "Disabled / No"}
-                        </Label>
-                    </div>
+                    </Label>
                 );
 
             case "select":
@@ -165,10 +192,10 @@ export function DynamicField({ attribute, value, onChange, className }: DynamicF
                     </Select>
                 );
 
-            case "multiselect":
-                const selectedList = Array.isArray(value) ? value : [];
+            case "multiselect": {
+                const selectedList: string[] = Array.isArray(value) ? value : [];
                 return (
-                    <div className="flex flex-wrap gap-1.5 p-2 border rounded-md bg-background/30 min-h-9">
+                    <div className="flex min-h-9 flex-wrap gap-1.5 rounded-md border bg-background/30 p-2">
                         {choices.length === 0 ? (
                             <span className="text-xs text-muted-foreground italic px-1">
                                 No options defined
@@ -181,14 +208,14 @@ export function DynamicField({ attribute, value, onChange, className }: DynamicF
                                         type="button"
                                         key={choice}
                                         onClick={() => handleMultiToggle(choice)}
-                                        className="transition-all focus:outline-none"
+                                        className="transition-transform focus:outline-none active:scale-95"
                                     >
                                         <Badge
                                             variant={isSelected ? "default" : "outline"}
                                             className={cn(
-                                                "cursor-pointer select-none text-xs px-2.5 py-0.5",
+                                                "cursor-pointer select-none text-xs px-2.5 py-0.5 transition-colors",
                                                 isSelected
-                                                    ? "bg-primary text-primary-foreground hover:bg-primary/95"
+                                                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
                                                     : "bg-background/30 hover:bg-accent hover:text-foreground text-muted-foreground"
                                             )}
                                         >
@@ -200,8 +227,9 @@ export function DynamicField({ attribute, value, onChange, className }: DynamicF
                         )}
                     </div>
                 );
+            }
 
-            case "url":
+            case "url": {
                 const isValidUrl =
                     typeof value === "string" &&
                     (value.startsWith("http://") || value.startsWith("https://"));
@@ -224,13 +252,14 @@ export function DynamicField({ attribute, value, onChange, className }: DynamicF
                                 size="icon"
                                 className="shrink-0"
                                 onClick={() => window.open(value, "_blank")}
-                                title="Open URL in Browser"
+                                title="Open URL in browser"
                             >
                                 <ExternalLink className="size-4" />
                             </Button>
                         )}
                     </div>
                 );
+            }
 
             default:
                 return (
@@ -245,13 +274,16 @@ export function DynamicField({ attribute, value, onChange, className }: DynamicF
         }
     };
 
+    const FieldIcon = FIELD_ICONS[attribute.field_type as FieldType] ?? Type;
+
     return (
         <div className={cn("space-y-1.5", className)}>
             <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <Label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <FieldIcon className="size-3 text-muted-foreground/70" />
                     {attribute.name}
                     {attribute.required === 1 && (
-                        <span className="text-destructive ml-1">*</span>
+                        <span className="text-destructive ml-0.5">*</span>
                     )}
                 </Label>
             </div>

@@ -2,6 +2,7 @@
  * CreateItemDialog — Modal form for creating a new item in a collection.
  */
 import { useState } from "react";
+import { AlertCircle, Loader2, Plus } from "lucide-react";
 import * as itemService from "@/core/api/itemService";
 import {
     Dialog,
@@ -76,13 +77,20 @@ export function CreateItemDialog({
             <DialogContent className="sm:max-w-md">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
-                        <DialogTitle>New Item</DialogTitle>
-                        <DialogDescription>
-                            Add a new item to &ldquo;{collectionName}&rdquo;.
-                        </DialogDescription>
+                        <div className="flex items-center gap-3">
+                            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                <Plus className="size-4" />
+                            </div>
+                            <div>
+                                <DialogTitle>New item</DialogTitle>
+                                <DialogDescription>
+                                    Add a new item to &ldquo;{collectionName}&rdquo;.
+                                </DialogDescription>
+                            </div>
+                        </div>
                     </DialogHeader>
 
-                    <div className="mt-4 space-y-4">
+                    <div className="mt-5 space-y-4">
                         {/* Title */}
                         <div className="space-y-2">
                             <label
@@ -103,7 +111,10 @@ export function CreateItemDialog({
 
                         {/* Error */}
                         {error && (
-                            <p className="text-sm text-destructive">{error}</p>
+                            <div className="flex items-start gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm font-medium text-destructive">
+                                <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                                <span>{error}</span>
+                            </div>
                         )}
                     </div>
 
@@ -119,8 +130,10 @@ export function CreateItemDialog({
                         <Button
                             type="submit"
                             disabled={!isValid || submitting}
+                            className="gap-1.5 min-w-[110px]"
                         >
-                            {submitting ? "Creating..." : "Create"}
+                            {submitting && <Loader2 className="size-3.5 animate-spin" />}
+                            {submitting ? "Creating..." : "Create item"}
                         </Button>
                     </DialogFooter>
                 </form>
