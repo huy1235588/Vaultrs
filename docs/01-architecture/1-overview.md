@@ -6,12 +6,15 @@
 
 ## 📋 TL;DR
 
-| Thành phần       | Công nghệ                    | Vai trò                          |
+| Thành phần       | Công nghệ / Giải pháp          | Vai trò / Chiến lược              |
 | ---------------- | ----------------------------- | --------------------------------- |
 | **Frontend**     | React 19 + TypeScript 7        | Giao diện người dùng             |
 | **Backend**      | Rust + Tauri v2                | Xử lý logic, quản lý dữ liệu     |
 | **Database**     | SQLite 3.53.x (WAL Mode)       | Lưu trữ dữ liệu nhúng            |
 | **Architecture** | Modular Monolith               | Tổ chức code theo module/feature |
+| **View Mode**    | List \| Grid                  | Chế độ hiển thị danh sách dạng bảng hoặc lưới |
+| **Loading**      | Pagination \| Infinite Scroll | Tải dữ liệu phân trang hoặc cuộn vô tận |
+| **Rendering**    | Virtualization (Luôn bật)     | Tối ưu render danh sách lớn       |
 
 > Chi tiết version đầy đủ (Vite, Tailwind, SeaORM, TanStack...) xem tại [Tech Stack](./3-tech-stack.md).
 
@@ -88,16 +91,17 @@ Vaultrs sử dụng kiến trúc **Modular Monolith** - tất cả components tr
 ### Layer 1: Presentation Layer (Frontend)
 
 ```typescript
-// React Components → UI Rendering
-// TanStack Table → Data Grid Logic
-// TanStack Virtual → 10M Row Virtualization
+// React Components → UI Rendering (List | Grid Mode)
+// TanStack Table → Data Grid Logic & Pagination / Infinite Scroll
+// TanStack Virtual → 10M Row Virtualization (Always Enabled)
 ```
 
 **Trách nhiệm:**
 
--   Render UI components
+-   Render UI components theo chế độ hiển thị (List hoặc Grid view)
 -   Handle user interactions
--   Virtual scrolling cho large datasets
+-   Virtual scrolling / Virtualization (luôn bật cho cả hai chế độ hiển thị để tối ưu hóa hiệu năng danh sách lớn)
+-   Hỗ trợ hai chiến lược tải dữ liệu linh hoạt (Pagination và Infinite Scroll)
 -   State management
 
 ### Layer 2: Service Layer (Backend)
@@ -236,9 +240,15 @@ crawler/  → Fetch metadata
 
 ```
 ┌─────────────────────────────────────────────┐
-│          VIRTUAL SCROLLING                  │
-│  Only render visible rows (~50)             │
+│    VIRTUALIZATION (Rendering - Always ON)   │
+│  Only render visible items in List / Grid   │
 │  Memory usage: O(1) instead of O(n)         │
+└─────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────┐
+│      LOADING (Pagination / Infinite Scroll) │
+│  Only fetch required chunks of data from DB  │
+│  Keyset/Offset pagination dynamically managed│
 └─────────────────────────────────────────────┘
                     ↓
 ┌─────────────────────────────────────────────┐
@@ -256,12 +266,12 @@ crawler/  → Fetch metadata
 
 ### Performance Targets
 
-| Operation         | Target  | Strategy           |
-| ----------------- | ------- | ------------------ |
-| Initial Load      | < 500ms | Pagination + index |
-| Scroll Frame Rate | 60 FPS  | Virtual scrolling  |
-| Search            | < 100ms | SQLite FTS         |
-| Insert            | < 10ms  | Optimized writes   |
+| Operation         | Target  | Strategy                                           |
+| ----------------- | ------- | -------------------------------------------------- |
+| Initial Load      | < 500ms | Pagination / Infinite Scroll + index               |
+| Scroll Frame Rate | 60 FPS  | Virtualization (Always ON for List / Grid view)    |
+| Search            | < 100ms | SQLite FTS                                         |
+| Insert            | < 10ms  | Optimized writes                                   |
 
 ---
 

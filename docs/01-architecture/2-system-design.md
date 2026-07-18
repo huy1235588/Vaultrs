@@ -72,8 +72,11 @@ App.tsx
 │       │       ├── HomePage
 │       │       ├── VaultPage
 │       │       │   ├── CollectionList
-│       │       │   └── ItemGrid
-│       │       │       └── VirtualTable
+│       │       │   └── ItemViewer
+│       │       │       ├── ViewModeToggle
+│       │       │       ├── LoadingStrategySelector
+│       │       │       ├── VirtualList
+│       │       │       └── VirtualGrid
 │       │       └── SettingsPage
 │       └── AuthGuard (nếu có)
 ```
@@ -113,12 +116,16 @@ src/
 │   │   └── types/
 │   ├── entry/               # Item management
 │   │   ├── components/
-│   │   │   ├── EntryList.tsx
-│   │   │   ├── EntryCard.tsx
-│   │   │   ├── EntryForm.tsx
-│   │   │   └── VirtualTable.tsx
+│   │   │   ├── EntryList.tsx          # Wrapper cho danh sách dạng bảng (List view)
+│   │   │   ├── EntryGrid.tsx          # Wrapper cho danh sách dạng thẻ (Grid view)
+│   │   │   ├── EntryCard.tsx          # Thẻ hiển thị Item (dùng trong Grid)
+│   │   │   ├── EntryRow.tsx           # Hàng hiển thị Item (dùng trong List)
+│   │   │   ├── VirtualList.tsx        # Render danh sách ảo hóa dạng bảng
+│   │   │   ├── VirtualGrid.tsx        # Render danh sách ảo hóa dạng lưới
+│   │   │   ├── ViewModeToggle.tsx     # Bộ nút chuyển đổi List/Grid
+│   │   │   └── LoadingControls.tsx    # Nút phân trang hoặc phần tử trigger Infinite Scroll
 │   │   ├── hooks/
-│   │   │   ├── useEntries.ts
+│   │   │   ├── useEntries.ts          # State/IPC hook hỗ trợ cả hai chiến lược load dữ liệu
 │   │   │   └── useSearch.ts
 │   │   ├── services/
 │   │   │   └── entryService.ts
@@ -572,40 +579,97 @@ async fn process_crawl_task(task: CrawlTask, db: &DatabaseConnection) {
 
 ---
 
-## 8. 📈 Performance Design
+## 8. 📈 Performance & UI Strategies
 
-### Virtual Scrolling Implementation
+### 8.1 Rendering Strategy: Virtualization (Luôn bật)
 
+Để đảm bảo hiệu năng tối ưu trên quy mô dữ liệu cực lớn (**10M+ records**), kỹ thuật **Virtualization** (phân trang ảo/cuộn ảo) thông qua thư viện `TanStack Virtual` được bắt buộc áp dụng và luôn ở trạng thái hoạt động cho cả hai chế độ hiển thị:
+
+#### A. Virtualization trong List Mode (Dạng bảng)
+Cuộn ảo 1 chiều (dọc) với chiều cao mỗi hàng cố định hoặc dynamic.
 ```typescript
-// Only render visible rows
-const virtualizer = useVirtualizer({
-    count: totalItems, // Could be 10M+
+const rowVirtualizer = useVirtualizer({
+    count: items.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => ROW_HEIGHT,
-    overscan: 5, // Buffer rows
+    estimateSize: () => 48, // Chiều cao ước lượng của một hàng bảng
+    overscan: 5,
 });
-
-// Render chỉ ~50 rows thay vì 10M
-const virtualRows = virtualizer.getVirtualItems();
 ```
 
-### Pagination Strategy
+#### B. Virtualization trong Grid Mode (Dạng lưới)
+Cuộn ảo đa cột. Ổn định số lượng cột dựa trên chiều rộng viewport, sau đó tính toán số hàng ảo cần hiển thị.
+```typescript
+const colCount = Math.floor(viewportWidth / CARD_WIDTH);
+const rowCount = Math.ceil(items.length / colCount);
 
-```rust
-// Backend pagination
-pub async fn get_items(
-    collection_id: i32,
-    offset: u64,
-    limit: u64,
-) -> Result<Vec<Item>> {
-    Item::find()
-        .filter(item::Column::CollectionId.eq(collection_id))
-        .offset(offset)
-        .limit(limit)
-        .all(&db)
-        .await
-}
+const gridVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => CARD_HEIGHT, // Chiều cao ước lượng của một hàng thẻ
+    overscan: 3,
+});
 ```
+
+---
+
+### 8.2 View Mode: List | Grid
+
+Hệ thống hỗ trợ chuyển đổi linh hoạt giữa hai chế độ hiển thị tùy theo nhu cầu xem của người dùng:
+
+-   **List Mode (Dạng bảng):**
+    -   Hiển thị thông tin dưới dạng dòng và cột (Title, Created At, Updated At, các trường dữ liệu tùy chỉnh).
+    -   Tối ưu cho việc so sánh, sắp xếp nhanh nhiều trường thông tin và thực hiện các thao tác hàng loạt.
+-   **Grid Mode (Dạng lưới):**
+    -   Hiển thị thông tin dưới dạng các thẻ (Card) trực quan với ảnh bìa nổi bật (Cover Image).
+    -   Phù hợp cho các bộ sưu tập media, sách, hoặc hình ảnh yêu cầu trải nghiệm duyệt trực quan.
+
+---
+
+### 8.3 Loading Strategy: Pagination | Infinite Scroll
+
+Để giảm thiểu tải dữ liệu từ SQLite DB và tối ưu bộ nhớ heap của React, Vaultrs hỗ trợ cấu hình hai chiến lược tải dữ liệu:
+
+#### A. Chiến lược phân trang truyền thống (Pagination)
+-   Dữ liệu được tải theo từng trang cố định (ví dụ: 50 items/trang).
+-   Sử dụng các nút điều khiển Trang trước, Trang sau, Chọn trang.
+-   **Luồng IPC / SQL Backend:**
+    ```rust
+    // Sử dụng limit và offset để lấy dữ liệu đúng trang
+    pub async fn get_items_paginated(
+        collection_id: i32,
+        page: u64,
+        limit: u64,
+    ) -> Result<Vec<Item>> {
+        let offset = (page - 1) * limit;
+        Item::find()
+            .filter(item::Column::CollectionId.eq(collection_id))
+            .offset(offset)
+            .limit(limit)
+            .all(&db)
+            .await
+    }
+    ```
+
+#### B. Chiến lược cuộn vô tận (Infinite Scroll)
+-   Tự động tải thêm dữ liệu khi người dùng cuộn đến gần cuối danh sách hiện tại.
+-   Sử dụng một phần tử trigger (Intersection Observer) hoặc tích hợp trực tiếp vào sự kiện scroll của container cuộn ảo để gọi IPC tải trang tiếp theo và nối vào mảng dữ liệu hiện có (`prev => [...prev, ...newItems]`).
+-   **Luồng IPC / SQL Backend (Khuyến nghị dùng Keyset Pagination để tránh suy giảm hiệu năng ở offset lớn):**
+    ```rust
+    // Keyset pagination: Lọc theo ID lớn hơn ID cuối cùng của trang trước
+    pub async fn get_items_infinite(
+        collection_id: i32,
+        last_id: i32,
+        limit: u64,
+    ) -> Result<Vec<Item>> {
+        Item::find()
+            .filter(item::Column::CollectionId.eq(collection_id))
+            .filter(item::Column::Id.gt(last_id))
+            .order_by_asc(item::Column::Id)
+            .limit(limit)
+            .all(&db)
+            .await
+    }
+    ```
 
 ### Query Optimization
 

@@ -163,18 +163,22 @@ const items = await invoke("get_items", { collectionId: 1 });
 
 ---
 
-## ⚡ Thuật ngữ Hiệu năng (Performance)
+## ⚡ Thuật ngữ Hiệu năng & Giao diện (Performance & UI)
 
-### Virtual Scrolling
+### View Mode
+-   **Định nghĩa:** Chế độ hiển thị danh sách các bản ghi (Items) trong giao diện.
+-   **Các chế độ hỗ trợ:** List (dạng bảng truyền thống, tối ưu so sánh thông tin) và Grid (dạng lưới các thẻ hình ảnh trực quan).
 
--   **Định nghĩa:** Kỹ thuật chỉ render các row đang nhìn thấy trên viewport, thay vì render toàn bộ danh sách
--   **Thư viện:** TanStack Virtual
--   **Lợi ích:** Memory usage O(1) thay vì O(n) — render ~50 rows thay vì 10M
+### Rendering Strategy: Virtualization
+-   **Định nghĩa:** Chiến lược dựng hình bắt buộc luôn được kích hoạt, chỉ render các phần tử thực sự hiển thị trên viewport (cả dạng dòng bảng lẫn dạng lưới thẻ).
+-   **Thư viện sử dụng:** TanStack Virtual.
+-   **Lợi ích:** Tiết kiệm RAM và CPU, đưa chi phí render về độ phức tạp O(1) thay vì O(n), cho phép cuộn mượt mà trên tập dữ liệu 10M+ records.
 
-### Pagination
-
--   **Định nghĩa:** Chia kết quả truy vấn thành các "trang" nhỏ (offset + limit)
--   **Kết hợp với:** Virtual scrolling để chỉ fetch dữ liệu cần thiết từ database
+### Loading Strategy: Pagination | Infinite Scroll
+-   **Định nghĩa:** Chiến lược tải dữ liệu từ cơ sở dữ liệu lên giao diện.
+-   **Pagination:** Phân trang cổ điển, chia nhỏ dữ liệu tải bằng offset & limit thông qua nút bấm chuyển trang (Page 1, 2, 3...).
+-   **Infinite Scroll:** Cuộn vô tận, tải thêm trang tiếp theo khi cuộn gần đến đáy danh sách hiện có thông qua sự kiện cuộn hoặc Intersection Observer.
+-   **Kết hợp với:** Virtualization để vừa tải dữ liệu tối ưu từ database vừa duy trì số lượng DOM element tối thiểu trên UI.
 
 ---
 

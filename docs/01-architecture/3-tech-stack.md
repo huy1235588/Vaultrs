@@ -20,8 +20,8 @@
 | **Database** | SQLite           | 3.53.x                 | Embedded database              |
 | **UI Kit**   | shadcn/ui        | CLI v4                 | Accessible components          |
 | **Styling**  | Tailwind CSS     | 4.3.x                  | Utility-first CSS (CSS-first config) |
-| **Grid**     | TanStack Table   | v9                     | Headless table logic           |
-| **Virtual**  | TanStack Virtual | latest (bản 2026)      | Virtual scrolling               |
+| **Data Grid**| TanStack Table   | v9                     | Headless table logic           |
+| **Virtual**  | TanStack Virtual | latest (bản 2026)      | Virtual scrolling (List / Grid)|
 
 > 📌 Vaultrs hiện chưa pin version cụ thể trong `Cargo.toml`/`package.json` — bảng trên là bản mới nhất tồn tại trên registry, dùng làm target khi thiết lập dự án mới hoặc upgrade. Luôn khóa version cụ thể (không dùng `latest`/`*`) khi thực sự cài đặt.
 
@@ -116,14 +116,24 @@ export default defineConfig({
 
 ### TanStack (Table v9 + Virtual)
 
--   **TanStack Table**: đã lên **v9**, engine không đổi nhiều về API cốt lõi so với v8 nhưng có thêm hệ thống "skills" cho AI coding agent (chỉ có từ v9 trở lên).
--   **TanStack Virtual**: các bản 2026 tập trung tối ưu hiệu năng — cold mount ở 100k dòng nhanh hơn ~5x, sửa lỗi cuộn quán tính trên iOS Safari, và thêm chế độ "end-anchored virtualization" (hữu ích nếu Vaultrs làm thêm log/activity feed). Vẫn là lựa chọn đúng cho yêu cầu 10M+ rows.
+-   **TanStack Table**: quản lý logic headless cho dạng bảng (List Mode) và điều phối trạng thái phân trang (Pagination).
+-   **TanStack Virtual**: giải pháp ảo hóa bắt buộc (luôn bật) để hiển thị danh sách hàng triệu records. Thư viện này hỗ trợ tối ưu cả cuộn dọc 1 chiều cho List Mode (Table) lẫn cuộn đa cột cho Grid Mode. Các bản 2026 tập trung tối ưu hiệu năng — cold mount ở 100k dòng nhanh hơn ~5x, sửa lỗi cuộn quán tính trên iOS Safari.
 
 ```typescript
-const virtualizer = useVirtualizer({
+// Ví dụ ảo hóa 1 chiều cho List Mode (Table)
+const rowVirtualizer = useVirtualizer({
     count: 10_000_000,
-    estimateSize: () => 50,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 48,
     overscan: 5,
+});
+
+// Ví dụ ảo hóa đa cột cho Grid Mode (dựa trên cột đã chia)
+const gridVirtualizer = useVirtualizer({
+    count: Math.ceil(10_000_000 / columnsCount),
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 220, // Chiều cao hàng Grid
+    overscan: 3,
 });
 ```
 
