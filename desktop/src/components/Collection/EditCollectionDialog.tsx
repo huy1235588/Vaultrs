@@ -2,8 +2,10 @@
  * EditCollectionDialog — Modal form for editing an existing collection.
  */
 import { useEffect, useState } from "react";
+import { Loader2, Pencil } from "lucide-react";
 import { useCollections } from "@/core/context/CollectionContext";
 import type { Collection } from "@/core/types/common";
+import { cn } from "@/lib/utils";
 import {
     Dialog,
     DialogContent,
@@ -20,6 +22,8 @@ interface EditCollectionDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
+
+const ICON_PRESETS = ["📁", "🎬", "📚", "🎮", "🎵", "📷", "🍳", "✈️"];
 
 export function EditCollectionDialog({
     collection,
@@ -45,6 +49,10 @@ export function EditCollectionDialog({
     }, [collection]);
 
     const isValid = name.trim().length > 0;
+    const isDirty =
+        name.trim() !== collection.name ||
+        icon.trim() !== (collection.icon ?? "") ||
+        description.trim() !== (collection.description ?? "");
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -76,7 +84,10 @@ export function EditCollectionDialog({
             <DialogContent className="sm:max-w-md">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
-                        <DialogTitle>Edit Collection</DialogTitle>
+                        <div className="mb-1 flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                            <Pencil className="size-5 text-primary" />
+                        </div>
+                        <DialogTitle>Edit collection</DialogTitle>
                         <DialogDescription>
                             Update the details of &ldquo;{collection.name}
                             &rdquo;.
@@ -111,13 +122,44 @@ export function EditCollectionDialog({
                                     (emoji)
                                 </span>
                             </label>
-                            <Input
-                                id="edit-icon"
-                                placeholder="🎬"
-                                value={icon}
-                                onChange={(e) => setIcon(e.target.value)}
-                                className="w-20"
-                            />
+                            <div className="flex items-start gap-2">
+                                <Input
+                                    id="edit-icon"
+                                    placeholder="🎬"
+                                    value={icon}
+                                    onChange={(e) => setIcon(e.target.value)}
+                                    className="w-14 shrink-0 text-center text-base"
+                                    maxLength={4}
+                                />
+                                <div className="flex flex-1 flex-wrap gap-1 pt-0.5">
+                                    {ICON_PRESETS.map((preset) => (
+                                        <button
+                                            key={preset}
+                                            type="button"
+                                            onClick={() => setIcon(preset)}
+                                            aria-label={`Use ${preset} as icon`}
+                                            aria-pressed={icon === preset}
+                                            className={cn(
+                                                "flex size-8 items-center justify-center rounded-md text-base transition-colors hover:bg-muted",
+                                                icon === preset &&
+                                                    "bg-muted ring-1 ring-ring",
+                                            )}
+                                        >
+                                            {preset}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Live preview */}
+                        <div className="flex items-center gap-2.5 rounded-lg border border-dashed border-border bg-muted/30 px-3 py-2">
+                            <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-base shadow-sm">
+                                {icon || "📁"}
+                            </span>
+                            <span className="truncate text-sm font-medium text-foreground">
+                                {name.trim() || "Untitled collection"}
+                            </span>
                         </div>
 
                         {/* Description */}
@@ -155,9 +197,12 @@ export function EditCollectionDialog({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={!isValid || submitting}
+                            disabled={!isValid || !isDirty || submitting}
                         >
-                            {submitting ? "Saving..." : "Save Changes"}
+                            {submitting && (
+                                <Loader2 className="size-4 animate-spin" />
+                            )}
+                            {submitting ? "Saving..." : "Save changes"}
                         </Button>
                     </DialogFooter>
                 </form>

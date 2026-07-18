@@ -1,8 +1,10 @@
 /**
  * CreateCollectionDialog — Modal form for creating a new collection.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { FolderPlus, Loader2 } from "lucide-react";
 import { useCollections } from "@/core/context/CollectionContext";
+import { cn } from "@/lib/utils";
 import {
     Dialog,
     DialogContent,
@@ -17,7 +19,12 @@ import { Input } from "@/components/ui/input";
 interface CreateCollectionDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    /** Optional starting values, e.g. from a quick-start suggestion. */
+    initialName?: string;
+    initialIcon?: string;
 }
+
+const ICON_PRESETS = ["📁", "🎬", "📚", "🎮", "🎵", "📷", "🍳", "✈️"];
 
 /** Generate a URL-safe slug from a string. */
 function toSlug(text: string): string {
@@ -33,14 +40,24 @@ function toSlug(text: string): string {
 export function CreateCollectionDialog({
     open,
     onOpenChange,
+    initialName,
+    initialIcon,
 }: CreateCollectionDialogProps) {
     const { addCollection } = useCollections();
 
-    const [name, setName] = useState("");
-    const [icon, setIcon] = useState("");
+    const [name, setName] = useState(initialName ?? "");
+    const [icon, setIcon] = useState(initialIcon ?? "");
     const [description, setDescription] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Re-seed the form from quick-start suggestions each time it opens.
+    useEffect(() => {
+        if (open) {
+            setName(initialName ?? "");
+            setIcon(initialIcon ?? "");
+        }
+    }, [open, initialName, initialIcon]);
 
     const slug = toSlug(name);
     const isValid = name.trim().length > 0;
@@ -90,7 +107,10 @@ export function CreateCollectionDialog({
             <DialogContent className="sm:max-w-md">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
-                        <DialogTitle>New Collection</DialogTitle>
+                        <div className="mb-1 flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                            <FolderPlus className="size-5 text-primary" />
+                        </div>
+                        <DialogTitle>New collection</DialogTitle>
                         <DialogDescription>
                             Create a collection to start organizing your data.
                         </DialogDescription>
@@ -133,13 +153,44 @@ export function CreateCollectionDialog({
                                     (emoji)
                                 </span>
                             </label>
-                            <Input
-                                id="create-icon"
-                                placeholder="🎬"
-                                value={icon}
-                                onChange={(e) => setIcon(e.target.value)}
-                                className="w-20"
-                            />
+                            <div className="flex items-start gap-2">
+                                <Input
+                                    id="create-icon"
+                                    placeholder="🎬"
+                                    value={icon}
+                                    onChange={(e) => setIcon(e.target.value)}
+                                    className="w-14 shrink-0 text-center text-base"
+                                    maxLength={4}
+                                />
+                                <div className="flex flex-1 flex-wrap gap-1 pt-0.5">
+                                    {ICON_PRESETS.map((preset) => (
+                                        <button
+                                            key={preset}
+                                            type="button"
+                                            onClick={() => setIcon(preset)}
+                                            aria-label={`Use ${preset} as icon`}
+                                            aria-pressed={icon === preset}
+                                            className={cn(
+                                                "flex size-8 items-center justify-center rounded-md text-base transition-colors hover:bg-muted",
+                                                icon === preset &&
+                                                    "bg-muted ring-1 ring-ring",
+                                            )}
+                                        >
+                                            {preset}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Live preview */}
+                        <div className="flex items-center gap-2.5 rounded-lg border border-dashed border-border bg-muted/30 px-3 py-2">
+                            <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-base shadow-sm">
+                                {icon || "📁"}
+                            </span>
+                            <span className="truncate text-sm font-medium text-foreground">
+                                {name.trim() || "Untitled collection"}
+                            </span>
                         </div>
 
                         {/* Description */}
@@ -175,11 +226,11 @@ export function CreateCollectionDialog({
                         >
                             Cancel
                         </Button>
-                        <Button
-                            type="submit"
-                            disabled={!isValid || submitting}
-                        >
-                            {submitting ? "Creating..." : "Create"}
+                        <Button type="submit" disabled={!isValid || submitting}>
+                            {submitting && (
+                                <Loader2 className="size-4 animate-spin" />
+                            )}
+                            {submitting ? "Creating..." : "Create collection"}
                         </Button>
                     </DialogFooter>
                 </form>

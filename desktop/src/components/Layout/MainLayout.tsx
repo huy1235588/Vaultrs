@@ -15,6 +15,14 @@ interface MainLayoutProps {
 function MainLayout({ children, onAddItem }: MainLayoutProps) {
     return (
         <div className="flex h-screen overflow-hidden bg-background">
+            {/* Skip link — lets keyboard users jump past the chrome */}
+            <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-1.5 focus:text-sm focus:font-medium focus:text-primary-foreground"
+            >
+                Skip to content
+            </a>
+
             {/* Sidebar */}
             <Sidebar />
 
@@ -24,7 +32,9 @@ function MainLayout({ children, onAddItem }: MainLayoutProps) {
                 <Header onAddItem={onAddItem} />
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">{children}</div>
+                <div id="main-content" className="flex-1 overflow-y-auto p-6 lg:p-8">
+                    {children}
+                </div>
             </main>
         </div>
     );

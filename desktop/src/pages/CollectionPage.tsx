@@ -2,9 +2,20 @@
  * CollectionPage — Displays the items within the selected collection.
  */
 import { useEffect, useState } from "react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useCollections } from "@/core/context/CollectionContext";
 import ItemTable from "@/components/Item/ItemTable";
 import { CreateItemDialog } from "@/components/Item/CreateItemDialog";
+import { EditCollectionDialog } from "@/components/Collection/EditCollectionDialog";
+import { DeleteCollectionDialog } from "@/components/Collection/DeleteCollectionDialog";
+import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface CollectionPageProps {
     /**
@@ -17,6 +28,8 @@ interface CollectionPageProps {
 function CollectionPage({ onAddItemRef }: CollectionPageProps) {
     const { selectedCollection } = useCollections();
     const [createItemOpen, setCreateItemOpen] = useState(false);
+    const [editOpen, setEditOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
 
     // Expose the open-dialog function to the parent via ref
@@ -35,13 +48,13 @@ function CollectionPage({ onAddItemRef }: CollectionPageProps) {
     return (
         <div className="flex h-full flex-col">
             {/* Collection info header */}
-            <div className="mb-6">
+            <div className="mb-6 flex items-start justify-between gap-4 border-b border-border pb-5">
                 <div className="flex items-center gap-3">
-                    <span className="text-3xl leading-none">
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/40 text-2xl leading-none">
                         {selectedCollection.icon || "📁"}
                     </span>
                     <div>
-                        <h1 className="text-xl font-bold text-foreground">
+                        <h1 className="text-xl font-bold tracking-tight text-foreground">
                             {selectedCollection.name}
                         </h1>
                         {selectedCollection.description && (
@@ -51,6 +64,32 @@ function CollectionPage({ onAddItemRef }: CollectionPageProps) {
                         )}
                     </div>
                 </div>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Collection options"
+                        >
+                            <MoreHorizontal className="size-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                            <Pencil className="size-4" />
+                            Edit collection
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => setDeleteOpen(true)}
+                        >
+                            <Trash2 className="size-4" />
+                            Delete collection
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             {/* Item table */}
@@ -68,6 +107,18 @@ function CollectionPage({ onAddItemRef }: CollectionPageProps) {
                 open={createItemOpen}
                 onOpenChange={setCreateItemOpen}
                 onCreated={() => setRefreshKey((k) => k + 1)}
+            />
+
+            {/* Edit / delete collection dialogs */}
+            <EditCollectionDialog
+                collection={selectedCollection}
+                open={editOpen}
+                onOpenChange={setEditOpen}
+            />
+            <DeleteCollectionDialog
+                collection={selectedCollection}
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
             />
         </div>
     );
