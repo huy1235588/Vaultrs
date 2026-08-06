@@ -57,3 +57,27 @@ export async function updateItem(
 export async function deleteItem(id: number): Promise<void> {
     return tauriInvoke<void>("delete_item", { id });
 }
+
+// --- Cursor-based Pagination (for infinite scroll) ---
+
+export interface CursorParams {
+    after_id?: number;
+    limit?: number;
+}
+
+export interface CursorResponse<T> {
+    data: T[];
+    has_more: boolean;
+    total: number;
+}
+
+/** Fetch items using cursor-based pagination (for infinite scroll). */
+export async function getItemsCursor(
+    collectionId: number,
+    params: CursorParams = {},
+): Promise<CursorResponse<Item>> {
+    return tauriInvoke<CursorResponse<Item>>("get_items_cursor", {
+        collectionId,
+        params,
+    });
+}

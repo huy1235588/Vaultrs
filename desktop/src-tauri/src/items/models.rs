@@ -68,3 +68,22 @@ pub struct PaginatedResponse<T: Serialize> {
     pub page_size: u64,
     pub total_pages: u64,
 }
+
+/// Cursor-based pagination parameters (for infinite scroll).
+#[derive(Debug, Deserialize)]
+pub struct CursorParams {
+    /// ID of the last item from the previous page (None for first page).
+    pub after_id: Option<i32>,
+    /// Number of items to fetch (default: 50, max: 200).
+    pub limit: Option<u64>,
+}
+
+/// Cursor-based paginated response.
+#[derive(Debug, Serialize)]
+pub struct CursorResponse<T: Serialize> {
+    pub data: Vec<T>,
+    /// Whether there are more items after this batch.
+    pub has_more: bool,
+    /// Total count of items in the collection (for UI display).
+    pub total: u64,
+}

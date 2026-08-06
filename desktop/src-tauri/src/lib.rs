@@ -8,6 +8,7 @@ mod core;
 mod custom_fields;
 mod db;
 mod items;
+mod search;
 
 use tauri::Manager;
 
@@ -47,6 +48,7 @@ pub fn run() {
             collections::commands::delete_collection,
             // Item commands
             items::commands::get_items,
+            items::commands::get_items_cursor,
             items::commands::get_item,
             items::commands::create_item,
             items::commands::update_item,
@@ -56,6 +58,9 @@ pub fn run() {
             custom_fields::commands::create_attribute,
             custom_fields::commands::update_attribute,
             custom_fields::commands::delete_attribute,
+            // Search commands
+            search::commands::search_items,
+            search::commands::quick_search,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

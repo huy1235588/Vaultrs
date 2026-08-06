@@ -104,4 +104,48 @@ impl ItemService {
 
         Ok(())
     }
+
+    /// Get items using cursor-based pagination (for infinite scroll).
+    ///
+    /// Uses keyset pagination (`WHERE id < after_id`) which is O(1) regardless
+    /// of offset — critical for 10M+ record performance.
+    pub async fn get_by_collection_cursor(
+        db: &DatabaseConnection,
+        collection_id: i32,
+        params: models::CursorParams,
+    ) -> AppResult<models::CursorResponse<models::Model>> {
+        let limit = params.limit.unwrap_or(50).min(200);
+
+        // Build query with optional cursor
+        let mut query = models::Entity::find()
+            .filter(models::Column::CollectionId.eq(collection_id));
+
+        if let Some(after_id) = params.after_id {
+            // Keyset pagination: fetch items with id less than the cursor
+            // (items are ordered by created_at DESC, but using id as cursor
+            //  since IDs are monotonically increasing and correlate with creation order)
+            query = query.filter(models::Column::Id.lt(after_id));
+        }
+
+        let items = query
+            .order_by_desc(models::Column::Id)
+            .limit(limit + 1) // Fetch one extra to check has_more
+            .all(db)
+            .await?;
+
+        let has_more = items.len() as u64 > limit;
+        let data: Vec<models::Model> = items.into_iter().take(limit as usize).collect();
+
+        // Get total count for UI display
+        let total = models::Entity::find()
+            .filter(models::Column::CollectionId.eq(collection_id))
+            .count(db)
+            .await?;
+
+        Ok(models::CursorResponse {
+            data,
+            has_more,
+            total,
+        })
+    }
 }

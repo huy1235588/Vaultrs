@@ -3,7 +3,10 @@
 use sea_orm::DatabaseConnection;
 use tauri::State;
 
-use super::models::{CreateItemDto, Model, PaginatedResponse, PaginationParams, UpdateItemDto};
+use super::models::{
+    CreateItemDto, CursorParams, CursorResponse, Model, PaginatedResponse, PaginationParams,
+    UpdateItemDto,
+};
 use super::service::ItemService;
 use crate::core::error::AppError;
 
@@ -15,6 +18,16 @@ pub async fn get_items(
     params: PaginationParams,
 ) -> Result<PaginatedResponse<Model>, AppError> {
     ItemService::get_by_collection(&db, collection_id, params).await
+}
+
+/// Get items using cursor-based pagination (for infinite scroll).
+#[tauri::command]
+pub async fn get_items_cursor(
+    db: State<'_, DatabaseConnection>,
+    collection_id: i32,
+    params: CursorParams,
+) -> Result<CursorResponse<Model>, AppError> {
+    ItemService::get_by_collection_cursor(&db, collection_id, params).await
 }
 
 /// Get a single item by ID.

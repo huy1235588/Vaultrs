@@ -1,10 +1,15 @@
 /**
- * CollectionPage — Displays the items within the selected collection.
+ * CollectionPage — Displays the items within the selected collection
+ * with toggleable List/Grid view modes.
  */
 import { useEffect, useState } from "react";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useCollections } from "@/core/context/CollectionContext";
+import { useLocalStorage } from "@/core/hooks/useLocalStorage";
 import ItemTable from "@/components/Item/ItemTable";
+import { ItemGrid } from "@/components/Item/ItemGrid";
+import { ViewModeToggle } from "@/components/Item/ViewModeToggle";
+import type { ViewMode } from "@/components/Item/ViewModeToggle";
 import { CreateItemDialog } from "@/components/Item/CreateItemDialog";
 import { EditCollectionDialog } from "@/components/Collection/EditCollectionDialog";
 import { DeleteCollectionDialog } from "@/components/Collection/DeleteCollectionDialog";
@@ -31,6 +36,10 @@ function CollectionPage({ onAddItemRef }: CollectionPageProps) {
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
+    const [viewMode, setViewMode] = useLocalStorage<ViewMode>(
+        "vaultrs-view-mode",
+        "list",
+    );
 
     // Expose the open-dialog function to the parent via ref
     useEffect(() => {
@@ -65,39 +74,51 @@ function CollectionPage({ onAddItemRef }: CollectionPageProps) {
                     </div>
                 </div>
 
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Collection options"
-                        >
-                            <MoreHorizontal className="size-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                            <Pencil className="size-4" />
-                            Edit collection
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => setDeleteOpen(true)}
-                        >
-                            <Trash2 className="size-4" />
-                            Delete collection
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex items-center gap-2">
+                    {/* View Mode Toggle */}
+                    <ViewModeToggle value={viewMode} onChange={setViewMode} />
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Collection options"
+                            >
+                                <MoreHorizontal className="size-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                                <Pencil className="size-4" />
+                                Edit collection
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => setDeleteOpen(true)}
+                            >
+                                <Trash2 className="size-4" />
+                                Delete collection
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
 
-            {/* Item table */}
+            {/* Item view — List or Grid */}
             <div className="flex-1">
-                <ItemTable
-                    collectionId={selectedCollection.id}
-                    refreshKey={refreshKey}
-                />
+                {viewMode === "grid" ? (
+                    <ItemGrid
+                        collectionId={selectedCollection.id}
+                        refreshKey={refreshKey}
+                    />
+                ) : (
+                    <ItemTable
+                        collectionId={selectedCollection.id}
+                        refreshKey={refreshKey}
+                    />
+                )}
             </div>
 
             {/* Create item dialog */}

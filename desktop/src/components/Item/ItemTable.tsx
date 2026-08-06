@@ -1,34 +1,30 @@
 /**
- * ItemTable — Table displaying items in a collection with pagination.
+ * ItemTable — Virtualized table displaying items with infinite scroll.
+ *
+ * Uses TanStack Virtual for DOM virtualization and cursor-based pagination
+ * for efficient data loading. Only visible rows are rendered in the DOM,
+ * keeping memory footprint flat regardless of dataset size (10M+).
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
     AlertCircle,
-    ChevronLeft,
     ChevronRight,
-    ChevronsLeft,
-    ChevronsRight,
     FileText,
+    Loader2,
     Trash2,
 } from "lucide-react";
-import * as itemService from "@/core/api/itemService";
-import type { Item, PaginatedResponse } from "@/core/types/common";
+import { useInfiniteItems } from "@/core/hooks/useInfiniteItems";
+import { useItem } from "@/core/context/ItemContext";
 import { Button } from "@/components/ui/button";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useItem } from "@/core/context/ItemContext";
 import { DeleteItemDialog } from "./DeleteItemDialog";
+import { useState } from "react";
+import type { Item } from "@/core/types/common";
 
 interface ItemTableProps {
     collectionId: number;
@@ -36,7 +32,7 @@ interface ItemTableProps {
     refreshKey?: number;
 }
 
-const PAGE_SIZE = 20;
+const ROW_HEIGHT = 48; // px — must match the rendered row height
 
 /** Format a unix timestamp (seconds) to a locale date string. */
 function formatDate(timestamp: number): string {
@@ -49,43 +45,44 @@ function formatDate(timestamp: number): string {
 
 function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
     const { selectItem } = useItem();
-    const [data, setData] = useState<PaginatedResponse<Item> | null>(null);
-    const [page, setPage] = useState(1);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const {
+        items,
+        hasMore,
+        total,
+        isLoading,
+        isFetchingMore,
+        error,
+        loadMore,
+        reset,
+    } = useInfiniteItems({ collectionId, refreshKey });
     const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
 
+    // Scroll container ref for the virtualizer
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    const fetchItems = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await itemService.getItems(collectionId, {
-                page,
-                page_size: PAGE_SIZE,
-            });
-            setData(result);
-        } catch (err) {
-            const message =
-                err instanceof Error ? err.message : "Failed to load items";
-            setError(message);
-        } finally {
-            setLoading(false);
+    const rowVirtualizer = useVirtualizer({
+        count: items.length,
+        getScrollElement: () => scrollContainerRef.current,
+        estimateSize: () => ROW_HEIGHT,
+        overscan: 10, // Render 10 extra rows above/below viewport for smooth scrolling
+    });
+
+    // Load more items when scrolling near the bottom
+    useEffect(() => {
+        const virtualItems = rowVirtualizer.getVirtualItems();
+        if (virtualItems.length === 0) return;
+
+        const lastItem = virtualItems[virtualItems.length - 1];
+        if (!lastItem) return;
+
+        // If the last virtual item is near the end of loaded data, load more
+        if (lastItem.index >= items.length - 10 && hasMore && !isFetchingMore) {
+            loadMore();
         }
-    }, [collectionId, page]);
+    }, [rowVirtualizer.getVirtualItems(), items.length, hasMore, isFetchingMore, loadMore]);
 
-    // Refetch when collection, page, or refreshKey changes
-    useEffect(() => {
-        fetchItems();
-    }, [fetchItems, refreshKey]);
-
-    // Reset page when collection changes
-    useEffect(() => {
-        setPage(1);
-    }, [collectionId]);
-
-    // --- Loading state ---
-    if (loading && !data) {
+    // --- Loading state (initial) ---
+    if (isLoading && items.length === 0) {
         return (
             <div className="overflow-hidden rounded-lg border border-border bg-card">
                 <div className="border-b border-border bg-muted/50 px-4 py-3">
@@ -105,14 +102,14 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
     }
 
     // --- Error state ---
-    if (error) {
+    if (error && items.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
                 <div className="flex size-11 items-center justify-center rounded-full bg-destructive/10 text-destructive">
                     <AlertCircle className="size-5" />
                 </div>
                 <p className="text-sm text-destructive">{error}</p>
-                <Button variant="outline" size="sm" onClick={fetchItems}>
+                <Button variant="outline" size="sm" onClick={reset}>
                     Try again
                 </Button>
             </div>
@@ -120,7 +117,7 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
     }
 
     // --- Empty state ---
-    if (!data || data.data.length === 0) {
+    if (!isLoading && items.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
                 <div className="flex size-14 items-center justify-center rounded-full bg-muted">
@@ -138,133 +135,122 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
         );
     }
 
-    // --- Table ---
+    // --- Virtualized Table ---
     return (
-        <div>
-                <div className="overflow-hidden rounded-lg border border-border bg-card">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-muted/50 hover:bg-muted/50">
-                                <TableHead className="text-muted-foreground">Title</TableHead>
-                                <TableHead className="hidden w-36 text-muted-foreground sm:table-cell">
-                                    Created
-                                </TableHead>
-                                <TableHead className="hidden w-36 text-muted-foreground sm:table-cell">
-                                    Updated
-                                </TableHead>
-                                <TableHead className="w-20" />
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {data.data.map((item) => (
-                                <TableRow
-                                    key={item.id}
-                                    className="group cursor-pointer transition-colors hover:bg-accent/40"
-                                    onClick={() => selectItem(item.id)}
-                                >
-                                    <TableCell className="font-semibold text-foreground">
-                                        <span className="line-clamp-1">{item.title}</span>
-                                    </TableCell>
-                                    <TableCell className="hidden text-xs text-muted-foreground tabular-nums sm:table-cell">
-                                        {formatDate(item.created_at)}
-                                    </TableCell>
-                                    <TableCell className="hidden text-xs text-muted-foreground tabular-nums sm:table-cell">
-                                        {formatDate(item.updated_at)}
-                                    </TableCell>
-                                    <TableCell
-                                        className="text-right"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        <div className="flex items-center justify-end gap-1">
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon-xs"
-                                                        className="text-destructive opacity-0 transition-opacity hover:bg-destructive/10 group-hover:opacity-100"
-                                                        onClick={() => setDeleteTarget(item)}
-                                                    >
-                                                        <Trash2 className="size-3.5" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent side="left">Delete item</TooltipContent>
-                                            </Tooltip>
-                                            <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+        <div className="flex flex-col gap-3">
+            {/* Item count indicator */}
+            <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                    {items.length.toLocaleString()} of {total.toLocaleString()} items loaded
+                </p>
+            </div>
+
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+                {/* Table header (fixed) */}
+                <div className="flex items-center border-b border-border bg-muted/50 px-4 py-2.5">
+                    <span className="flex-1 text-xs font-medium text-muted-foreground">
+                        Title
+                    </span>
+                    <span className="hidden w-32 text-xs font-medium text-muted-foreground sm:block">
+                        Created
+                    </span>
+                    <span className="hidden w-32 text-xs font-medium text-muted-foreground sm:block">
+                        Updated
+                    </span>
+                    <span className="w-16" />
                 </div>
 
-                {/* Pagination */}
-                {data.total_pages > 1 && (
-                    <div className="mt-4 flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">
-                            Showing{" "}
-                            {(data.page - 1) * data.page_size + 1}–
-                            {Math.min(data.page * data.page_size, data.total)} of{" "}
-                            {data.total} items
-                        </p>
-                        <div className="flex items-center gap-1">
-                            <Button
-                                variant="outline"
-                                size="icon-sm"
-                                disabled={page <= 1}
-                                onClick={() => setPage(1)}
-                                title="First page"
-                            >
-                                <ChevronsLeft className="size-4" />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="icon-sm"
-                                disabled={page <= 1}
-                                onClick={() => setPage((p) => p - 1)}
-                                title="Previous page"
-                            >
-                                <ChevronLeft className="size-4" />
-                            </Button>
-                            <span className="min-w-[3.5rem] text-center text-xs tabular-nums text-muted-foreground">
-                                {page} / {data.total_pages}
-                            </span>
-                            <Button
-                                variant="outline"
-                                size="icon-sm"
-                                disabled={page >= data.total_pages}
-                                onClick={() => setPage((p) => p + 1)}
-                                title="Next page"
-                            >
-                                <ChevronRight className="size-4" />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="icon-sm"
-                                disabled={page >= data.total_pages}
-                                onClick={() => setPage(data.total_pages)}
-                                title="Last page"
-                            >
-                                <ChevronsRight className="size-4" />
-                            </Button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Delete Confirmation Dialog */}
-                {deleteTarget && (
-                    <DeleteItemDialog
-                        itemId={deleteTarget.id}
-                        itemTitle={deleteTarget.title}
-                        open={!!deleteTarget}
-                        onOpenChange={(open) => !open && setDeleteTarget(null)}
-                        onDeleted={() => {
-                            setDeleteTarget(null);
-                            fetchItems();
+                {/* Virtualized scroll container */}
+                <div
+                    ref={scrollContainerRef}
+                    className="overflow-y-auto"
+                    style={{ maxHeight: "calc(100vh - 280px)" }}
+                >
+                    <div
+                        style={{
+                            height: `${rowVirtualizer.getTotalSize()}px`,
+                            width: "100%",
+                            position: "relative",
                         }}
-                    />
-                )}
+                    >
+                        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                            const item = items[virtualRow.index];
+                            if (!item) return null;
+
+                            return (
+                                <div
+                                    key={item.id}
+                                    className="group absolute left-0 flex w-full cursor-pointer items-center border-b border-border/50 px-4 transition-colors hover:bg-accent/40"
+                                    style={{
+                                        height: `${virtualRow.size}px`,
+                                        transform: `translateY(${virtualRow.start}px)`,
+                                    }}
+                                    onClick={() => selectItem(item.id)}
+                                >
+                                    {/* Title */}
+                                    <span className="flex-1 truncate text-sm font-semibold text-foreground">
+                                        {item.title}
+                                    </span>
+
+                                    {/* Created */}
+                                    <span className="hidden w-32 text-xs tabular-nums text-muted-foreground sm:block">
+                                        {formatDate(item.created_at)}
+                                    </span>
+
+                                    {/* Updated */}
+                                    <span className="hidden w-32 text-xs tabular-nums text-muted-foreground sm:block">
+                                        {formatDate(item.updated_at)}
+                                    </span>
+
+                                    {/* Actions */}
+                                    <div
+                                        className="flex w-16 items-center justify-end gap-1"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon-xs"
+                                                    className="text-destructive opacity-0 transition-opacity hover:bg-destructive/10 group-hover:opacity-100"
+                                                    onClick={() => setDeleteTarget(item)}
+                                                >
+                                                    <Trash2 className="size-3.5" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="left">Delete item</TooltipContent>
+                                        </Tooltip>
+                                        <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Loading more indicator */}
+                    {isFetchingMore && (
+                        <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
+                            <Loader2 className="size-3.5 animate-spin" />
+                            Loading more items...
+                        </div>
+                    )}
+                </div>
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            {deleteTarget && (
+                <DeleteItemDialog
+                    itemId={deleteTarget.id}
+                    itemTitle={deleteTarget.title}
+                    open={!!deleteTarget}
+                    onOpenChange={(open) => !open && setDeleteTarget(null)}
+                    onDeleted={() => {
+                        setDeleteTarget(null);
+                        reset();
+                    }}
+                />
+            )}
+        </div>
     );
 }
 
