@@ -28,6 +28,10 @@ pub enum AppError {
     /// Internal errors.
     #[error("Internal error: {0}")]
     Internal(String),
+
+    /// File system I/O errors.
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
 }
 
 // Allow AppError to be returned from Tauri commands as a serialized string.

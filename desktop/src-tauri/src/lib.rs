@@ -3,6 +3,8 @@
 //! Registers all domain modules and sets up the Tauri application.
 
 // Domain modules
+mod assets;
+mod collection_settings;
 mod collections;
 mod core;
 mod custom_fields;
@@ -15,6 +17,7 @@ use tauri::Manager;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             // Initialize logging in debug mode
             if cfg!(debug_assertions) {
@@ -34,6 +37,14 @@ pub fn run() {
 
             // Store database connection as managed state
             app.manage(db);
+
+            // Initialize vault storage
+            let app_data_dir = core::config::get_app_data_dir(app.handle());
+            let vault_storage = assets::storage::VaultStorage::new(&app_data_dir);
+            vault_storage
+                .ensure_dirs()
+                .expect("Failed to create vault storage directories");
+            app.manage(vault_storage);
 
             log::info!("Vaultrs initialized successfully");
 
@@ -61,6 +72,18 @@ pub fn run() {
             // Search commands
             search::commands::search_items,
             search::commands::quick_search,
+            // Collection settings commands
+            collection_settings::commands::get_collection_settings,
+            collection_settings::commands::update_collection_settings,
+            // Asset commands
+            assets::commands::upload_asset,
+            assets::commands::add_remote_asset,
+            assets::commands::get_item_assets,
+            assets::commands::get_item_cover,
+            assets::commands::get_covers_batch,
+            assets::commands::set_item_cover,
+            assets::commands::delete_asset,
+            assets::commands::unlink_asset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

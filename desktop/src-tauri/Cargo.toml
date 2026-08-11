@@ -19,7 +19,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 # Tauri
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-log = "2"
 
 # Serialization
@@ -43,6 +43,15 @@ log = "0.4"
 
 # Error handling
 thiserror = "2"
+
+# Asset system
+sha2 = "0.10"
+uuid = { version = "1", features = ["v4"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+async-trait = "0.1"
+
+# File dialog
+tauri-plugin-dialog = "2"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

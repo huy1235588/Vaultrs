@@ -2,8 +2,9 @@
  * ItemDetailPage — Detail and editing page for a single item.
  * Supports inline editing of title, dynamic editing of custom attributes,
  * required fields validation, and structured metadata display.
+ * Includes cover image hero section with upload/change/remove.
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     ArrowLeft,
     Save,
@@ -29,8 +30,12 @@ import {
 } from "@/components/ui/tooltip";
 import { DynamicField } from "@/components/Item/DynamicField";
 import { DeleteItemDialog } from "@/components/Item/DeleteItemDialog";
+import { CoverUpload } from "@/components/Item/CoverUpload";
 import * as itemService from "@/core/api/itemService";
+import * as assetService from "@/core/api/assetService";
+import { resolveAssetUrlSync } from "@/core/utils/assetResolver";
 import { Badge } from "@/components/ui/badge";
+import type { Asset } from "@/core/types/common";
 
 function formatDate(timestamp: number): string {
     return new Date(timestamp * 1000).toLocaleString(undefined, {
@@ -56,6 +61,7 @@ export function ItemDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [copiedId, setCopiedId] = useState(false);
+    const [cover, setCover] = useState<Asset | null>(null);
 
     // Load item data into form state
     useEffect(() => {
@@ -75,8 +81,18 @@ export function ItemDetailPage() {
             setOriginalProperties(propsObj);
             setError(null);
             setSaveSuccess(false);
+
+            // Load cover image
+            assetService.getItemCover(selectedItem.id)
+                .then((asset) => setCover(asset))
+                .catch((err) => console.error("Failed to load cover:", err));
         }
     }, [selectedItem]);
+
+    // Handle cover change from CoverUpload
+    const handleCoverChange = useCallback((newCover: Asset | null) => {
+        setCover(newCover);
+    }, []);
 
     // Detect if there are unsaved changes
     const hasChanges =
@@ -272,6 +288,14 @@ export function ItemDetailPage() {
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
                     {/* Left Panel: Field Editors (scrollable) */}
                     <div className="lg:col-span-2 overflow-y-auto pr-2 space-y-6">
+                        {/* Cover Image Upload */}
+                        <CoverUpload
+                            cover={cover}
+                            itemId={selectedItem.id}
+                            onCoverChange={handleCoverChange}
+                            resolveAssetUrl={resolveAssetUrlSync}
+                        />
+
                         {/* Item Title Input */}
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">

@@ -3,16 +3,19 @@
  *
  * Uses TanStack Virtual for window-based virtualization of grid rows.
  * Only visible rows of cards are rendered, keeping memory footprint flat.
+ * Integrates with useCoverImages for lazy-loading cover art.
  */
 import { useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AlertCircle, FileText, Loader2 } from "lucide-react";
 import { useInfiniteItems } from "@/core/hooks/useInfiniteItems";
+import { useCoverImages } from "@/core/hooks/useCoverImages";
 import { useItem } from "@/core/context/ItemContext";
 import { useCollections } from "@/core/context/CollectionContext";
 import { Button } from "@/components/ui/button";
 import { ItemCard } from "./ItemCard";
 import { DeleteItemDialog } from "./DeleteItemDialog";
+import { resolveAssetUrlSync } from "@/core/utils/assetResolver";
 import type { Item } from "@/core/types/common";
 
 interface ItemGridProps {
@@ -47,10 +50,16 @@ function ItemGrid({ collectionId, refreshKey = 0 }: ItemGridProps) {
         loadMore,
         reset,
     } = useInfiniteItems({ collectionId, batchSize: 60, refreshKey });
+    const { getCover, loadCovers, clearCovers } = useCoverImages();
     const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
     const [columnCount, setColumnCount] = useState(4);
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Clear cover cache when collection changes
+    useEffect(() => {
+        clearCovers();
+    }, [collectionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Track container width for responsive column count
     useEffect(() => {
@@ -89,6 +98,26 @@ function ItemGrid({ collectionId, refreshKey = 0 }: ItemGridProps) {
             loadMore();
         }
     }, [rowVirtualizer.getVirtualItems(), rowCount, hasMore, isFetchingMore, loadMore]);
+
+    // Load covers for visible items
+    useEffect(() => {
+        const virtualItems = rowVirtualizer.getVirtualItems();
+        if (virtualItems.length === 0) return;
+
+        // Collect all item IDs in visible rows
+        const visibleIds: number[] = [];
+        for (const vRow of virtualItems) {
+            const startIndex = vRow.index * columnCount;
+            const rowItems = items.slice(startIndex, startIndex + columnCount);
+            for (const item of rowItems) {
+                visibleIds.push(item.id);
+            }
+        }
+
+        if (visibleIds.length > 0) {
+            loadCovers(visibleIds);
+        }
+    }, [rowVirtualizer.getVirtualItems(), items, columnCount, loadCovers]);
 
     const collectionIcon = selectedCollection?.icon || "📁";
 
@@ -199,6 +228,8 @@ function ItemGrid({ collectionId, refreshKey = 0 }: ItemGridProps) {
                                             createdAt={item.created_at}
                                             updatedAt={item.updated_at}
                                             collectionIcon={collectionIcon}
+                                            cover={getCover(item.id)}
+                                            resolveAssetUrl={resolveAssetUrlSync}
                                             onClick={() =>
                                                 selectItem(item.id)
                                             }

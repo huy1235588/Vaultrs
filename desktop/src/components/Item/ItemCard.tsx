@@ -1,9 +1,8 @@
 /**
  * ItemCard — Card component for Grid view displaying an item.
  *
- * Uses a deterministic gradient background derived from the item title hash
- * and overlays the collection icon as a placeholder until the Assets system
- * is implemented (Phase 4B).
+ * Shows the cover image when available, falling back to a deterministic
+ * gradient background derived from the item title hash.
  */
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,6 +12,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { Asset } from "@/core/types/common";
 
 interface ItemCardProps {
     id: number;
@@ -20,6 +20,10 @@ interface ItemCardProps {
     createdAt: number;
     updatedAt: number;
     collectionIcon?: string;
+    /** Cover asset for the item (null = no cover, undefined = not yet loaded). */
+    cover?: Asset | null;
+    /** Resolve a relative vault path to a displayable URL. */
+    resolveAssetUrl?: (relativePath: string) => string;
     onClick: () => void;
     onDelete: () => void;
 }
@@ -56,29 +60,61 @@ function formatDate(timestamp: number): string {
     });
 }
 
+/**
+ * Resolve the best displayable URL for a cover asset.
+ * Prefers thumbnail > original > source_url.
+ */
+function getCoverUrl(
+    cover: Asset,
+    resolveUrl?: (path: string) => string,
+): string | null {
+    if (cover.source_type === "REMOTE" && cover.source_url) {
+        return cover.source_url;
+    }
+    if (!resolveUrl) return null;
+    if (cover.thumbnail_path) return resolveUrl(cover.thumbnail_path);
+    if (cover.relative_path) return resolveUrl(cover.relative_path);
+    return null;
+}
+
 function ItemCard({
     id,
     title,
     createdAt,
     updatedAt,
     collectionIcon,
+    cover,
+    resolveAssetUrl,
     onClick,
     onDelete,
 }: ItemCardProps) {
+    const hasCover = cover && cover.state === "READY";
+    const coverUrl = hasCover ? getCoverUrl(cover, resolveAssetUrl) : null;
+
     return (
         <div
             className="group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5"
             onClick={onClick}
         >
-            {/* Cover area — gradient + icon placeholder */}
+            {/* Cover area — image or gradient fallback */}
             <div
                 className="relative flex h-36 items-center justify-center overflow-hidden"
-                style={{ background: titleToGradient(title) }}
+                style={coverUrl ? undefined : { background: titleToGradient(title) }}
             >
-                {/* Collection icon overlay */}
-                <span className="text-4xl opacity-30 transition-opacity group-hover:opacity-50">
-                    {collectionIcon || "📄"}
-                </span>
+                {coverUrl ? (
+                    <img
+                        src={coverUrl}
+                        alt={title}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                        draggable={false}
+                        loading="lazy"
+                    />
+                ) : (
+                    /* Collection icon overlay (fallback) */
+                    <span className="text-4xl opacity-30 transition-opacity group-hover:opacity-50">
+                        {collectionIcon || "📄"}
+                    </span>
+                )}
 
                 {/* Delete button — appears on hover */}
                 <div

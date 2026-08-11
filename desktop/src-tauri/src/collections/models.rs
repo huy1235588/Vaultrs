@@ -24,6 +24,8 @@ pub enum Relation {
     Items,
     #[sea_orm(has_many = "super::super::custom_fields::models::Entity")]
     Attributes,
+    #[sea_orm(has_one = "super::super::collection_settings::models::Entity")]
+    Settings,
 }
 
 impl Related<super::super::items::models::Entity> for Entity {
@@ -35,6 +37,12 @@ impl Related<super::super::items::models::Entity> for Entity {
 impl Related<super::super::custom_fields::models::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Attributes.def()
+    }
+}
+
+impl Related<super::super::collection_settings::models::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Settings.def()
     }
 }
 

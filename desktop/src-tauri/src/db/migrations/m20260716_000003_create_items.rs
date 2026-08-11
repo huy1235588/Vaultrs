@@ -180,7 +180,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(DeriveIden)]
-enum Items {
+pub(crate) enum Items {
     Table,
     Id,
     CollectionId,

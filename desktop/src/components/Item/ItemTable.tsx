@@ -4,6 +4,7 @@
  * Uses TanStack Virtual for DOM virtualization and cursor-based pagination
  * for efficient data loading. Only visible rows are rendered in the DOM,
  * keeping memory footprint flat regardless of dataset size (10M+).
+ * Includes optional thumbnail column showing cover images.
  */
 import { useCallback, useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -11,10 +12,12 @@ import {
     AlertCircle,
     ChevronRight,
     FileText,
+    ImageIcon,
     Loader2,
     Trash2,
 } from "lucide-react";
 import { useInfiniteItems } from "@/core/hooks/useInfiniteItems";
+import { useCoverImages } from "@/core/hooks/useCoverImages";
 import { useItem } from "@/core/context/ItemContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +27,8 @@ import {
 } from "@/components/ui/tooltip";
 import { DeleteItemDialog } from "./DeleteItemDialog";
 import { useState } from "react";
-import type { Item } from "@/core/types/common";
+import { resolveAssetUrlSync } from "@/core/utils/assetResolver";
+import type { Item, Asset } from "@/core/types/common";
 
 interface ItemTableProps {
     collectionId: number;
@@ -43,6 +47,17 @@ function formatDate(timestamp: number): string {
     });
 }
 
+/** Resolve the best URL for a cover thumbnail. */
+function getThumbnailUrl(
+    cover: Asset | null | undefined,
+): string | null {
+    if (!cover || cover.state !== "READY") return null;
+    if (cover.source_type === "REMOTE" && cover.source_url) return cover.source_url;
+    if (cover.thumbnail_path) return resolveAssetUrlSync(cover.thumbnail_path);
+    if (cover.relative_path) return resolveAssetUrlSync(cover.relative_path);
+    return null;
+}
+
 function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
     const { selectItem } = useItem();
     const {
@@ -55,10 +70,16 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
         loadMore,
         reset,
     } = useInfiniteItems({ collectionId, refreshKey });
+    const { getCover, loadCovers, clearCovers } = useCoverImages();
     const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
 
     // Scroll container ref for the virtualizer
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Clear cover cache when collection changes
+    useEffect(() => {
+        clearCovers();
+    }, [collectionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const rowVirtualizer = useVirtualizer({
         count: items.length,
@@ -81,6 +102,20 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
         }
     }, [rowVirtualizer.getVirtualItems(), items.length, hasMore, isFetchingMore, loadMore]);
 
+    // Load covers for visible items
+    useEffect(() => {
+        const virtualItems = rowVirtualizer.getVirtualItems();
+        if (virtualItems.length === 0) return;
+
+        const visibleIds = virtualItems
+            .map((vRow) => items[vRow.index]?.id)
+            .filter((id): id is number => id !== undefined);
+
+        if (visibleIds.length > 0) {
+            loadCovers(visibleIds);
+        }
+    }, [rowVirtualizer.getVirtualItems(), items, loadCovers]);
+
     // --- Loading state (initial) ---
     if (isLoading && items.length === 0) {
         return (
@@ -91,6 +126,7 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
                 <div className="divide-y divide-border">
                     {[1, 2, 3, 4, 5].map((i) => (
                         <div key={i} className="flex items-center gap-4 px-4 py-3.5">
+                            <div className="size-8 shrink-0 rounded bg-muted animate-pulse" />
                             <div className="h-3.5 flex-1 rounded bg-muted animate-pulse" />
                             <div className="hidden h-3.5 w-20 rounded bg-muted animate-pulse sm:block" />
                             <div className="hidden h-3.5 w-20 rounded bg-muted animate-pulse sm:block" />
@@ -148,6 +184,8 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
             <div className="overflow-hidden rounded-lg border border-border bg-card">
                 {/* Table header (fixed) */}
                 <div className="flex items-center border-b border-border bg-muted/50 px-4 py-2.5">
+                    {/* Thumbnail column header */}
+                    <span className="w-10 shrink-0" />
                     <span className="flex-1 text-xs font-medium text-muted-foreground">
                         Title
                     </span>
@@ -177,6 +215,9 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
                             const item = items[virtualRow.index];
                             if (!item) return null;
 
+                            const cover = getCover(item.id);
+                            const thumbUrl = getThumbnailUrl(cover);
+
                             return (
                                 <div
                                     key={item.id}
@@ -187,6 +228,21 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
                                     }}
                                     onClick={() => selectItem(item.id)}
                                 >
+                                    {/* Thumbnail */}
+                                    <div className="mr-3 flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted/40">
+                                        {thumbUrl ? (
+                                            <img
+                                                src={thumbUrl}
+                                                alt=""
+                                                className="size-8 object-cover"
+                                                draggable={false}
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <ImageIcon className="size-3.5 text-muted-foreground/40" />
+                                        )}
+                                    </div>
+
                                     {/* Title */}
                                     <span className="flex-1 truncate text-sm font-semibold text-foreground">
                                         {item.title}
