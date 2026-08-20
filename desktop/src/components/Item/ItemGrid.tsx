@@ -4,10 +4,11 @@
  * Uses TanStack Virtual for window-based virtualization of grid rows.
  * Only visible rows of cards are rendered, keeping memory footprint flat.
  * Integrates with useCoverImages for lazy-loading cover art.
+ * Supports dynamic sorting and title filtering.
  */
 import { useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { AlertCircle, FileText, Loader2 } from "lucide-react";
+import { AlertCircle, FileText, Loader2, SearchX } from "lucide-react";
 import { useInfiniteItems } from "@/core/hooks/useInfiniteItems";
 import { useCoverImages } from "@/core/hooks/useCoverImages";
 import { useItem } from "@/core/context/ItemContext";
@@ -16,12 +17,22 @@ import { Button } from "@/components/ui/button";
 import { ItemCard } from "./ItemCard";
 import { DeleteItemDialog } from "./DeleteItemDialog";
 import { resolveAssetUrlSync } from "@/core/utils/assetResolver";
-import type { Item } from "@/core/types/common";
+import type { Item, SortField, SortOrder } from "@/core/types/common";
 
 interface ItemGridProps {
     collectionId: number;
     /** Incremented externally to trigger a refetch (e.g., after creating an item). */
     refreshKey?: number;
+    /** Sort field (default: "created_at"). */
+    sortField?: SortField;
+    /** Sort direction (default: "DESC"). */
+    sortOrder?: SortOrder;
+    /** Filter items by title (debounced value). */
+    filterTitle?: string;
+    /** Whether to show title on grid cards (default: true). */
+    showTitleOnCard?: boolean;
+    /** Callback to report total count (for filter badge). */
+    onTotalChange?: (total: number) => void;
 }
 
 const ROW_HEIGHT = 230; // Approximate height of a card row (cover 144px + info ~86px)
@@ -37,7 +48,15 @@ function getColumnCount(width: number): number {
     return 2;                     // default
 }
 
-function ItemGrid({ collectionId, refreshKey = 0 }: ItemGridProps) {
+function ItemGrid({
+    collectionId,
+    refreshKey = 0,
+    sortField = "created_at",
+    sortOrder = "DESC",
+    filterTitle,
+    showTitleOnCard = true,
+    onTotalChange,
+}: ItemGridProps) {
     const { selectItem } = useItem();
     const { selectedCollection } = useCollections();
     const {
@@ -49,17 +68,29 @@ function ItemGrid({ collectionId, refreshKey = 0 }: ItemGridProps) {
         error,
         loadMore,
         reset,
-    } = useInfiniteItems({ collectionId, batchSize: 60, refreshKey });
+    } = useInfiniteItems({
+        collectionId,
+        batchSize: 60,
+        refreshKey,
+        sortField,
+        sortOrder,
+        filterTitle: filterTitle || undefined,
+    });
     const { getCover, loadCovers, clearCovers } = useCoverImages();
     const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
     const [columnCount, setColumnCount] = useState(4);
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Clear cover cache when collection changes
+    // Report total to parent (for filter badge)
+    useEffect(() => {
+        onTotalChange?.(total);
+    }, [total, onTotalChange]);
+
+    // Clear cover cache when collection or sort/filter changes
     useEffect(() => {
         clearCovers();
-    }, [collectionId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [collectionId, sortField, sortOrder, filterTitle]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Track container width for responsive column count
     useEffect(() => {
@@ -120,6 +151,7 @@ function ItemGrid({ collectionId, refreshKey = 0 }: ItemGridProps) {
     }, [rowVirtualizer.getVirtualItems(), items, columnCount, loadCovers]);
 
     const collectionIcon = selectedCollection?.icon || "📁";
+    const isFiltering = filterTitle && filterTitle.trim().length > 0;
 
     // --- Loading state (initial) ---
     if (isLoading && items.length === 0) {
@@ -156,7 +188,27 @@ function ItemGrid({ collectionId, refreshKey = 0 }: ItemGridProps) {
         );
     }
 
-    // --- Empty state ---
+    // --- Empty state (no results from filter) ---
+    if (!isLoading && items.length === 0 && isFiltering) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+                <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+                    <SearchX className="size-7 text-muted-foreground" />
+                </div>
+                <div>
+                    <p className="text-sm font-medium text-foreground">
+                        No matching items
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        No items match &ldquo;{filterTitle}&rdquo;. Try a
+                        different search term.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // --- Empty state (no items) ---
     if (!isLoading && items.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
@@ -188,7 +240,7 @@ function ItemGrid({ collectionId, refreshKey = 0 }: ItemGridProps) {
             <div
                 ref={scrollContainerRef}
                 className="overflow-y-auto"
-                style={{ maxHeight: "calc(100vh - 260px)" }}
+                style={{ maxHeight: "calc(100vh - 300px)" }}
             >
                 <div
                     style={{
@@ -230,6 +282,7 @@ function ItemGrid({ collectionId, refreshKey = 0 }: ItemGridProps) {
                                             collectionIcon={collectionIcon}
                                             cover={getCover(item.id)}
                                             resolveAssetUrl={resolveAssetUrlSync}
+                                            showTitle={showTitleOnCard}
                                             onClick={() =>
                                                 selectItem(item.id)
                                             }

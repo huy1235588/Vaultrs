@@ -425,6 +425,9 @@ Không đánh index rời trên các cột cardinality thấp (`role`, `media_ty
 
 ## 🔗 Tài liệu Liên quan
 
+- [Kiến trúc Nguồn Asset](./asset-source-architecture.md) — Chi tiết LOCAL/REMOTE, cơ chế cache, state machine
+- [Hệ thống Multi-role Asset](./multi-role-asset-system.md) — Chi tiết 7 role, Singular/Plural, query patterns
+- [Thiết kế CollectionSettings](./collection-settings-design.md) — Chi tiết JSON settings, default cover, validation
 - [Feature Specification: Media System](./media_feature_specification.md)
 - [System Design tổng quan](../01-architecture/2-system-design.md)
 

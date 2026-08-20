@@ -24,6 +24,8 @@ interface ItemCardProps {
     cover?: Asset | null;
     /** Resolve a relative vault path to a displayable URL. */
     resolveAssetUrl?: (relativePath: string) => string;
+    /** Whether to show the title/date info section below the cover (default: true). */
+    showTitle?: boolean;
     onClick: () => void;
     onDelete: () => void;
 }
@@ -85,6 +87,7 @@ function ItemCard({
     collectionIcon,
     cover,
     resolveAssetUrl,
+    showTitle = true,
     onClick,
     onDelete,
 }: ItemCardProps) {
@@ -138,14 +141,16 @@ function ItemCard({
             </div>
 
             {/* Info area */}
-            <div className="flex flex-1 flex-col gap-1 p-3">
-                <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
-                    {title}
-                </h3>
-                <p className="mt-auto text-[11px] tabular-nums text-muted-foreground">
-                    {formatDate(updatedAt)}
-                </p>
-            </div>
+            {showTitle && (
+                <div className="flex flex-1 flex-col gap-1 p-3">
+                    <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+                        {title}
+                    </h3>
+                    <p className="mt-auto text-[11px] tabular-nums text-muted-foreground">
+                        {formatDate(updatedAt)}
+                    </p>
+                </div>
+            )}
         </div>
     );
 }

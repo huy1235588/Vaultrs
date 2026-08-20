@@ -5,15 +5,19 @@
  * for efficient data loading. Only visible rows are rendered in the DOM,
  * keeping memory footprint flat regardless of dataset size (10M+).
  * Includes optional thumbnail column showing cover images.
+ * Supports dynamic sorting via clickable column headers and title filtering.
  */
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
     AlertCircle,
+    ArrowDown,
+    ArrowUp,
     ChevronRight,
     FileText,
     ImageIcon,
     Loader2,
+    SearchX,
     Trash2,
 } from "lucide-react";
 import { useInfiniteItems } from "@/core/hooks/useInfiniteItems";
@@ -26,14 +30,24 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DeleteItemDialog } from "./DeleteItemDialog";
-import { useState } from "react";
 import { resolveAssetUrlSync } from "@/core/utils/assetResolver";
-import type { Item, Asset } from "@/core/types/common";
+import { cn } from "@/lib/utils";
+import type { Item, Asset, SortField, SortOrder } from "@/core/types/common";
 
 interface ItemTableProps {
     collectionId: number;
     /** Incremented externally to trigger a refetch (e.g., after creating an item). */
     refreshKey?: number;
+    /** Sort field (default: "created_at"). */
+    sortField?: SortField;
+    /** Sort direction (default: "DESC"). */
+    sortOrder?: SortOrder;
+    /** Filter items by title (debounced value). */
+    filterTitle?: string;
+    /** Callback when user clicks a column header to change sort. */
+    onSortChange?: (field: SortField, order: SortOrder) => void;
+    /** Callback to report total count (for filter badge). */
+    onTotalChange?: (total: number) => void;
 }
 
 const ROW_HEIGHT = 48; // px — must match the rendered row height
@@ -58,7 +72,70 @@ function getThumbnailUrl(
     return null;
 }
 
-function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
+/** Sortable column header component. */
+function SortableHeader({
+    label,
+    field,
+    activeField,
+    activeOrder,
+    onSort,
+    className,
+}: {
+    label: string;
+    field: SortField;
+    activeField: SortField;
+    activeOrder: SortOrder;
+    onSort: (field: SortField, order: SortOrder) => void;
+    className?: string;
+}) {
+    const isActive = activeField === field;
+    const SortIcon = isActive && activeOrder === "ASC" ? ArrowUp : ArrowDown;
+
+    const handleClick = () => {
+        if (isActive) {
+            // Toggle direction
+            onSort(field, activeOrder === "ASC" ? "DESC" : "ASC");
+        } else {
+            // New field: default to DESC for dates, ASC for title
+            const defaultOrder = field === "title" ? "ASC" : "DESC";
+            onSort(field, defaultOrder);
+        }
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={handleClick}
+            className={cn(
+                "group/sort flex items-center gap-1 text-xs font-medium transition-colors",
+                isActive
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                className,
+            )}
+        >
+            {label}
+            <SortIcon
+                className={cn(
+                    "size-3 transition-opacity",
+                    isActive
+                        ? "opacity-100"
+                        : "opacity-0 group-hover/sort:opacity-50",
+                )}
+            />
+        </button>
+    );
+}
+
+function ItemTable({
+    collectionId,
+    refreshKey = 0,
+    sortField = "created_at",
+    sortOrder = "DESC",
+    filterTitle,
+    onSortChange,
+    onTotalChange,
+}: ItemTableProps) {
     const { selectItem } = useItem();
     const {
         items,
@@ -69,17 +146,28 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
         error,
         loadMore,
         reset,
-    } = useInfiniteItems({ collectionId, refreshKey });
+    } = useInfiniteItems({
+        collectionId,
+        refreshKey,
+        sortField,
+        sortOrder,
+        filterTitle: filterTitle || undefined,
+    });
     const { getCover, loadCovers, clearCovers } = useCoverImages();
     const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
 
     // Scroll container ref for the virtualizer
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Clear cover cache when collection changes
+    // Report total to parent (for filter badge)
+    useEffect(() => {
+        onTotalChange?.(total);
+    }, [total, onTotalChange]);
+
+    // Clear cover cache when collection or sort/filter changes
     useEffect(() => {
         clearCovers();
-    }, [collectionId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [collectionId, sortField, sortOrder, filterTitle]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const rowVirtualizer = useVirtualizer({
         count: items.length,
@@ -115,6 +203,12 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
             loadCovers(visibleIds);
         }
     }, [rowVirtualizer.getVirtualItems(), items, loadCovers]);
+
+    const handleSort = (field: SortField, order: SortOrder) => {
+        onSortChange?.(field, order);
+    };
+
+    const isFiltering = filterTitle && filterTitle.trim().length > 0;
 
     // --- Loading state (initial) ---
     if (isLoading && items.length === 0) {
@@ -152,7 +246,27 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
         );
     }
 
-    // --- Empty state ---
+    // --- Empty state (no results from filter) ---
+    if (!isLoading && items.length === 0 && isFiltering) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+                <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+                    <SearchX className="size-7 text-muted-foreground" />
+                </div>
+                <div>
+                    <p className="text-sm font-medium text-foreground">
+                        No matching items
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        No items match &ldquo;{filterTitle}&rdquo;. Try a
+                        different search term.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // --- Empty state (no items) ---
     if (!isLoading && items.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
@@ -182,19 +296,37 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
             </div>
 
             <div className="overflow-hidden rounded-lg border border-border bg-card">
-                {/* Table header (fixed) */}
+                {/* Table header (fixed) — clickable columns for sorting */}
                 <div className="flex items-center border-b border-border bg-muted/50 px-4 py-2.5">
                     {/* Thumbnail column header */}
                     <span className="w-10 shrink-0" />
-                    <span className="flex-1 text-xs font-medium text-muted-foreground">
-                        Title
-                    </span>
-                    <span className="hidden w-32 text-xs font-medium text-muted-foreground sm:block">
-                        Created
-                    </span>
-                    <span className="hidden w-32 text-xs font-medium text-muted-foreground sm:block">
-                        Updated
-                    </span>
+                    <div className="flex-1">
+                        <SortableHeader
+                            label="Title"
+                            field="title"
+                            activeField={sortField}
+                            activeOrder={sortOrder}
+                            onSort={handleSort}
+                        />
+                    </div>
+                    <div className="hidden w-32 sm:block">
+                        <SortableHeader
+                            label="Created"
+                            field="created_at"
+                            activeField={sortField}
+                            activeOrder={sortOrder}
+                            onSort={handleSort}
+                        />
+                    </div>
+                    <div className="hidden w-32 sm:block">
+                        <SortableHeader
+                            label="Updated"
+                            field="updated_at"
+                            activeField={sortField}
+                            activeOrder={sortOrder}
+                            onSort={handleSort}
+                        />
+                    </div>
                     <span className="w-16" />
                 </div>
 
@@ -202,7 +334,7 @@ function ItemTable({ collectionId, refreshKey = 0 }: ItemTableProps) {
                 <div
                     ref={scrollContainerRef}
                     className="overflow-y-auto"
-                    style={{ maxHeight: "calc(100vh - 280px)" }}
+                    style={{ maxHeight: "calc(100vh - 320px)" }}
                 >
                     <div
                         style={{

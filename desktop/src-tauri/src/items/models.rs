@@ -70,12 +70,27 @@ pub struct PaginatedResponse<T: Serialize> {
 }
 
 /// Cursor-based pagination parameters (for infinite scroll).
+///
+/// Supports dynamic sorting and title filtering. When sort_field changes
+/// from the default (`id`), compound cursor values (`after_sort_value` + `after_id`)
+/// are used for keyset pagination stability.
 #[derive(Debug, Deserialize)]
 pub struct CursorParams {
     /// ID of the last item from the previous page (None for first page).
     pub after_id: Option<i32>,
     /// Number of items to fetch (default: 50, max: 200).
     pub limit: Option<u64>,
+    /// Sort field: "title", "created_at", "updated_at" (default: sort by id DESC).
+    pub sort_field: Option<String>,
+    /// Sort order: "ASC" or "DESC" (default: "DESC").
+    pub sort_order: Option<String>,
+    /// Filter items by title (partial match, case-insensitive).
+    pub filter_title: Option<String>,
+    /// Compound cursor: the sort column value of the last item from previous page.
+    /// Required for keyset pagination when sorting by non-id fields.
+    /// - For "title": the title string of the last item
+    /// - For "created_at"/"updated_at": the timestamp as string
+    pub after_sort_value: Option<String>,
 }
 
 /// Cursor-based paginated response.

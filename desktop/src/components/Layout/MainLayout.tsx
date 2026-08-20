@@ -10,9 +10,11 @@ interface MainLayoutProps {
     children: React.ReactNode;
     /** Called when user clicks "Add Item" in the header. */
     onAddItem?: () => void;
+    /** Called when user clicks "Collection settings" in the sidebar. */
+    onOpenSettings?: () => void;
 }
 
-function MainLayout({ children, onAddItem }: MainLayoutProps) {
+function MainLayout({ children, onAddItem, onOpenSettings }: MainLayoutProps) {
     return (
         <div className="flex h-screen overflow-hidden bg-background">
             {/* Skip link — lets keyboard users jump past the chrome */}
@@ -24,7 +26,7 @@ function MainLayout({ children, onAddItem }: MainLayoutProps) {
             </a>
 
             {/* Sidebar */}
-            <Sidebar />
+            <Sidebar onOpenSettings={onOpenSettings} />
 
             {/* Main content */}
             <main className="flex flex-1 flex-col overflow-hidden">

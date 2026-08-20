@@ -56,15 +56,19 @@ Sơ đồ và giải thích kiến trúc tổng quan của Vaultrs.
 
 Schema, format và cách lưu trữ dữ liệu.
 
-| #   | Tài liệu                                                        | Mô tả                                    |
-| --- | ---------------------------------------------------------------- | ---------------------------------------- |
-| 1   | [💾 Tổng quan Database](../02-database/1-overview.md)             | SQLite, WAL mode, EAV + JSON, targets    |
-| 2   | [📋 Database Schema](../02-database/2-schema.md)                 | DDL, columns, FTS5, schema diagram       |
-| 3   | [⚡ Indexes & Performance](../02-database/3-indexes.md)           | Index strategy, query optimization       |
-| 4   | [🔍 Queries](../02-database/4-queries.md)                        | Common queries, pagination, FTS5 search  |
-| 5   | [🔄 Migrations](../02-database/5-migrations.md)                  | SeaORM migration quy trình               |
-| 6   | [💾 Backup & Recovery](../02-database/6-backup.md)               | Backup strategies, restore               |
-| 7   | [📊 Field Data Handling](../02-database/7-field-data-handling.md) | JSON properties format, field types      |
+| #   | Tài liệu                                                                          | Mô tả                                         |
+| --- | ---------------------------------------------------------------------------------- | ---------------------------------------------- |
+| 1   | [💾 Tổng quan Database](../02-database/1-overview.md)                               | SQLite, WAL mode, EAV + JSON, targets          |
+| 2   | [📋 Database Schema](../02-database/2-schema.md)                                   | DDL, columns, FTS5, schema diagram             |
+| 3   | [⚡ Indexes & Performance](../02-database/3-indexes.md)                             | Index strategy, query optimization             |
+| 4   | [🔍 Queries](../02-database/4-queries.md)                                          | Common queries, pagination, FTS5 search        |
+| 5   | [🔄 Migrations](../02-database/5-migrations.md)                                    | SeaORM migration quy trình                     |
+| 6   | [💾 Backup & Recovery](../02-database/6-backup.md)                                 | Backup strategies, restore                     |
+| 7   | [📊 Field Data Handling](../02-database/7-field-data-handling.md)                   | JSON properties format, field types            |
+| —   | [📋 Đặc tả Thiết kế Database](../02-database/database-design-specification.md)     | Entities, relationships, constraints, schema   |
+| —   | [🔗 Kiến trúc Nguồn Asset](../02-database/asset-source-architecture.md)            | LOCAL/REMOTE dual-source, cache, state machine |
+| —   | [🏷️ Hệ thống Multi-role Asset](../02-database/multi-role-asset-system.md)          | 7 role taxonomy, Singular/Plural constraints   |
+| —   | [⚙️ Thiết kế CollectionSettings](../02-database/collection-settings-design.md)     | JSON settings, default cover, validation       |
 
 ---
 

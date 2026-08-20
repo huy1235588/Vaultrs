@@ -36,7 +36,12 @@ import { DeleteCollectionDialog } from "@/components/Collection/DeleteCollection
 import { AttributeManager } from "@/components/Attribute/AttributeManager";
 import type { Collection } from "@/core/types/common";
 
-function Sidebar() {
+interface SidebarProps {
+    /** Called when user clicks "Collection settings" in a collection's dropdown. */
+    onOpenSettings?: () => void;
+}
+
+function Sidebar({ onOpenSettings }: SidebarProps) {
     const { collections, selectedCollection, selectCollection, loading } =
         useCollections();
 
@@ -191,6 +196,18 @@ function Sidebar() {
                                                             <Settings className="size-3.5" />
                                                             Manage fields
                                                         </DropdownMenuItem>
+                                                        {onOpenSettings && (
+                                                            <DropdownMenuItem
+                                                                onClick={() => {
+                                                                    selectCollection(collection.id);
+                                                                    // Use setTimeout to ensure collection is selected before opening
+                                                                    setTimeout(() => onOpenSettings(), 0);
+                                                                }}
+                                                            >
+                                                                <Settings className="size-3.5" />
+                                                                Collection settings
+                                                            </DropdownMenuItem>
+                                                        )}
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem
                                                             className="text-destructive focus:bg-destructive/10 focus:text-destructive"

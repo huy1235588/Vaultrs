@@ -63,6 +63,16 @@ export type FieldType =
     | "file";
 
 // ═══════════════════════════════════════════════════════════════════════
+// Sort & Filter Types (Phase 5A)
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Sortable fields for item lists. */
+export type SortField = "title" | "created_at" | "updated_at";
+
+/** Sort direction. */
+export type SortOrder = "ASC" | "DESC";
+
+// ═══════════════════════════════════════════════════════════════════════
 // Asset System Types (Phase 4B)
 // ═══════════════════════════════════════════════════════════════════════
 

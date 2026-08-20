@@ -107,40 +107,131 @@ impl ItemService {
 
     /// Get items using cursor-based pagination (for infinite scroll).
     ///
-    /// Uses keyset pagination (`WHERE id < after_id`) which is O(1) regardless
-    /// of offset — critical for 10M+ record performance.
+    /// Supports dynamic sorting by `title`, `created_at`, `updated_at` (or default `id`)
+    /// and optional case-insensitive title filtering.
+    ///
+    /// Uses compound keyset pagination `(sort_col, id)` when sorting by non-id fields,
+    /// ensuring O(1) seek regardless of position in the dataset.
     pub async fn get_by_collection_cursor(
         db: &DatabaseConnection,
         collection_id: i32,
         params: models::CursorParams,
     ) -> AppResult<models::CursorResponse<models::Model>> {
         let limit = params.limit.unwrap_or(50).min(200);
+        let sort_field = params.sort_field.as_deref().unwrap_or("created_at");
+        let sort_order = params.sort_order.as_deref().unwrap_or("DESC");
 
-        // Build query with optional cursor
-        let mut query = models::Entity::find()
-            .filter(models::Column::CollectionId.eq(collection_id));
+        // Validate sort field
+        let sort_col = match sort_field {
+            "title" => "title",
+            "created_at" => "created_at",
+            "updated_at" => "updated_at",
+            _ => "created_at",
+        };
 
-        if let Some(after_id) = params.after_id {
-            // Keyset pagination: fetch items with id less than the cursor
-            // (items are ordered by created_at DESC, but using id as cursor
-            //  since IDs are monotonically increasing and correlate with creation order)
-            query = query.filter(models::Column::Id.lt(after_id));
+        // Validate sort order
+        let is_desc = !sort_order.eq_ignore_ascii_case("ASC");
+        let order_sql = if is_desc { "DESC" } else { "ASC" };
+        // Secondary sort for tie-breaking: always by id in the same direction
+        let id_order_sql = if is_desc { "DESC" } else { "ASC" };
+
+        // Comparison operator for keyset cursor
+        // DESC order → next page has smaller values → use <
+        // ASC order → next page has larger values → use >
+        let cmp = if is_desc { "<" } else { ">" };
+
+        // Build WHERE conditions
+        let mut conditions = vec!["collection_id = ?1".to_string()];
+        let mut bind_values: Vec<sea_orm::Value> = vec![collection_id.into()];
+        let mut param_idx: usize = 2;
+
+        // Title filter (case-insensitive LIKE)
+        if let Some(ref filter) = params.filter_title {
+            let trimmed = filter.trim();
+            if !trimmed.is_empty() {
+                conditions.push(format!("title LIKE ?{param_idx} COLLATE NOCASE"));
+                bind_values.push(format!("%{trimmed}%").into());
+                param_idx += 1;
+            }
         }
 
-        let items = query
-            .order_by_desc(models::Column::Id)
-            .limit(limit + 1) // Fetch one extra to check has_more
-            .all(db)
-            .await?;
+        // Compound cursor condition
+        if let (Some(after_id), Some(ref after_sort_val)) =
+            (params.after_id, &params.after_sort_value)
+        {
+            // Compound keyset: (sort_col, id) < (last_sort_val, last_id)
+            // For DESC: WHERE (sort_col < ?x) OR (sort_col = ?x AND id < ?y)
+            // For ASC:  WHERE (sort_col > ?x) OR (sort_col = ?x AND id > ?y)
+            let sv_idx = param_idx;
+            let id_idx = param_idx + 1;
+            let sv_idx2 = param_idx + 2;
+
+            conditions.push(format!(
+                "({sort_col} {cmp} ?{sv_idx} OR ({sort_col} = ?{sv_idx2} AND id {cmp} ?{id_idx}))"
+            ));
+            bind_values.push(after_sort_val.clone().into());
+            bind_values.push(after_id.into());
+            bind_values.push(after_sort_val.clone().into());
+            param_idx += 3;
+        } else if let Some(after_id) = params.after_id {
+            // Fallback: simple id cursor (when sort_field == default and no sort_value provided)
+            conditions.push(format!("id {cmp} ?{param_idx}"));
+            bind_values.push(after_id.into());
+            param_idx += 1;
+        }
+
+        let where_clause = conditions.join(" AND ");
+        let _ = param_idx; // suppress unused warning
+
+        // Data query
+        let data_sql = format!(
+            "SELECT id, collection_id, title, created_at, updated_at, properties \
+             FROM items WHERE {where_clause} \
+             ORDER BY {sort_col} {order_sql}, id {id_order_sql} \
+             LIMIT {fetch_limit}",
+            fetch_limit = limit + 1,
+        );
+
+        let backend = sea_orm::DatabaseBackend::Sqlite;
+        let items = models::Model::find_by_statement(Statement::from_sql_and_values(
+            backend,
+            &data_sql,
+            bind_values.clone(),
+        ))
+        .all(db)
+        .await?;
 
         let has_more = items.len() as u64 > limit;
         let data: Vec<models::Model> = items.into_iter().take(limit as usize).collect();
 
-        // Get total count for UI display
-        let total = models::Entity::find()
-            .filter(models::Column::CollectionId.eq(collection_id))
-            .count(db)
+        // Count query (with same filter but no cursor)
+        let mut count_conditions = vec!["collection_id = ?1".to_string()];
+        let mut count_values: Vec<sea_orm::Value> = vec![collection_id.into()];
+
+        if let Some(ref filter) = params.filter_title {
+            let trimmed = filter.trim();
+            if !trimmed.is_empty() {
+                count_conditions.push("title LIKE ?2 COLLATE NOCASE".to_string());
+                count_values.push(format!("%{trimmed}%").into());
+            }
+        }
+
+        let count_sql = format!(
+            "SELECT COUNT(*) AS num FROM items WHERE {}",
+            count_conditions.join(" AND ")
+        );
+
+        let count_result = db
+            .query_one(Statement::from_sql_and_values(
+                backend,
+                &count_sql,
+                count_values,
+            ))
             .await?;
+
+        let total = count_result
+            .map(|row| row.try_get::<i64>("", "num").unwrap_or(0) as u64)
+            .unwrap_or(0);
 
         Ok(models::CursorResponse {
             data,
@@ -149,3 +240,4 @@ impl ItemService {
         })
     }
 }
+

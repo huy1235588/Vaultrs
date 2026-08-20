@@ -63,6 +63,14 @@ export async function deleteItem(id: number): Promise<void> {
 export interface CursorParams {
     after_id?: number;
     limit?: number;
+    /** Sort field: "title", "created_at", "updated_at". */
+    sort_field?: string;
+    /** Sort order: "ASC" or "DESC". */
+    sort_order?: string;
+    /** Filter items by title (partial match, case-insensitive). */
+    filter_title?: string;
+    /** Compound cursor: sort column value of the last item (for keyset pagination). */
+    after_sort_value?: string;
 }
 
 export interface CursorResponse<T> {

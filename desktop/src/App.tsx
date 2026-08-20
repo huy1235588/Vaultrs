@@ -21,6 +21,7 @@ function AppContent() {
     const { selectedCollection } = useCollections();
     const { selectedItem } = useItem();
     const addItemRef = useRef<(() => void) | null>(null);
+    const openSettingsRef = useRef<(() => void) | null>(null);
 
     // Initialize asset resolver on mount
     useEffect(() => {
@@ -31,15 +32,25 @@ function AppContent() {
         addItemRef.current?.();
     }, []);
 
+    const handleOpenSettings = useCallback(() => {
+        openSettingsRef.current?.();
+    }, []);
+
     // Only show "Add Item" button in header if a collection is selected AND we are NOT in item detail view
     const showAddAction = selectedCollection && !selectedItem;
 
     return (
-        <MainLayout onAddItem={showAddAction ? handleAddItem : undefined}>
+        <MainLayout
+            onAddItem={showAddAction ? handleAddItem : undefined}
+            onOpenSettings={selectedCollection && !selectedItem ? handleOpenSettings : undefined}
+        >
             {selectedItem ? (
                 <ItemDetailPage />
             ) : selectedCollection ? (
-                <CollectionPage onAddItemRef={addItemRef} />
+                <CollectionPage
+                    onAddItemRef={addItemRef}
+                    onOpenSettingsRef={openSettingsRef}
+                />
             ) : (
                 <HomePage />
             )}
