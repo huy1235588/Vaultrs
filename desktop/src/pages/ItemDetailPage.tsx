@@ -31,6 +31,7 @@ import {
 import { DynamicField } from "@/components/Item/DynamicField";
 import { DeleteItemDialog } from "@/components/Item/DeleteItemDialog";
 import { CoverUpload } from "@/components/Item/CoverUpload";
+import { BackReferences } from "@/components/Item/BackReferences";
 import * as itemService from "@/core/api/itemService";
 import * as assetService from "@/core/api/assetService";
 import { resolveAssetUrlSync } from "@/core/utils/assetResolver";
@@ -423,6 +424,13 @@ export function ItemDetailPage() {
                                         </div>
                                     </div>
                                 )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Back-References Panel */}
+                        <Card className="shadow-xs">
+                            <CardContent className="p-5">
+                                <BackReferences itemId={selectedItem.id} />
                             </CardContent>
                         </Card>
                     </div>

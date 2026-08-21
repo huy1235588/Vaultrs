@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { OptionsTagInput } from "./OptionsTagInput";
-import { getFieldTypeMeta, isChoiceFieldType } from "./attributeFieldTypes";
+import { getFieldTypeMeta, isChoiceFieldType, isReferenceFieldType } from "./attributeFieldTypes";
 import type { Attribute, FieldType } from "@/core/types/common";
 import { AlertCircle, Asterisk, Loader2, Pencil, Save, Search } from "lucide-react";
 
@@ -33,7 +33,7 @@ export function EditAttributeDialog({
     onOpenChange,
     onUpdated,
 }: EditAttributeDialogProps) {
-    const { editAttribute } = useCollections();
+    const { editAttribute, collections } = useCollections();
     const [name, setName] = useState("");
     const [options, setOptions] = useState<string[]>([]);
     const [optionDraft, setOptionDraft] = useState("");
@@ -43,8 +43,23 @@ export function EditAttributeDialog({
     const [error, setError] = useState<string | null>(null);
 
     const isSelectOrMulti = isChoiceFieldType(attribute.field_type as FieldType);
+    const isReference = isReferenceFieldType(attribute.field_type as FieldType);
     const typeMeta = getFieldTypeMeta(attribute.field_type as FieldType);
     const TypeIcon = typeMeta.icon;
+
+    // Parse target collection for reference type
+    const targetCollectionId = (() => {
+        if (!isReference || !attribute.options) return null;
+        try {
+            const parsed = JSON.parse(attribute.options);
+            return parsed?.target_collection_id ?? null;
+        } catch {
+            return null;
+        }
+    })();
+    const targetCollection = targetCollectionId
+        ? collections.find((c) => c.id === targetCollectionId)
+        : null;
 
     // Set form fields on attribute change
     useEffect(() => {
@@ -162,6 +177,22 @@ export function EditAttributeDialog({
                                 />
                                 <p className="text-xs text-muted-foreground">
                                     Press Enter or comma to add each option.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Target Collection (read-only) for Reference type */}
+                        {isReference && targetCollection && (
+                            <div className="space-y-1.5">
+                                <Label>Target Collection</Label>
+                                <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                                    <span className="text-base leading-none">
+                                        {targetCollection.icon || "\uD83D\uDCC1"}
+                                    </span>
+                                    <span className="font-medium">{targetCollection.name}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Target collection cannot be changed after creation.
                                 </p>
                             </div>
                         )}

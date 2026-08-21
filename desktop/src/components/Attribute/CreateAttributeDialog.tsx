@@ -23,7 +23,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { OptionsTagInput } from "./OptionsTagInput";
-import { FIELD_TYPES, getFieldTypeMeta, isChoiceFieldType } from "./attributeFieldTypes";
+import { FIELD_TYPES, getFieldTypeMeta, isChoiceFieldType, isReferenceFieldType } from "./attributeFieldTypes";
 import type { FieldType } from "@/core/types/common";
 import { AlertCircle, Asterisk, Loader2, Plus, Search, SlidersHorizontal } from "lucide-react";
 
@@ -40,7 +40,7 @@ export function CreateAttributeDialog({
     onOpenChange,
     onCreated,
 }: CreateAttributeDialogProps) {
-    const { addAttribute } = useCollections();
+    const { addAttribute, collections } = useCollections();
     const formRef = useRef<HTMLFormElement>(null);
 
     const [name, setName] = useState("");
@@ -53,8 +53,10 @@ export function CreateAttributeDialog({
     const [searchable, setSearchable] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [targetCollectionId, setTargetCollectionId] = useState<number | null>(null);
 
     const isChoiceType = isChoiceFieldType(fieldType);
+    const isReferenceType = isReferenceFieldType(fieldType);
     const selectedType = useMemo(() => getFieldTypeMeta(fieldType), [fieldType]);
     const SelectedIcon = selectedType.icon;
 
@@ -94,6 +96,7 @@ export function CreateAttributeDialog({
         setRequired(false);
         setSearchable(true);
         setError(null);
+        setTargetCollectionId(null);
     }
 
     async function handleSubmit(e: FormEvent) {
@@ -113,6 +116,11 @@ export function CreateAttributeDialog({
                     throw new Error("Please add at least one option for this selection list");
                 }
                 attributeOptions = { choices };
+            } else if (isReferenceType) {
+                if (!targetCollectionId) {
+                    throw new Error("Please select a target collection for this reference field");
+                }
+                attributeOptions = { target_collection_id: targetCollectionId };
             }
 
             await addAttribute({
@@ -245,6 +253,40 @@ export function CreateAttributeDialog({
                                 />
                                 <p className="text-xs text-muted-foreground">
                                     Press Enter or comma to add each option.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Target Collection for Reference type */}
+                        {isReferenceType && (
+                            <div className="space-y-1.5">
+                                <Label htmlFor="attr-target-collection">
+                                    Target Collection <span className="text-destructive">*</span>
+                                </Label>
+                                <Select
+                                    value={targetCollectionId?.toString() ?? ""}
+                                    onValueChange={(val) => setTargetCollectionId(Number(val))}
+                                >
+                                    <SelectTrigger id="attr-target-collection">
+                                        <SelectValue placeholder="Select target collection" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {collections
+                                            .filter((c) => c.id !== collectionId)
+                                            .map((c) => (
+                                                <SelectItem key={c.id} value={c.id.toString()}>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-base leading-none">
+                                                            {c.icon || "📁"}
+                                                        </span>
+                                                        <span className="font-medium">{c.name}</span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">
+                                    Items from this collection will be selectable as references.
                                 </p>
                             </div>
                         )}

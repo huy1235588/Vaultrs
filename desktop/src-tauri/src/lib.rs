@@ -10,6 +10,7 @@ mod core;
 mod custom_fields;
 mod db;
 mod items;
+mod relations;
 mod search;
 
 use tauri::Manager;
@@ -84,6 +85,10 @@ pub fn run() {
             assets::commands::set_item_cover,
             assets::commands::delete_asset,
             assets::commands::unlink_asset,
+            // Relation commands
+            relations::commands::resolve_references,
+            relations::commands::search_reference_targets,
+            relations::commands::get_back_references,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

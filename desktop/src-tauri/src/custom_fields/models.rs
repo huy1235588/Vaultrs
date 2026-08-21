@@ -19,6 +19,7 @@ pub enum FieldType {
     Url,
     Image,
     File,
+    Reference,
 }
 
 impl std::fmt::Display for FieldType {

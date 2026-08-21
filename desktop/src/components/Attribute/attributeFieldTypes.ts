@@ -9,6 +9,7 @@ import {
     Calendar,
     CalendarClock,
     CheckSquare,
+    GitBranch,
     Hash,
     LayoutList,
     Link2,
@@ -36,6 +37,7 @@ export const FIELD_TYPES: FieldTypeMeta[] = [
     { value: "multiselect", label: "Multi-Select", description: "Select multiple options from a list", icon: ListChecks },
     { value: "checkbox", label: "Checkbox (Boolean)", description: "Yes/No toggler", icon: CheckSquare },
     { value: "url", label: "URL", description: "Web link", icon: Link2 },
+    { value: "reference", label: "Reference", description: "Link to items in another collection", icon: GitBranch },
 ];
 
 const FIELD_TYPE_MAP = new Map(FIELD_TYPES.map((t) => [t.value, t]));
@@ -48,4 +50,9 @@ export function getFieldTypeMeta(type: FieldType): FieldTypeMeta {
 /** Whether a field type stores a fixed list of choices (select / multiselect). */
 export function isChoiceFieldType(type: FieldType): boolean {
     return type === "select" || type === "multiselect";
+}
+
+/** Whether a field type is a cross-collection reference. */
+export function isReferenceFieldType(type: FieldType): boolean {
+    return type === "reference";
 }

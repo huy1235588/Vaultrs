@@ -60,7 +60,8 @@ export type FieldType =
     | "checkbox"
     | "url"
     | "image"
-    | "file";
+    | "file"
+    | "reference";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Sort & Filter Types (Phase 5A)
@@ -71,6 +72,34 @@ export type SortField = "title" | "created_at" | "updated_at";
 
 /** Sort direction. */
 export type SortOrder = "ASC" | "DESC";
+
+// ═══════════════════════════════════════════════════════════════════════
+// Relations Types (Phase 5B)
+// ═══════════════════════════════════════════════════════════════════════
+
+/** A resolved reference — an item from another collection with context. */
+export interface ReferencedItem {
+    id: number;
+    title: string;
+    collection_id: number;
+    collection_name: string;
+    collection_icon: string | null;
+}
+
+/** A back-reference — an item that references the current item. */
+export interface BackReference {
+    item_id: number;
+    item_title: string;
+    collection_id: number;
+    collection_name: string;
+    collection_icon: string | null;
+    attribute_name: string;
+}
+
+/** Resolved references grouped by attribute key. */
+export interface ResolvedReferencesResponse {
+    references: Record<string, ReferencedItem[]>;
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // Asset System Types (Phase 4B)

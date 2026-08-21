@@ -14,6 +14,7 @@ import {
     ToggleLeft,
     List,
     ListChecks,
+    GitBranch,
     type LucideIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ import {
 import type { Attribute, FieldType } from "@/core/types/common";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ReferenceField } from "./ReferenceField";
 
 interface DynamicFieldProps {
     attribute: Attribute;
@@ -51,6 +53,7 @@ const FIELD_ICONS: Partial<Record<FieldType, LucideIcon>> = {
     select: List,
     multiselect: ListChecks,
     url: Link,
+    reference: GitBranch,
 };
 
 export function DynamicField({ attribute, value, onChange, className }: DynamicFieldProps) {
@@ -258,6 +261,38 @@ export function DynamicField({ attribute, value, onChange, className }: DynamicF
                             </Button>
                         )}
                     </div>
+                );
+            }
+
+            case "reference": {
+                // Parse target_collection_id from attribute options
+                let targetCollectionId: number | null = null;
+                if (attribute.options) {
+                    try {
+                        const parsed = JSON.parse(attribute.options);
+                        targetCollectionId = parsed?.target_collection_id ?? null;
+                    } catch (e) {
+                        console.error("Failed to parse reference options:", e);
+                    }
+                }
+
+                if (!targetCollectionId) {
+                    return (
+                        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                            Missing target collection configuration for this reference field.
+                        </div>
+                    );
+                }
+
+                const referenceIds = Array.isArray(value) ? value : [];
+
+                return (
+                    <ReferenceField
+                        attributeKey={attribute.key}
+                        targetCollectionId={targetCollectionId}
+                        value={referenceIds}
+                        onChange={onChange}
+                    />
                 );
             }
 
