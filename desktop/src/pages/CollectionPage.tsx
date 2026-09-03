@@ -7,12 +7,11 @@ import { useEffect, useRef, useState } from "react";
 import { MoreHorizontal, Pencil, Settings2, Trash2 } from "lucide-react";
 import { useCollections } from "@/core/context/CollectionContext";
 import { useCollectionSettings } from "@/core/hooks/useCollectionSettings";
-import { useLocalStorage } from "@/core/hooks/useLocalStorage";
+import { useCollectionViewPrefs } from "@/core/hooks/useCollectionViewPrefs";
 import { useDebounce } from "@/core/hooks/useDebounce";
 import ItemTable from "@/components/Item/ItemTable";
 import { ItemGrid } from "@/components/Item/ItemGrid";
 import { ViewModeToggle } from "@/components/Item/ViewModeToggle";
-import type { ViewMode } from "@/components/Item/ViewModeToggle";
 import { SortFilterBar } from "@/components/Item/SortFilterBar";
 import { CreateItemDialog } from "@/components/Item/CreateItemDialog";
 import { EditCollectionDialog } from "@/components/Collection/EditCollectionDialog";
@@ -50,20 +49,20 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
-    const [viewMode, setViewMode] = useLocalStorage<ViewMode>(
-        "vaultrs-view-mode",
-        "list",
-    );
 
-    // --- Sort & Filter State ---
-    const [sortField, setSortField] = useLocalStorage<SortField>(
-        "vaultrs-sort-field",
-        "created_at",
-    );
-    const [sortOrder, setSortOrder] = useLocalStorage<SortOrder>(
-        "vaultrs-sort-order",
-        "DESC",
-    );
+    // --- Collection Settings ---
+    const { settings } = useCollectionSettings(selectedCollection?.id);
+
+    // --- Per-collection view preferences (viewMode, sortField, sortOrder) ---
+    // These are saved per-collection in localStorage. When no saved prefs exist
+    // for a collection, they fall back to the collection's default settings.
+    const {
+        viewMode, setViewMode,
+        sortField, setSortField,
+        sortOrder, setSortOrder,
+    } = useCollectionViewPrefs(selectedCollection?.id, settings);
+
+    // --- Filter State ---
     const [filterInput, setFilterInput] = useState("");
     // Debounce filter input to avoid excessive API calls
     const debouncedFilter = useDebounce(filterInput, 300);
@@ -73,42 +72,18 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
         undefined,
     );
 
-    // --- Collection Settings ---
-    const { settings } = useCollectionSettings(selectedCollection?.id);
-
-    // Track the last collection ID to detect switches
+    // Clear filter input when switching collections
     const prevCollectionIdRef = useRef<number | undefined>(undefined);
-
-    // Apply per-collection settings when switching collections
     useEffect(() => {
         if (!selectedCollection) return;
         if (prevCollectionIdRef.current === selectedCollection.id) return;
-
         prevCollectionIdRef.current = selectedCollection.id;
         setFilterInput("");
+    }, [selectedCollection?.id]);
 
-        if (settings) {
-            // Apply per-collection view mode override
-            const settingsViewMode =
-                settings.appearance.default_view_mode === "GRID"
-                    ? "grid"
-                    : "list";
-            setViewMode(settingsViewMode);
-
-            // Apply per-collection sort defaults
-            const field = settings.behavior.default_sort_field as SortField;
-            const order = settings.behavior.default_sort_order as SortOrder;
-            if (["title", "created_at", "updated_at"].includes(field)) {
-                setSortField(field);
-            }
-            if (order === "ASC" || order === "DESC") {
-                setSortOrder(order);
-            }
-        }
-    }, [selectedCollection?.id, settings]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Derive showTitleOnCard from settings
+    // Derive showTitleOnCard & cardSize from settings
     const showTitleOnCard = settings?.appearance.show_title_on_card ?? true;
+    const cardSize = settings?.appearance.card_size ?? "MEDIUM";
 
     // Expose the open-dialog function to the parent via ref
     useEffect(() => {
@@ -139,19 +114,23 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
     if (!selectedCollection) return null;
 
     return (
-        <div className="flex h-full flex-col">
+        <div className="flex h-full flex-col animate-fade-in-up">
             {/* Collection info header */}
-            <div className="mb-4 flex items-start justify-between gap-4 border-b border-border pb-4">
-                <div className="flex items-center gap-3">
-                    <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/40 text-2xl leading-none">
-                        {selectedCollection.icon || "📁"}
-                    </span>
+            <div className="mb-5 flex items-start justify-between gap-4 border-b border-border/50 pb-5">
+                <div className="flex items-center gap-3.5">
+                    <div className="relative">
+                        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-gradient-to-br from-muted/60 to-muted/20 text-2xl leading-none shadow-sm">
+                            {selectedCollection.icon || "📁"}
+                        </span>
+                        {/* Gradient accent dot */}
+                        <span className="absolute -bottom-0.5 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary/60 to-orange-400/60" />
+                    </div>
                     <div>
                         <h1 className="text-xl font-bold tracking-tight text-foreground">
                             {selectedCollection.name}
                         </h1>
                         {selectedCollection.description && (
-                            <p className="mt-0.5 text-sm text-muted-foreground">
+                            <p className="mt-0.5 text-sm text-muted-foreground/80">
                                 {selectedCollection.description}
                             </p>
                         )}
@@ -233,6 +212,7 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
                         sortOrder={sortOrder}
                         filterTitle={debouncedFilter}
                         showTitleOnCard={showTitleOnCard}
+                        cardSize={cardSize}
                         onTotalChange={setFilteredTotal}
                     />
                 ) : (

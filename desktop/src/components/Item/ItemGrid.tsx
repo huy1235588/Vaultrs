@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ItemCard } from "./ItemCard";
 import { DeleteItemDialog } from "./DeleteItemDialog";
 import { resolveAssetUrlSync } from "@/core/utils/assetResolver";
+import { cn } from "@/lib/utils";
 import type { Item, SortField, SortOrder } from "@/core/types/common";
 
 interface ItemGridProps {
@@ -31,21 +32,47 @@ interface ItemGridProps {
     filterTitle?: string;
     /** Whether to show title on grid cards (default: true). */
     showTitleOnCard?: boolean;
+    /** Card size preset from collection settings (default: "MEDIUM"). */
+    cardSize?: "SMALL" | "MEDIUM" | "LARGE";
     /** Callback to report total count (for filter badge). */
     onTotalChange?: (total: number) => void;
 }
 
-const ROW_HEIGHT = 230; // Approximate height of a card row (cover 144px + info ~86px)
+function getEstimatedRowHeight(
+    cardSize: "SMALL" | "MEDIUM" | "LARGE" = "MEDIUM",
+    showTitle: boolean = true,
+): number {
+    if (!showTitle) {
+        switch (cardSize) {
+            case "SMALL":
+                return 150;
+            case "LARGE":
+                return 260;
+            case "MEDIUM":
+            default:
+                return 190;
+        }
+    }
+    switch (cardSize) {
+        case "SMALL":
+            return 200;
+        case "LARGE":
+            return 320;
+        case "MEDIUM":
+        default:
+            return 255;
+    }
+}
 
 /**
  * Calculate the number of columns based on container width.
  * Mirrors the CSS grid responsive breakpoints.
  */
 function getColumnCount(width: number): number {
-    if (width >= 1280) return 5;  // xl
-    if (width >= 1024) return 4;  // lg
-    if (width >= 640) return 3;   // sm
-    return 2;                     // default
+    if (width >= 1280) return 5; // xl
+    if (width >= 1024) return 4; // lg
+    if (width >= 640) return 3; // sm
+    return 2; // default
 }
 
 function ItemGrid({
@@ -55,6 +82,7 @@ function ItemGrid({
     sortOrder = "DESC",
     filterTitle,
     showTitleOnCard = true,
+    cardSize = "MEDIUM",
     onTotalChange,
 }: ItemGridProps) {
     const { selectItem } = useItem();
@@ -112,7 +140,7 @@ function ItemGrid({
     const rowVirtualizer = useVirtualizer({
         count: rowCount,
         getScrollElement: () => scrollContainerRef.current,
-        estimateSize: () => ROW_HEIGHT,
+        estimateSize: () => getEstimatedRowHeight(cardSize, showTitleOnCard),
         overscan: 3, // Render 3 extra rows above/below
     });
 
@@ -160,13 +188,25 @@ function ItemGrid({
                 {Array.from({ length: 12 }).map((_, i) => (
                     <div
                         key={i}
-                        className="overflow-hidden rounded-xl border border-border bg-card"
+                        className="overflow-hidden rounded-xl border border-border/40 bg-card"
+                        style={{ animationDelay: `${i * 50}ms` }}
                     >
-                        <div className="h-36 animate-pulse bg-muted/40" />
-                        <div className="space-y-2 p-3">
-                            <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
-                            <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+                        <div
+                            className={cn(
+                                "relative w-full bg-muted/20",
+                                cardSize === "SMALL" && "aspect-[16/10]",
+                                cardSize === "LARGE" && "aspect-[4/3]",
+                                cardSize === "MEDIUM" && "aspect-[16/10]",
+                            )}
+                        >
+                            <div className="absolute inset-0 animate-shimmer" />
                         </div>
+                        {showTitleOnCard && (
+                            <div className="space-y-2.5 p-3">
+                                <div className="h-4 w-3/4 rounded-md bg-muted/30 animate-shimmer" />
+                                <div className="h-3 w-1/2 rounded-md bg-muted/20 animate-shimmer" />
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
@@ -283,6 +323,7 @@ function ItemGrid({
                                             cover={getCover(item.id)}
                                             resolveAssetUrl={resolveAssetUrlSync}
                                             showTitle={showTitleOnCard}
+                                            cardSize={cardSize}
                                             onClick={() =>
                                                 selectItem(item.id)
                                             }

@@ -158,7 +158,7 @@ function SortFilterBar({
                     placeholder="Filter by title..."
                     value={filterTitle}
                     onChange={(e) => onFilterChange(e.target.value)}
-                    className="h-8 pl-8 pr-8 text-xs"
+                    className="h-8 pl-8 pr-8 text-xs transition-all duration-200 focus-visible:ring-primary/20 focus-visible:shadow-sm focus-visible:shadow-primary/10"
                 />
                 {hasFilter && (
                     <Tooltip>
@@ -181,7 +181,7 @@ function SortFilterBar({
             {hasFilter && filteredTotal !== undefined && (
                 <Badge
                     variant="secondary"
-                    className="gap-1 text-[10px] font-medium"
+                    className="animate-scale-in gap-1 text-[10px] font-medium"
                 >
                     <Filter className="size-3" />
                     {filteredTotal.toLocaleString()} results

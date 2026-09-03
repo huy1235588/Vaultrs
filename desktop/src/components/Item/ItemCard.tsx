@@ -4,6 +4,7 @@
  * Shows the cover image when available, falling back to a deterministic
  * gradient background derived from the item title hash.
  */
+import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,8 @@ interface ItemCardProps {
     resolveAssetUrl?: (relativePath: string) => string;
     /** Whether to show the title/date info section below the cover (default: true). */
     showTitle?: boolean;
+    /** Card size preset (default: "MEDIUM"). */
+    cardSize?: "SMALL" | "MEDIUM" | "LARGE";
     onClick: () => void;
     onDelete: () => void;
 }
@@ -88,40 +91,77 @@ function ItemCard({
     cover,
     resolveAssetUrl,
     showTitle = true,
+    cardSize = "MEDIUM",
     onClick,
     onDelete,
 }: ItemCardProps) {
     const hasCover = cover && cover.state === "READY";
     const coverUrl = hasCover ? getCoverUrl(cover, resolveAssetUrl) : null;
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     return (
         <div
-            className="group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5"
+            className="group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border/40 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1"
             onClick={onClick}
         >
             {/* Cover area — image or gradient fallback */}
             <div
-                className="relative flex h-36 items-center justify-center overflow-hidden"
+                className={cn(
+                    "relative flex w-full shrink-0 items-center justify-center overflow-hidden",
+                    cardSize === "SMALL" && "aspect-[16/10]",
+                    cardSize === "LARGE" && "aspect-[4/3]",
+                    cardSize === "MEDIUM" && "aspect-[16/10]",
+                )}
                 style={coverUrl ? undefined : { background: titleToGradient(title) }}
             >
+                {/* Noise overlay for gradient fallback */}
+                {!coverUrl && <div className="noise-overlay absolute inset-0" />}
+
                 {coverUrl ? (
-                    <img
-                        src={coverUrl}
-                        alt={title}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                        draggable={false}
-                        loading="lazy"
-                    />
+                    <>
+                        {/* Shimmer skeleton while image loads */}
+                        {!imageLoaded && (
+                            <div className="absolute inset-0 bg-muted/30 animate-shimmer" />
+                        )}
+                        <img
+                            src={coverUrl}
+                            alt={title}
+                            className={cn(
+                                "h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-105",
+                                imageLoaded ? "opacity-100" : "opacity-0",
+                            )}
+                            draggable={false}
+                            loading="lazy"
+                            onLoad={() => setImageLoaded(true)}
+                        />
+                    </>
                 ) : (
                     /* Collection icon overlay (fallback) */
-                    <span className="text-4xl opacity-30 transition-opacity group-hover:opacity-50">
+                    <span
+                        className={cn(
+                            "opacity-20 transition-all duration-300 group-hover:opacity-35 group-hover:scale-110",
+                            cardSize === "SMALL" ? "text-3xl" : "text-4xl",
+                        )}
+                    >
                         {collectionIcon || "📄"}
                     </span>
                 )}
 
+                {/* Bottom gradient and title overlay when showTitle is false */}
+                {!showTitle && (
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/85 via-black/45 to-transparent p-3 pt-8">
+                        <h3 className="line-clamp-2 text-xs font-semibold leading-snug text-white drop-shadow-sm">
+                            {title}
+                        </h3>
+                        <p className="mt-0.5 text-[10px] tabular-nums text-white/70">
+                            {formatDate(updatedAt)}
+                        </p>
+                    </div>
+                )}
+
                 {/* Delete button — appears on hover */}
                 <div
-                    className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
+                    className="absolute top-2 right-2 opacity-0 transition-all duration-200 group-hover:opacity-100"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <Tooltip>
@@ -129,7 +169,7 @@ function ItemCard({
                             <Button
                                 variant="ghost"
                                 size="icon-xs"
-                                className="bg-black/30 text-white/80 backdrop-blur-sm hover:bg-destructive hover:text-white"
+                                className="bg-black/30 text-white/80 backdrop-blur-md border border-white/10 hover:bg-destructive hover:text-white hover:border-transparent transition-all duration-200"
                                 onClick={onDelete}
                             >
                                 <Trash2 className="size-3.5" />
@@ -142,11 +182,21 @@ function ItemCard({
 
             {/* Info area */}
             {showTitle && (
-                <div className="flex flex-1 flex-col gap-1 p-3">
-                    <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+                <div
+                    className={cn(
+                        "flex flex-1 flex-col gap-1.5",
+                        cardSize === "SMALL" ? "p-2.5" : "p-3",
+                    )}
+                >
+                    <h3
+                        className={cn(
+                            "line-clamp-2 font-semibold leading-snug text-foreground group-hover:text-primary/90 transition-colors duration-200",
+                            cardSize === "SMALL" ? "text-xs" : "text-sm",
+                        )}
+                    >
                         {title}
                     </h3>
-                    <p className="mt-auto text-[11px] tabular-nums text-muted-foreground">
+                    <p className="mt-auto text-[11px] tabular-nums text-muted-foreground/60">
                         {formatDate(updatedAt)}
                     </p>
                 </div>

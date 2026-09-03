@@ -213,17 +213,17 @@ function ItemTable({
     // --- Loading state (initial) ---
     if (isLoading && items.length === 0) {
         return (
-            <div className="overflow-hidden rounded-lg border border-border bg-card">
-                <div className="border-b border-border bg-muted/50 px-4 py-3">
-                    <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+            <div className="overflow-hidden rounded-xl border border-border/40 bg-card shadow-sm">
+                <div className="border-b border-border/60 bg-muted/20 px-4 py-3">
+                    <div className="h-3 w-24 rounded-md bg-muted/30 animate-shimmer" />
                 </div>
-                <div className="divide-y divide-border">
+                <div className="divide-y divide-border/30">
                     {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className="flex items-center gap-4 px-4 py-3.5">
-                            <div className="size-8 shrink-0 rounded bg-muted animate-pulse" />
-                            <div className="h-3.5 flex-1 rounded bg-muted animate-pulse" />
-                            <div className="hidden h-3.5 w-20 rounded bg-muted animate-pulse sm:block" />
-                            <div className="hidden h-3.5 w-20 rounded bg-muted animate-pulse sm:block" />
+                        <div key={i} className="flex items-center gap-4 px-4 py-3.5" style={{ animationDelay: `${i * 60}ms` }}>
+                            <div className="size-8 shrink-0 rounded-lg bg-muted/20 animate-shimmer" />
+                            <div className="h-3.5 flex-1 rounded-md bg-muted/20 animate-shimmer" />
+                            <div className="hidden h-3.5 w-20 rounded-md bg-muted/15 animate-shimmer sm:block" />
+                            <div className="hidden h-3.5 w-20 rounded-md bg-muted/15 animate-shimmer sm:block" />
                         </div>
                     ))}
                 </div>
@@ -295,9 +295,9 @@ function ItemTable({
                 </p>
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <div className="overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm">
                 {/* Table header (fixed) — clickable columns for sorting */}
-                <div className="flex items-center border-b border-border bg-muted/50 px-4 py-2.5">
+                <div className="flex items-center border-b border-border/60 bg-muted/30 px-4 py-2.5">
                     {/* Thumbnail column header */}
                     <span className="w-10 shrink-0" />
                     <div className="flex-1">
@@ -353,30 +353,32 @@ function ItemTable({
                             return (
                                 <div
                                     key={item.id}
-                                    className="group absolute left-0 flex w-full cursor-pointer items-center border-b border-border/50 px-4 transition-colors hover:bg-accent/40"
+                                    className="group absolute left-0 flex w-full cursor-pointer items-center border-b border-border/30 px-4 transition-all duration-200 hover:bg-accent/30"
                                     style={{
                                         height: `${virtualRow.size}px`,
                                         transform: `translateY(${virtualRow.start}px)`,
                                     }}
                                     onClick={() => selectItem(item.id)}
                                 >
+                                    {/* Hover accent bar */}
+                                    <span className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-full bg-primary opacity-0 transition-all duration-200 group-hover:opacity-100" />
                                     {/* Thumbnail */}
-                                    <div className="mr-3 flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted/40">
+                                    <div className="mr-3 flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted/30">
                                         {thumbUrl ? (
                                             <img
                                                 src={thumbUrl}
                                                 alt=""
-                                                className="size-8 object-cover"
+                                                className="size-8 rounded-lg object-cover transition-transform duration-300 group-hover:scale-110"
                                                 draggable={false}
                                                 loading="lazy"
                                             />
                                         ) : (
-                                            <ImageIcon className="size-3.5 text-muted-foreground/40" />
+                                            <ImageIcon className="size-3.5 text-muted-foreground/30" />
                                         )}
                                     </div>
 
                                     {/* Title */}
-                                    <span className="flex-1 truncate text-sm font-semibold text-foreground">
+                                    <span className="flex-1 truncate text-sm font-semibold text-foreground group-hover:text-primary/90 transition-colors duration-200">
                                         {item.title}
                                     </span>
 

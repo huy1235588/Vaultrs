@@ -194,9 +194,9 @@ export function ItemDetailPage() {
     const isMac = typeof navigator !== "undefined" && /mac/i.test(navigator.platform);
 
     return (
-        <div className="flex h-full flex-col">
+        <div className="flex h-full flex-col animate-slide-in-right">
                 {/* Header / Actions bar */}
-                <div className="flex items-center justify-between border-b pb-4 mb-6">
+                <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
                     <div className="flex items-center gap-3">
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -223,9 +223,9 @@ export function ItemDetailPage() {
                     <div className="flex items-center gap-2">
                         {/* Status notifications */}
                         {saveSuccess && (
-                            <span className="flex items-center gap-1 text-xs text-green-500 font-medium animate-in fade-in-0 zoom-in-95 duration-200">
+                            <span className="flex items-center gap-1.5 rounded-full bg-green-500/10 px-3 py-1 text-xs text-green-400 font-medium animate-scale-in">
                                 <Check className="size-3.5" />
-                                Changes saved
+                                Saved
                             </span>
                         )}
                         {validationErrors.length > 0 && hasChanges && (
@@ -348,7 +348,7 @@ export function ItemDetailPage() {
 
                     {/* Right Panel: Metadata (sidebar-style) */}
                     <div className="lg:col-span-1 space-y-4">
-                        <Card className="shadow-xs">
+                        <Card className="shadow-sm gradient-border overflow-hidden">
                             <CardContent className="p-5 space-y-4">
                                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                                     <FileText className="size-4 text-primary" />
@@ -428,7 +428,7 @@ export function ItemDetailPage() {
                         </Card>
 
                         {/* Back-References Panel */}
-                        <Card className="shadow-xs">
+                        <Card className="shadow-sm overflow-hidden">
                             <CardContent className="p-5">
                                 <BackReferences itemId={selectedItem.id} />
                             </CardContent>

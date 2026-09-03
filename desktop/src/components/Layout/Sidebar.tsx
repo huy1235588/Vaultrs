@@ -55,25 +55,31 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
         <TooltipProvider delayDuration={300}>
             <aside
                 className={cn(
-                    "flex flex-col overflow-hidden border-r border-border bg-card transition-[width] duration-200 ease-in-out",
+                    "relative flex flex-col overflow-hidden border-r border-border bg-gradient-to-b from-card via-card to-card/80 transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
                     collapsed ? "w-16" : "w-64",
                 )}
             >
+                {/* Subtle noise overlay for premium feel */}
+                <div className="noise-overlay pointer-events-none absolute inset-0" aria-hidden />
+
                 {/* Logo / window drag region */}
                 <div
                     data-tauri-drag-region
-                    className="flex h-14 shrink-0 select-none items-center gap-2 border-b border-border px-4"
+                    className="relative z-10 flex h-14 shrink-0 select-none items-center gap-2 border-b border-border/60 px-4"
                 >
                     <img
-                        className="h-8 shrink-0"
-                        src="/logo-1.png"
+                        className={cn(
+                            "shrink-0 transition-all duration-300",
+                            collapsed ? "h-7" : "h-8",
+                        )}
+                        src={`${collapsed ? `/logo-2.png` : `/logo-1.png`}`}
                         alt="Vaultrs"
                         loading="eager"
                     />
                 </div>
 
                 {/* Collection list */}
-                <ScrollArea className="flex-1">
+                <ScrollArea className="relative z-10 flex-1">
                     <nav className="flex flex-col gap-2 p-3">
                         <div
                             className={cn(
@@ -82,7 +88,7 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
                             )}
                         >
                             {!collapsed && (
-                                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                                     Collections
                                 </p>
                             )}
@@ -93,6 +99,7 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
                                         size="icon-xs"
                                         aria-label="New collection"
                                         onClick={() => setCreateOpen(true)}
+                                        className="text-muted-foreground hover:text-primary transition-colors"
                                     >
                                         <Plus className="size-3.5" />
                                     </Button>
@@ -105,7 +112,7 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
                             {loading ? (
                                 <div className="space-y-1.5 px-2">
                                     {[1, 2, 3].map((i) => (
-                                        <Skeleton key={i} className="h-9 w-full rounded-md" />
+                                        <div key={i} className="h-9 w-full rounded-md bg-muted/30 animate-shimmer" />
                                     ))}
                                 </div>
                             ) : collections.length === 0 ? (
@@ -116,7 +123,7 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
                                                 type="button"
                                                 onClick={() => setCreateOpen(true)}
                                                 aria-label="Create your first collection"
-                                                className="mx-auto flex size-9 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                                                className="mx-auto flex size-9 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-all duration-200 hover:border-primary/50 hover:text-foreground hover:scale-105"
                                             >
                                                 <Database className="size-4 opacity-50" />
                                             </button>
@@ -129,9 +136,9 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
                                     <button
                                         type="button"
                                         onClick={() => setCreateOpen(true)}
-                                        className="flex w-full items-center gap-2 rounded-md border border-dashed border-border px-3 py-4 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                                        className="group flex w-full items-center gap-2 rounded-lg border border-dashed border-border/60 px-3 py-4 text-sm text-muted-foreground transition-all duration-200 hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
                                     >
-                                        <Database className="size-4 opacity-50" />
+                                        <Database className="size-4 opacity-50 transition-transform duration-200 group-hover:scale-110" />
                                         <span>Create your first collection</span>
                                     </button>
                                 )
@@ -141,25 +148,30 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
 
                                     const row = (
                                         <div className="group relative">
-                                            {/* Active accent bar */}
+                                            {/* Active accent bar — glowing */}
                                             <span
                                                 className={cn(
-                                                    "absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary transition-opacity",
-                                                    isActive ? "opacity-100" : "opacity-0",
+                                                    "absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary transition-all duration-300",
+                                                    isActive
+                                                        ? "opacity-100 shadow-[0_0_8px_oklch(0.646_0.222_41.116/0.4)]"
+                                                        : "opacity-0 scale-y-0",
                                                 )}
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => selectCollection(collection.id)}
                                                 className={cn(
-                                                    "flex w-full items-center gap-2.5 rounded-md py-2 text-sm font-medium transition-colors duration-150",
+                                                    "flex w-full items-center gap-2.5 rounded-lg py-2 text-sm font-medium transition-all duration-200",
                                                     collapsed ? "justify-center px-0" : "px-3",
                                                     isActive
-                                                        ? "bg-primary/10 text-primary"
-                                                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                                                        ? "bg-primary/10 text-primary shadow-sm"
+                                                        : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
                                                 )}
                                             >
-                                                <span className="shrink-0 text-base leading-none">
+                                                <span className={cn(
+                                                    "shrink-0 text-base leading-none transition-transform duration-200",
+                                                    isActive && "scale-110",
+                                                )}>
                                                     {collection.icon || "📁"}
                                                 </span>
                                                 {!collapsed && (
@@ -174,7 +186,7 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
                                                             variant="ghost"
                                                             size="icon-xs"
                                                             aria-label={`More actions for ${collection.name}`}
-                                                            className="absolute top-1/2 right-1.5 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100"
+                                                            className="absolute top-1/2 right-1.5 -translate-y-1/2 opacity-0 transition-all duration-150 group-hover:opacity-100 data-[state=open]:opacity-100"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
                                                             <MoreHorizontal className="size-3.5" />
@@ -238,15 +250,15 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
                     </nav>
                 </ScrollArea>
 
-                {/* Collapse toggle */}
-                <div className="shrink-0 border-t border-border p-2">
+                {/* Collapse toggle — cleaner footer */}
+                <div className="relative z-10 shrink-0 border-t border-border/60 p-2">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button
                                 variant="ghost"
                                 size="icon-xs"
                                 aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                                className="w-full justify-center"
+                                className="w-full justify-center text-muted-foreground hover:text-foreground transition-colors"
                                 onClick={() => setCollapsed((c) => !c)}
                             >
                                 {collapsed ? (

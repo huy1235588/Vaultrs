@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { AttributeManager } from "@/components/Attribute/AttributeManager";
+import { cn } from "@/lib/utils";
 
 interface HeaderProps {
     /** Called when user clicks the "Add Item" button. */
@@ -47,6 +48,7 @@ function Header({ onAddItem }: HeaderProps) {
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
     const [showResults, setShowResults] = useState(false);
+    const [activeResultIndex, setActiveResultIndex] = useState(-1);
     const searchRef = useRef<HTMLInputElement>(null);
     const resultsRef = useRef<HTMLDivElement>(null);
     const debouncedQuery = useDebounce(searchQuery, 250);
@@ -61,6 +63,7 @@ function Header({ onAddItem }: HeaderProps) {
             // Escape closes search results
             if (e.key === "Escape" && showResults) {
                 setShowResults(false);
+                setActiveResultIndex(-1);
                 searchRef.current?.blur();
             }
         }
@@ -127,9 +130,33 @@ function Header({ onAddItem }: HeaderProps) {
             selectItem(result.id);
             setShowResults(false);
             setSearchQuery("");
+            setActiveResultIndex(-1);
             searchRef.current?.blur();
         },
         [selectItem],
+    );
+
+    // Keyboard navigation for search results
+    const handleSearchKeyDown = useCallback(
+        (e: React.KeyboardEvent) => {
+            if (!showResults || searchResults.length === 0) return;
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setActiveResultIndex((prev) =>
+                    prev < searchResults.length - 1 ? prev + 1 : 0,
+                );
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setActiveResultIndex((prev) =>
+                    prev > 0 ? prev - 1 : searchResults.length - 1,
+                );
+            } else if (e.key === "Enter" && activeResultIndex >= 0) {
+                e.preventDefault();
+                handleResultClick(searchResults[activeResultIndex]);
+            }
+        },
+        [showResults, searchResults, activeResultIndex, handleResultClick],
     );
 
     // Clear search
@@ -137,8 +164,31 @@ function Header({ onAddItem }: HeaderProps) {
         setSearchQuery("");
         setSearchResults([]);
         setShowResults(false);
+        setActiveResultIndex(-1);
         searchRef.current?.focus();
     }, []);
+
+    // Highlight matching text in search results
+    const highlightMatch = useCallback(
+        (text: string) => {
+            if (!searchQuery.trim()) return text;
+            const regex = new RegExp(
+                `(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+                "gi",
+            );
+            const parts = text.split(regex);
+            return parts.map((part, i) =>
+                regex.test(part) ? (
+                    <mark key={i} className="bg-primary/20 text-primary rounded-sm px-0.5">
+                        {part}
+                    </mark>
+                ) : (
+                    part
+                ),
+            );
+        },
+        [searchQuery],
+    );
 
     // Get collection name for a result
     const getCollectionName = useCallback(
@@ -165,7 +215,7 @@ function Header({ onAddItem }: HeaderProps) {
     return (
         <header
             data-tauri-drag-region
-            className="flex h-14 shrink-0 select-none items-center justify-between border-b border-border bg-card px-6"
+            className="relative flex h-14 shrink-0 select-none items-center justify-between border-b border-border/60 bg-card/80 px-6 backdrop-blur-sm"
         >
             {/* Left — Breadcrumb / Title */}
             <div className="flex min-w-0 items-center gap-2">
@@ -175,18 +225,21 @@ function Header({ onAddItem }: HeaderProps) {
                             type="button"
                             onClick={clearItem}
                             aria-label={selectedItem ? "Back to collection" : undefined}
-                            className="flex shrink-0 items-center gap-1.5 text-foreground transition-colors hover:text-primary"
+                            className="group/breadcrumb flex shrink-0 items-center gap-1.5 text-foreground transition-colors hover:text-primary"
                         >
-                            <span className="text-base leading-none">
+                            <span className="text-base leading-none transition-transform duration-200 group-hover/breadcrumb:scale-110">
                                 {selectedCollection.icon || "📁"}
                             </span>
-                            <span>{selectedCollection.name}</span>
+                            <span className="relative">
+                                {selectedCollection.name}
+                                <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-primary transition-all duration-200 group-hover/breadcrumb:w-full" />
+                            </span>
                         </button>
 
                         {selectedItem && (
                             <>
-                                <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
-                                <span className="truncate font-medium text-muted-foreground">
+                                <ChevronRight className="size-3.5 shrink-0 text-muted-foreground/50" />
+                                <span className="animate-fade-in-up truncate font-medium text-muted-foreground">
                                     {selectedItem.title}
                                 </span>
                             </>
@@ -203,7 +256,10 @@ function Header({ onAddItem }: HeaderProps) {
             <div className="flex shrink-0 items-center gap-3">
                 {/* Search */}
                 <div className="relative hidden sm:block">
-                    <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                    <Search className={cn(
+                        "pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 transition-colors duration-200",
+                        searchFocused ? "text-primary" : "text-muted-foreground"
+                    )} />
                     <Input
                         ref={searchRef}
                         type="text"
@@ -217,8 +273,13 @@ function Header({ onAddItem }: HeaderProps) {
                         onChange={(e) => {
                             setSearchQuery(e.target.value);
                             setShowResults(true);
+                            setActiveResultIndex(-1);
                         }}
-                        className="h-8 w-48 bg-background pl-8 pr-12 text-sm transition-all focus-visible:w-64"
+                        onKeyDown={handleSearchKeyDown}
+                        className={cn(
+                            "h-8 w-48 bg-background/60 pl-8 pr-12 text-sm transition-all duration-300",
+                            searchFocused && "w-72 bg-background shadow-sm ring-1 ring-primary/20"
+                        )}
                     />
                     {/* Keyboard shortcut hint or clear button */}
                     {searchQuery ? (
@@ -241,55 +302,68 @@ function Header({ onAddItem }: HeaderProps) {
                     {showResults && searchQuery.trim() && (
                         <div
                             ref={resultsRef}
-                            className="absolute top-full right-0 z-50 mt-1.5 w-80 overflow-hidden rounded-lg border border-border bg-card shadow-xl shadow-black/20"
+                            className="animate-fade-in-down absolute top-full right-0 z-50 mt-1.5 w-80 overflow-hidden rounded-xl border border-border/60 bg-card/95 shadow-2xl shadow-black/30 backdrop-blur-md"
                         >
                             {searchLoading ? (
-                                <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-muted-foreground">
-                                    <Loader2 className="size-4 animate-spin" />
+                                <div className="flex items-center justify-center gap-2 px-4 py-8 text-sm text-muted-foreground">
+                                    <Loader2 className="size-4 animate-spin text-primary" />
                                     Searching...
                                 </div>
                             ) : searchResults.length === 0 ? (
-                                <div className="flex flex-col items-center gap-1.5 px-4 py-6 text-center">
-                                    <Search className="size-5 text-muted-foreground/50" />
+                                <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+                                    <div className="flex size-10 items-center justify-center rounded-full bg-muted/40">
+                                        <Search className="size-4 text-muted-foreground/50" />
+                                    </div>
                                     <p className="text-sm text-muted-foreground">
                                         No results for "{searchQuery}"
                                     </p>
                                 </div>
                             ) : (
-                                <div className="max-h-72 overflow-y-auto">
-                                    <div className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                                <div className="max-h-80 overflow-y-auto">
+                                    <div className="sticky top-0 z-10 border-b border-border/40 bg-card/90 px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground backdrop-blur-sm">
                                         {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
                                         {selectedCollection && (
                                             <span> in {selectedCollection.name}</span>
                                         )}
                                     </div>
-                                    {searchResults.map((result) => (
-                                        <button
-                                            key={result.id}
-                                            type="button"
-                                            className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-accent/50"
-                                            onMouseDown={(e) => {
-                                                e.preventDefault(); // Prevent blur before click
-                                                handleResultClick(result);
-                                            }}
-                                        >
-                                            <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted/60 text-sm">
-                                                {getCollectionIcon(result.collection_id)}
-                                            </span>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-medium text-foreground">
-                                                    {result.title}
-                                                </p>
-                                                <p className="truncate text-xs text-muted-foreground">
-                                                    {!selectedCollection && (
-                                                        <span>{getCollectionName(result.collection_id)} · </span>
-                                                    )}
-                                                    {formatDate(result.updated_at)}
-                                                </p>
-                                            </div>
-                                            <FileText className="size-3.5 shrink-0 text-muted-foreground/40" />
-                                        </button>
-                                    ))}
+                                    <div className="py-1">
+                                        {searchResults.map((result, index) => (
+                                            <button
+                                                key={result.id}
+                                                type="button"
+                                                className={cn(
+                                                    "flex w-full items-center gap-3 px-3 py-2.5 text-left transition-all duration-150",
+                                                    index === activeResultIndex
+                                                        ? "bg-primary/10 text-primary"
+                                                        : "hover:bg-accent/50"
+                                                )}
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault(); // Prevent blur before click
+                                                    handleResultClick(result);
+                                                }}
+                                                onMouseEnter={() => setActiveResultIndex(index)}
+                                            >
+                                                <span className={cn(
+                                                    "flex size-8 shrink-0 items-center justify-center rounded-lg text-sm transition-colors",
+                                                    index === activeResultIndex ? "bg-primary/15" : "bg-muted/50"
+                                                )}>
+                                                    {getCollectionIcon(result.collection_id)}
+                                                </span>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="truncate text-sm font-medium text-foreground">
+                                                        {highlightMatch(result.title)}
+                                                    </p>
+                                                    <p className="truncate text-xs text-muted-foreground">
+                                                        {!selectedCollection && (
+                                                            <span>{getCollectionName(result.collection_id)} · </span>
+                                                        )}
+                                                        {formatDate(result.updated_at)}
+                                                    </p>
+                                                </div>
+                                                <FileText className="size-3.5 shrink-0 text-muted-foreground/30" />
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
