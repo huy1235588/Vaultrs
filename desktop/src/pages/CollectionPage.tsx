@@ -1,23 +1,30 @@
 /**
  * CollectionPage — Displays the items within the selected collection
- * with toggleable List/Grid view modes, sort/filter controls,
- * and per-collection settings integration.
+ * with List/Grid view modes and sort controls managed via ViewOptionsDrawer.
  */
 import { useEffect, useRef, useState } from "react";
-import { MoreHorizontal, Pencil, Settings2, Trash2 } from "lucide-react";
+import {
+    Filter,
+    MoreHorizontal,
+    Pencil,
+    Search,
+    Settings2,
+    SlidersHorizontal,
+    Trash2,
+    X,
+} from "lucide-react";
 import { useCollections } from "@/core/context/CollectionContext";
 import { useCollectionSettings } from "@/core/hooks/useCollectionSettings";
 import { useCollectionViewPrefs } from "@/core/hooks/useCollectionViewPrefs";
 import { useDebounce } from "@/core/hooks/useDebounce";
 import ItemTable from "@/components/Item/ItemTable";
 import { ItemGrid } from "@/components/Item/ItemGrid";
-import { ViewModeToggle } from "@/components/Item/ViewModeToggle";
-import { SortFilterBar } from "@/components/Item/SortFilterBar";
 import { CreateItemDialog } from "@/components/Item/CreateItemDialog";
-import { EditCollectionDialog } from "@/components/Collection/EditCollectionDialog";
 import { DeleteCollectionDialog } from "@/components/Collection/DeleteCollectionDialog";
-import { CollectionSettingsDialog } from "@/components/Collection/CollectionSettingsDialog";
+import { ViewOptionsDrawer } from "@/components/Collection/ViewOptionsDrawer";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -38,33 +45,37 @@ interface CollectionPageProps {
      * the "Create Item" dialog from the header button.
      */
     onAddItemRef?: React.MutableRefObject<(() => void) | null>;
-    /** Ref to open settings dialog from external triggers (e.g., Sidebar). */
+    /** Optional ref for backwards compatibility. */
     onOpenSettingsRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps) {
-    const { selectedCollection } = useCollections();
+    const { selectedCollection, setActiveSubView } = useCollections();
     const [createItemOpen, setCreateItemOpen] = useState(false);
-    const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
-    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [viewOptionsOpen, setViewOptionsOpen] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
 
     // --- Collection Settings ---
     const { settings } = useCollectionSettings(selectedCollection?.id);
 
-    // --- Per-collection view preferences (viewMode, sortField, sortOrder) ---
-    // These are saved per-collection in localStorage. When no saved prefs exist
-    // for a collection, they fall back to the collection's default settings.
+    // --- Per-collection view preferences (viewMode, sortField, sortOrder, cardWidth, cardHeight, info display) ---
     const {
         viewMode, setViewMode,
         sortField, setSortField,
         sortOrder, setSortOrder,
+        cardSize, setCardSize,
+        cardWidth, setCardWidth,
+        cardHeight, setCardHeight,
+        aspectPreset, setAspectPreset,
+        showTitleOnCard, setShowTitleOnCard,
+        showPropertiesOnCard, setShowPropertiesOnCard,
+        showDateOnCard, setShowDateOnCard,
+        resetDefaults,
     } = useCollectionViewPrefs(selectedCollection?.id, settings);
 
     // --- Filter State ---
     const [filterInput, setFilterInput] = useState("");
-    // Debounce filter input to avoid excessive API calls
     const debouncedFilter = useDebounce(filterInput, 300);
 
     // Track filtered total from child component
@@ -79,11 +90,7 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
         if (prevCollectionIdRef.current === selectedCollection.id) return;
         prevCollectionIdRef.current = selectedCollection.id;
         setFilterInput("");
-    }, [selectedCollection?.id]);
-
-    // Derive showTitleOnCard & cardSize from settings
-    const showTitleOnCard = settings?.appearance.show_title_on_card ?? true;
-    const cardSize = settings?.appearance.card_size ?? "MEDIUM";
+    }, [selectedCollection]);
 
     // Expose the open-dialog function to the parent via ref
     useEffect(() => {
@@ -95,15 +102,15 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
         }
     }, [onAddItemRef]);
 
-    // Expose settings dialog opener to parent (Sidebar can trigger this)
+    // Backwards compatibility for settings opener
     useEffect(() => {
         if (onOpenSettingsRef) {
-            onOpenSettingsRef.current = () => setSettingsOpen(true);
+            onOpenSettingsRef.current = () => setActiveSubView("settings");
             return () => {
                 onOpenSettingsRef.current = null;
             };
         }
-    }, [onOpenSettingsRef]);
+    }, [onOpenSettingsRef, setActiveSubView]);
 
     const handleSortChange = (field: SortField, order: SortOrder) => {
         setSortField(field);
@@ -113,9 +120,11 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
     // Safety check — this page should only render when a collection is selected
     if (!selectedCollection) return null;
 
+    const hasFilter = filterInput.trim().length > 0;
+
     return (
         <div className="flex h-full flex-col animate-fade-in-up">
-            {/* Collection info header */}
+            {/* ═══ Collection info header ═══ */}
             <div className="mb-5 flex items-start justify-between gap-4 border-b border-border/50 pb-5">
                 <div className="flex items-center gap-3.5">
                     <div className="relative">
@@ -138,24 +147,22 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* View Mode Toggle */}
-                    <ViewModeToggle value={viewMode} onChange={setViewMode} />
+                    {/* View Options Drawer trigger button */}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 text-xs font-medium cursor-pointer"
+                        onClick={() => setViewOptionsOpen(true)}
+                        title="Display & Sorting Options"
+                    >
+                        <SlidersHorizontal className="size-3.5 text-primary" />
+                        <span className="hidden sm:inline">Display</span>
+                        <Badge variant="secondary" className="px-1.5 py-0 text-[10px] uppercase font-mono font-medium">
+                            {viewMode}
+                        </Badge>
+                    </Button>
 
-                    {/* Collection Settings */}
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                aria-label="Collection settings"
-                                onClick={() => setSettingsOpen(true)}
-                            >
-                                <Settings2 className="size-4" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Collection settings</TooltipContent>
-                    </Tooltip>
-
+                    {/* Dropdown Menu */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -167,15 +174,13 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                                <Pencil className="size-4" />
-                                Edit collection
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() => setSettingsOpen(true)}
-                            >
+                            <DropdownMenuItem onClick={() => setActiveSubView("settings")}>
                                 <Settings2 className="size-4" />
                                 Collection settings
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setActiveSubView("fields")}>
+                                <Pencil className="size-4" />
+                                Manage fields
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -190,19 +195,54 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
                 </div>
             </div>
 
-            {/* Sort & Filter Bar */}
-            <div className="mb-3">
-                <SortFilterBar
-                    sortField={sortField}
-                    sortOrder={sortOrder}
-                    filterTitle={filterInput}
-                    filteredTotal={filteredTotal}
-                    onSortChange={handleSortChange}
-                    onFilterChange={setFilterInput}
-                />
+            {/* ═══ Filter & Quick Search Bar ═══ */}
+            <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1 max-w-sm">
+                    <div className="relative w-full">
+                        <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            placeholder="Filter items by title..."
+                            value={filterInput}
+                            onChange={(e) => setFilterInput(e.target.value)}
+                            className="h-8 pl-8 pr-8 text-xs transition-all duration-200 bg-muted/20 focus-visible:bg-background"
+                        />
+                        {hasFilter && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute right-0.5 top-1/2 size-7 -translate-y-1/2"
+                                        onClick={() => setFilterInput("")}
+                                    >
+                                        <X className="size-3.5" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Clear filter</TooltipContent>
+                            </Tooltip>
+                        )}
+                    </div>
+
+                    {hasFilter && filteredTotal !== undefined && (
+                        <Badge
+                            variant="secondary"
+                            className="animate-scale-in gap-1 text-[10px] font-medium shrink-0"
+                        >
+                            <Filter className="size-3" />
+                            {filteredTotal.toLocaleString()} results
+                        </Badge>
+                    )}
+                </div>
+
+                <div className="text-xs text-muted-foreground hidden sm:flex items-center gap-2">
+                    <span className="capitalize">
+                        Sorted by <strong className="text-foreground font-medium">{sortField.replace("_", " ")}</strong> ({sortOrder === "ASC" ? "Ascending" : "Descending"})
+                    </span>
+                </div>
             </div>
 
-            {/* Item view — List or Grid */}
+            {/* ═══ Item View — List or Grid ═══ */}
             <div className="flex-1">
                 {viewMode === "grid" ? (
                     <ItemGrid
@@ -212,6 +252,10 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
                         sortOrder={sortOrder}
                         filterTitle={debouncedFilter}
                         showTitleOnCard={showTitleOnCard}
+                        showPropertiesOnCard={showPropertiesOnCard}
+                        showDateOnCard={showDateOnCard}
+                        cardWidth={cardWidth}
+                        cardHeight={cardHeight}
                         cardSize={cardSize}
                         onTotalChange={setFilteredTotal}
                     />
@@ -228,7 +272,7 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
                 )}
             </div>
 
-            {/* Create item dialog */}
+            {/* ═══ Create item dialog ═══ */}
             <CreateItemDialog
                 collectionId={selectedCollection.id}
                 collectionName={selectedCollection.name}
@@ -237,25 +281,37 @@ function CollectionPage({ onAddItemRef, onOpenSettingsRef }: CollectionPageProps
                 onCreated={() => setRefreshKey((k) => k + 1)}
             />
 
-            {/* Edit / delete collection dialogs */}
-            <EditCollectionDialog
-                collection={selectedCollection}
-                open={editOpen}
-                onOpenChange={setEditOpen}
-            />
+            {/* ═══ Delete collection dialog ═══ */}
             <DeleteCollectionDialog
                 collection={selectedCollection}
                 open={deleteOpen}
                 onOpenChange={setDeleteOpen}
             />
 
-            {/* Collection Settings dialog */}
-            <CollectionSettingsDialog
-                collectionId={selectedCollection.id}
-                collectionName={selectedCollection.name}
-                collectionIcon={selectedCollection.icon}
-                open={settingsOpen}
-                onOpenChange={setSettingsOpen}
+            {/* ═══ View & Sort Options Drawer ═══ */}
+            <ViewOptionsDrawer
+                open={viewOptionsOpen}
+                onOpenChange={setViewOptionsOpen}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                cardSize={cardSize}
+                onCardSizeChange={setCardSize}
+                cardWidth={cardWidth}
+                onCardWidthChange={setCardWidth}
+                cardHeight={cardHeight}
+                onCardHeightChange={setCardHeight}
+                aspectPreset={aspectPreset}
+                onAspectPresetChange={setAspectPreset}
+                showTitleOnCard={showTitleOnCard}
+                onShowTitleOnCardChange={setShowTitleOnCard}
+                showPropertiesOnCard={showPropertiesOnCard}
+                onShowPropertiesOnCardChange={setShowPropertiesOnCard}
+                showDateOnCard={showDateOnCard}
+                onShowDateOnCardChange={setShowDateOnCard}
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSortChange={handleSortChange}
+                onResetDefaults={resetDefaults}
             />
         </div>
     );

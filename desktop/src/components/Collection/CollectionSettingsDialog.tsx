@@ -7,13 +7,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
     Check,
-    Eye,
-    EyeOff,
     Image,
     LayoutGrid,
     List,
-    Loader2,
-    Monitor,
     Palette,
     Settings2,
     SlidersHorizontal,
@@ -44,7 +40,6 @@ import { useCollectionSettings } from "@/core/hooks/useCollectionSettings";
 import type {
     AppearanceSettings,
     BehaviorSettings,
-    CollectionSettings,
     MediaSettings,
     AssetRole,
 } from "@/core/types/common";

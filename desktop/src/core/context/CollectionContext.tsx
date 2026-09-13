@@ -25,6 +25,8 @@ import type {
     UpdateAttributeDto,
 } from "@/core/api/attributeService";
 
+export type CollectionSubView = "items" | "fields" | "settings";
+
 // --- Types ---
 
 interface CollectionState {
@@ -32,6 +34,8 @@ interface CollectionState {
     collections: Collection[];
     /** The currently selected collection (null = home). */
     selectedCollection: Collection | null;
+    /** Active subview for the selected collection. */
+    activeSubView: CollectionSubView;
     /** Whether collections are being loaded. */
     loading: boolean;
     /** Last error message, if any. */
@@ -45,8 +49,10 @@ interface CollectionState {
 interface CollectionActions {
     /** Reload the collection list from the backend. */
     loadCollections: () => Promise<void>;
-    /** Select a collection by ID (null to deselect). */
-    selectCollection: (id: number | null) => void;
+    /** Select a collection by ID (null to deselect). Optionally specify subView. */
+    selectCollection: (id: number | null, subView?: CollectionSubView) => void;
+    /** Set active subview for the current collection. */
+    setActiveSubView: (view: CollectionSubView) => void;
     /** Create a new collection and refresh the list. */
     addCollection: (dto: CreateCollectionDto) => Promise<Collection>;
     /** Update an existing collection and refresh the list. */
@@ -82,6 +88,7 @@ export function CollectionProvider({
     const [collections, setCollections] = useState<Collection[]>([]);
     const [selectedCollection, setSelectedCollection] =
         useState<Collection | null>(null);
+    const [activeSubView, setActiveSubView] = useState<CollectionSubView>("items");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [attributes, setAttributes] = useState<Attribute[]>([]);
@@ -98,21 +105,27 @@ export function CollectionProvider({
             const message =
                 err instanceof Error ? err.message : "Failed to load collections";
             setError(message);
-            console.error("Failed to load collections:", err);
         } finally {
             setLoading(false);
         }
     }, []);
 
+    // Initial load on mount
+    useEffect(() => {
+        loadCollections();
+    }, [loadCollections]);
+
     // Select a collection by ID
     const selectCollection = useCallback(
-        (id: number | null) => {
+        (id: number | null, subView: CollectionSubView = "items") => {
             if (id === null) {
                 setSelectedCollection(null);
+                setActiveSubView("items");
                 return;
             }
             const found = collections.find((c) => c.id === id) ?? null;
             setSelectedCollection(found);
+            setActiveSubView(subView);
         },
         [collections],
     );
@@ -219,12 +232,14 @@ export function CollectionProvider({
         () => ({
             collections,
             selectedCollection,
+            activeSubView,
             loading,
             error,
             attributes,
             attributesLoading,
             loadCollections,
             selectCollection,
+            setActiveSubView,
             addCollection,
             editCollection,
             removeCollection,
@@ -236,12 +251,14 @@ export function CollectionProvider({
         [
             collections,
             selectedCollection,
+            activeSubView,
             loading,
             error,
             attributes,
             attributesLoading,
             loadCollections,
             selectCollection,
+            setActiveSubView,
             addCollection,
             editCollection,
             removeCollection,

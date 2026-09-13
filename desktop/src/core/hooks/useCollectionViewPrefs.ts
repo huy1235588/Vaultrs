@@ -1,20 +1,11 @@
 /**
  * useCollectionViewPrefs — Stores per-collection view preferences
- * (viewMode, sortField, sortOrder) in localStorage.
+ * (viewMode, sortField, sortOrder, cardWidth, cardHeight, showPropertiesOnCard, etc.)
+ * in localStorage.
  *
  * Each collection gets its own saved preferences. When the user changes
- * sort order, view mode, etc., those changes are remembered for that
- * specific collection. When switching back to a collection, the last
- * user-chosen settings are restored instead of resetting to defaults.
- *
- * Falls back to collection settings defaults (from the DB) when no
- * saved preference exists for a given collection.
- *
- * @example
- * ```tsx
- * const { viewMode, sortField, sortOrder, setViewMode, setSortField, setSortOrder }
- *     = useCollectionViewPrefs(collectionId, settings);
- * ```
+ * dimensions, sort order, view mode, etc., those changes are remembered for that
+ * specific collection.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ViewMode } from "@/components/Item/ViewModeToggle";
@@ -26,10 +17,38 @@ import type {
 
 const STORAGE_KEY = "vaultrs-collection-view-prefs";
 
-interface CollectionViewPrefs {
+export type CardAspectPreset = "poster" | "book" | "square" | "landscape" | "video" | "custom";
+
+export interface CollectionViewPrefs {
     viewMode: ViewMode;
     sortField: SortField;
     sortOrder: SortOrder;
+    cardSize?: "SMALL" | "MEDIUM" | "LARGE";
+    cardWidth?: number;
+    cardHeight?: number;
+    aspectPreset?: CardAspectPreset;
+    showTitleOnCard?: boolean;
+    showPropertiesOnCard?: boolean;
+    showDateOnCard?: boolean;
+}
+
+/** Calculate height from width and aspect ratio preset. */
+export function calculateHeightFromAspect(width: number, preset: CardAspectPreset, currentHeight: number): number {
+    switch (preset) {
+        case "poster": // 2:3
+            return Math.round(width * 1.5);
+        case "book": // 3:4
+            return Math.round(width * 1.333);
+        case "square": // 1:1
+            return width;
+        case "landscape": // 16:10
+            return Math.round(width * 0.625);
+        case "video": // 16:9
+            return Math.round(width * 0.5625);
+        case "custom":
+        default:
+            return currentHeight;
+    }
 }
 
 /** Read the entire prefs map from localStorage. */
@@ -64,10 +83,9 @@ function savePrefs(collectionId: number, prefs: CollectionViewPrefs) {
 }
 
 /**
- * Derive the initial/default prefs from CollectionSettings (DB defaults).
- * Used as fallback when no user preference has been saved yet.
+ * Derive initial/default prefs from CollectionSettings (DB defaults).
  */
-function defaultsFromSettings(settings: CollectionSettings | null): CollectionViewPrefs {
+function defaultsFromSettings(settings: CollectionSettings | null): Required<CollectionViewPrefs> {
     const viewMode: ViewMode =
         settings?.appearance.default_view_mode === "GRID" ? "grid" : "list";
 
@@ -83,16 +101,52 @@ function defaultsFromSettings(settings: CollectionSettings | null): CollectionVi
         sortOrder = order;
     }
 
-    return { viewMode, sortField, sortOrder };
+    const cardSize = (settings?.appearance.card_size as "SMALL" | "MEDIUM" | "LARGE") ?? "MEDIUM";
+    const defaultWidth = cardSize === "SMALL" ? 160 : cardSize === "LARGE" ? 260 : 200;
+    const defaultHeight = cardSize === "SMALL" ? 220 : cardSize === "LARGE" ? 360 : 280;
+    const cardWidth = defaultWidth;
+    const cardHeight = defaultHeight;
+    const aspectPreset: CardAspectPreset = "poster";
+    const showTitleOnCard = settings?.appearance.show_title_on_card ?? true;
+    const showPropertiesOnCard = true;
+    const showDateOnCard = true;
+
+    return {
+        viewMode,
+        sortField,
+        sortOrder,
+        cardSize,
+        cardWidth,
+        cardHeight,
+        aspectPreset,
+        showTitleOnCard,
+        showPropertiesOnCard,
+        showDateOnCard,
+    };
 }
 
 export interface UseCollectionViewPrefsResult {
     viewMode: ViewMode;
     sortField: SortField;
     sortOrder: SortOrder;
+    cardSize: "SMALL" | "MEDIUM" | "LARGE";
+    cardWidth: number;
+    cardHeight: number;
+    aspectPreset: CardAspectPreset;
+    showTitleOnCard: boolean;
+    showPropertiesOnCard: boolean;
+    showDateOnCard: boolean;
     setViewMode: (mode: ViewMode) => void;
     setSortField: (field: SortField) => void;
     setSortOrder: (order: SortOrder) => void;
+    setCardSize: (size: "SMALL" | "MEDIUM" | "LARGE") => void;
+    setCardWidth: (width: number) => void;
+    setCardHeight: (height: number) => void;
+    setAspectPreset: (preset: CardAspectPreset) => void;
+    setShowTitleOnCard: (show: boolean) => void;
+    setShowPropertiesOnCard: (show: boolean) => void;
+    setShowDateOnCard: (show: boolean) => void;
+    resetDefaults: () => void;
 }
 
 export function useCollectionViewPrefs(
@@ -101,18 +155,36 @@ export function useCollectionViewPrefs(
 ): UseCollectionViewPrefsResult {
     // Resolve initial state for the current collection
     const resolvePrefs = useCallback(
-        (id: number | undefined): CollectionViewPrefs => {
+        (id: number | undefined): Required<CollectionViewPrefs> => {
+            const defaults = defaultsFromSettings(settings);
             if (id === undefined) {
-                return defaultsFromSettings(settings);
+                return defaults;
             }
             const saved = readPrefs(id);
-            if (saved) return saved;
-            return defaultsFromSettings(settings);
+            if (saved) {
+                const cardWidth = saved.cardWidth ?? defaults.cardWidth;
+                const aspectPreset = saved.aspectPreset ?? defaults.aspectPreset;
+                const cardHeight = saved.cardHeight ?? calculateHeightFromAspect(cardWidth, aspectPreset, defaults.cardHeight);
+
+                return {
+                    viewMode: saved.viewMode ?? defaults.viewMode,
+                    sortField: saved.sortField ?? defaults.sortField,
+                    sortOrder: saved.sortOrder ?? defaults.sortOrder,
+                    cardSize: saved.cardSize ?? defaults.cardSize,
+                    cardWidth,
+                    cardHeight,
+                    aspectPreset,
+                    showTitleOnCard: saved.showTitleOnCard ?? defaults.showTitleOnCard,
+                    showPropertiesOnCard: saved.showPropertiesOnCard ?? defaults.showPropertiesOnCard,
+                    showDateOnCard: saved.showDateOnCard ?? defaults.showDateOnCard,
+                };
+            }
+            return defaults;
         },
         [settings],
     );
 
-    const [prefs, setPrefsState] = useState<CollectionViewPrefs>(() =>
+    const [prefs, setPrefsState] = useState<Required<CollectionViewPrefs>>(() =>
         resolvePrefs(collectionId),
     );
 
@@ -125,8 +197,6 @@ export function useCollectionViewPrefs(
 
         prevIdRef.current = collectionId;
 
-        // When switching to a (potentially different) collection,
-        // load saved prefs or fall back to settings defaults.
         const resolved = resolvePrefs(collectionId);
         setPrefsState(resolved);
     }, [collectionId, resolvePrefs]);
@@ -134,7 +204,7 @@ export function useCollectionViewPrefs(
     // --- Individual setters that also persist ---
 
     const persist = useCallback(
-        (updated: CollectionViewPrefs) => {
+        (updated: Required<CollectionViewPrefs>) => {
             if (collectionId !== undefined) {
                 savePrefs(collectionId, updated);
             }
@@ -175,12 +245,134 @@ export function useCollectionViewPrefs(
         [persist],
     );
 
+    const setCardSize = useCallback(
+        (size: "SMALL" | "MEDIUM" | "LARGE") => {
+            setPrefsState((prev) => {
+                const width = size === "SMALL" ? 160 : size === "LARGE" ? 260 : 200;
+                const height = size === "SMALL" ? 220 : size === "LARGE" ? 360 : 280;
+                const next: Required<CollectionViewPrefs> = {
+                    ...prev,
+                    cardSize: size,
+                    cardWidth: width,
+                    cardHeight: height,
+                    aspectPreset: "poster",
+                };
+                persist(next);
+                return next;
+            });
+        },
+        [persist],
+    );
+
+    const setCardWidth = useCallback(
+        (width: number) => {
+            setPrefsState((prev) => {
+                const height = prev.aspectPreset !== "custom"
+                    ? calculateHeightFromAspect(width, prev.aspectPreset, prev.cardHeight)
+                    : prev.cardHeight;
+                const next: Required<CollectionViewPrefs> = {
+                    ...prev,
+                    cardWidth: width,
+                    cardHeight: height,
+                };
+                persist(next);
+                return next;
+            });
+        },
+        [persist],
+    );
+
+    const setCardHeight = useCallback(
+        (height: number) => {
+            setPrefsState((prev) => {
+                const next: Required<CollectionViewPrefs> = {
+                    ...prev,
+                    cardHeight: height,
+                    aspectPreset: "custom", // Manually changing height makes it custom
+                };
+                persist(next);
+                return next;
+            });
+        },
+        [persist],
+    );
+
+    const setAspectPreset = useCallback(
+        (preset: CardAspectPreset) => {
+            setPrefsState((prev) => {
+                const height = calculateHeightFromAspect(prev.cardWidth, preset, prev.cardHeight);
+                const next: Required<CollectionViewPrefs> = {
+                    ...prev,
+                    aspectPreset: preset,
+                    cardHeight: height,
+                };
+                persist(next);
+                return next;
+            });
+        },
+        [persist],
+    );
+
+    const setShowTitleOnCard = useCallback(
+        (show: boolean) => {
+            setPrefsState((prev) => {
+                const next = { ...prev, showTitleOnCard: show };
+                persist(next);
+                return next;
+            });
+        },
+        [persist],
+    );
+
+    const setShowPropertiesOnCard = useCallback(
+        (show: boolean) => {
+            setPrefsState((prev) => {
+                const next = { ...prev, showPropertiesOnCard: show };
+                persist(next);
+                return next;
+            });
+        },
+        [persist],
+    );
+
+    const setShowDateOnCard = useCallback(
+        (show: boolean) => {
+            setPrefsState((prev) => {
+                const next = { ...prev, showDateOnCard: show };
+                persist(next);
+                return next;
+            });
+        },
+        [persist],
+    );
+
+    const resetDefaults = useCallback(() => {
+        const defaults = defaultsFromSettings(settings);
+        setPrefsState(defaults);
+        persist(defaults);
+    }, [settings, persist]);
+
     return {
         viewMode: prefs.viewMode,
         sortField: prefs.sortField,
         sortOrder: prefs.sortOrder,
+        cardSize: prefs.cardSize,
+        cardWidth: prefs.cardWidth,
+        cardHeight: prefs.cardHeight,
+        aspectPreset: prefs.aspectPreset,
+        showTitleOnCard: prefs.showTitleOnCard,
+        showPropertiesOnCard: prefs.showPropertiesOnCard,
+        showDateOnCard: prefs.showDateOnCard,
         setViewMode,
         setSortField,
         setSortOrder,
+        setCardSize,
+        setCardWidth,
+        setCardHeight,
+        setAspectPreset,
+        setShowTitleOnCard,
+        setShowPropertiesOnCard,
+        setShowDateOnCard,
+        resetDefaults,
     };
 }

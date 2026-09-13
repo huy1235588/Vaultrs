@@ -1,78 +1,42 @@
 /**
- * ItemGrid — Virtualized grid layout displaying items as cards with infinite scroll.
+ * ItemGrid — Virtualized grid display of collection items.
  *
- * Uses TanStack Virtual for window-based virtualization of grid rows.
- * Only visible rows of cards are rendered, keeping memory footprint flat.
- * Integrates with useCoverImages for lazy-loading cover art.
- * Supports dynamic sorting and title filtering.
+ * Supports customizable card width & height, dynamic responsive columns,
+ * cover images, title toggling, and rich metadata attribute display.
  */
 import { useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { AlertCircle, FileText, Loader2, SearchX } from "lucide-react";
-import { useInfiniteItems } from "@/core/hooks/useInfiniteItems";
-import { useCoverImages } from "@/core/hooks/useCoverImages";
+import { FileText, Loader2, Search } from "lucide-react";
 import { useItem } from "@/core/context/ItemContext";
 import { useCollections } from "@/core/context/CollectionContext";
-import { Button } from "@/components/ui/button";
-import { ItemCard } from "./ItemCard";
-import { DeleteItemDialog } from "./DeleteItemDialog";
+import { useInfiniteItems } from "@/core/hooks/useInfiniteItems";
+import { useCoverImages } from "@/core/hooks/useCoverImages";
 import { resolveAssetUrlSync } from "@/core/utils/assetResolver";
-import { cn } from "@/lib/utils";
+import { ItemCard } from "@/components/Item/ItemCard";
+import { DeleteItemDialog } from "@/components/Item/DeleteItemDialog";
 import type { Item, SortField, SortOrder } from "@/core/types/common";
 
 interface ItemGridProps {
     collectionId: number;
-    /** Incremented externally to trigger a refetch (e.g., after creating an item). */
     refreshKey?: number;
-    /** Sort field (default: "created_at"). */
     sortField?: SortField;
-    /** Sort direction (default: "DESC"). */
     sortOrder?: SortOrder;
     /** Filter items by title (debounced value). */
     filterTitle?: string;
     /** Whether to show title on grid cards (default: true). */
     showTitleOnCard?: boolean;
-    /** Card size preset from collection settings (default: "MEDIUM"). */
+    /** Whether to show custom fields/metadata on cards (default: true). */
+    showPropertiesOnCard?: boolean;
+    /** Whether to show date on cards (default: true). */
+    showDateOnCard?: boolean;
+    /** Card width in px. */
+    cardWidth?: number;
+    /** Card cover height in px. */
+    cardHeight?: number;
+    /** Card size preset (default: "MEDIUM"). */
     cardSize?: "SMALL" | "MEDIUM" | "LARGE";
     /** Callback to report total count (for filter badge). */
     onTotalChange?: (total: number) => void;
-}
-
-function getEstimatedRowHeight(
-    cardSize: "SMALL" | "MEDIUM" | "LARGE" = "MEDIUM",
-    showTitle: boolean = true,
-): number {
-    if (!showTitle) {
-        switch (cardSize) {
-            case "SMALL":
-                return 150;
-            case "LARGE":
-                return 260;
-            case "MEDIUM":
-            default:
-                return 190;
-        }
-    }
-    switch (cardSize) {
-        case "SMALL":
-            return 200;
-        case "LARGE":
-            return 320;
-        case "MEDIUM":
-        default:
-            return 255;
-    }
-}
-
-/**
- * Calculate the number of columns based on container width.
- * Mirrors the CSS grid responsive breakpoints.
- */
-function getColumnCount(width: number): number {
-    if (width >= 1280) return 5; // xl
-    if (width >= 1024) return 4; // lg
-    if (width >= 640) return 3; // sm
-    return 2; // default
 }
 
 function ItemGrid({
@@ -82,11 +46,19 @@ function ItemGrid({
     sortOrder = "DESC",
     filterTitle,
     showTitleOnCard = true,
+    showPropertiesOnCard = true,
+    showDateOnCard = true,
+    cardWidth,
+    cardHeight,
     cardSize = "MEDIUM",
     onTotalChange,
 }: ItemGridProps) {
     const { selectItem } = useItem();
-    const { selectedCollection } = useCollections();
+    const { selectedCollection, attributes } = useCollections();
+
+    const effectiveCardWidth = cardWidth ?? (cardSize === "SMALL" ? 160 : cardSize === "LARGE" ? 260 : 200);
+    const effectiveCardHeight = cardHeight ?? (cardSize === "SMALL" ? 220 : cardSize === "LARGE" ? 360 : 280);
+
     const {
         items,
         hasMore,
@@ -120,31 +92,50 @@ function ItemGrid({
         clearCovers();
     }, [collectionId, sortField, sortOrder, filterTitle]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Track container width for responsive column count
+    // Dynamic responsive column count based on container width and cardWidth
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
 
+        const updateCols = (width: number) => {
+            const gap = 16;
+            const cols = Math.max(1, Math.min(10, Math.floor((width + gap) / (effectiveCardWidth + gap))));
+            setColumnCount(cols);
+        };
+
+        updateCols(container.clientWidth);
+
         const observer = new ResizeObserver((entries) => {
             for (const entry of entries) {
-                setColumnCount(getColumnCount(entry.contentRect.width));
+                updateCols(entry.contentRect.width);
             }
         });
         observer.observe(container);
         return () => observer.disconnect();
-    }, []);
+    }, [effectiveCardWidth]);
 
     // Number of rows needed to display all items
     const rowCount = Math.ceil(items.length / columnCount);
 
+    // Dynamic row height calculation
+    const extraInfoHeight = showTitleOnCard
+        ? (showPropertiesOnCard ? 75 : 45) + (showDateOnCard ? 15 : 0)
+        : 0;
+    const estimatedRowHeight = effectiveCardHeight + extraInfoHeight + 16;
+
     const rowVirtualizer = useVirtualizer({
         count: rowCount,
         getScrollElement: () => scrollContainerRef.current,
-        estimateSize: () => getEstimatedRowHeight(cardSize, showTitleOnCard),
-        overscan: 3, // Render 3 extra rows above/below
+        estimateSize: () => estimatedRowHeight,
+        overscan: 3,
     });
 
-    // Load more items when scrolling near the bottom
+    // Reset list and reload when collection or sort changes
+    useEffect(() => {
+        reset();
+    }, [collectionId, sortField, sortOrder, filterTitle, reset]);
+
+    // Infinite scroll trigger
     useEffect(() => {
         const virtualItems = rowVirtualizer.getVirtualItems();
         if (virtualItems.length === 0) return;
@@ -152,18 +143,16 @@ function ItemGrid({
         const lastVirtRow = virtualItems[virtualItems.length - 1];
         if (!lastVirtRow) return;
 
-        // If last visible row is near the end, load more
         if (lastVirtRow.index >= rowCount - 3 && hasMore && !isFetchingMore) {
             loadMore();
         }
-    }, [rowVirtualizer.getVirtualItems(), rowCount, hasMore, isFetchingMore, loadMore]);
+    }, [rowVirtualizer, rowCount, hasMore, isFetchingMore, loadMore]);
 
-    // Load covers for visible items
+    // Viewport-aware cover loading
     useEffect(() => {
         const virtualItems = rowVirtualizer.getVirtualItems();
         if (virtualItems.length === 0) return;
 
-        // Collect all item IDs in visible rows
         const visibleIds: number[] = [];
         for (const vRow of virtualItems) {
             const startIndex = vRow.index * columnCount;
@@ -176,72 +165,52 @@ function ItemGrid({
         if (visibleIds.length > 0) {
             loadCovers(visibleIds);
         }
-    }, [rowVirtualizer.getVirtualItems(), items, columnCount, loadCovers]);
+    }, [rowVirtualizer, items, columnCount, loadCovers]);
 
-    const collectionIcon = selectedCollection?.icon || "📁";
-    const isFiltering = filterTitle && filterTitle.trim().length > 0;
-
-    // --- Loading state (initial) ---
-    if (isLoading && items.length === 0) {
-        return (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {Array.from({ length: 12 }).map((_, i) => (
-                    <div
-                        key={i}
-                        className="overflow-hidden rounded-xl border border-border/40 bg-card"
-                        style={{ animationDelay: `${i * 50}ms` }}
-                    >
-                        <div
-                            className={cn(
-                                "relative w-full bg-muted/20",
-                                cardSize === "SMALL" && "aspect-[16/10]",
-                                cardSize === "LARGE" && "aspect-[4/3]",
-                                cardSize === "MEDIUM" && "aspect-[16/10]",
-                            )}
-                        >
-                            <div className="absolute inset-0 animate-shimmer" />
-                        </div>
-                        {showTitleOnCard && (
-                            <div className="space-y-2.5 p-3">
-                                <div className="h-4 w-3/4 rounded-md bg-muted/30 animate-shimmer" />
-                                <div className="h-3 w-1/2 rounded-md bg-muted/20 animate-shimmer" />
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-        );
-    }
+    const collectionIcon = selectedCollection?.icon ?? undefined;
 
     // --- Error state ---
     if (error && items.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-                <div className="flex size-11 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-                    <AlertCircle className="size-5" />
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+                <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                    <FileText className="size-6" />
                 </div>
-                <p className="text-sm text-destructive">{error}</p>
-                <Button variant="outline" size="sm" onClick={reset}>
-                    Try again
-                </Button>
+                <div className="space-y-1">
+                    <p className="text-sm font-medium text-destructive">
+                        Failed to load items
+                    </p>
+                    <p className="text-xs text-muted-foreground">{error}</p>
+                </div>
             </div>
         );
     }
 
-    // --- Empty state (no results from filter) ---
-    if (!isLoading && items.length === 0 && isFiltering) {
+    // --- Initial loading state ---
+    if (isLoading && items.length === 0) {
+        return (
+            <div className="flex items-center justify-center py-16">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="size-4 animate-spin text-primary" />
+                    Loading items...
+                </div>
+            </div>
+        );
+    }
+
+    // --- Empty search/filter result ---
+    if (items.length === 0 && filterTitle && filterTitle.trim().length > 0) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-                <div className="flex size-14 items-center justify-center rounded-full bg-muted">
-                    <SearchX className="size-7 text-muted-foreground" />
+                <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                    <Search className="size-6 text-muted-foreground" />
                 </div>
-                <div>
+                <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">
                         No matching items
                     </p>
                     <p className="text-xs text-muted-foreground">
-                        No items match &ldquo;{filterTitle}&rdquo;. Try a
-                        different search term.
+                        No items match &ldquo;{filterTitle}&rdquo;. Try a different search term.
                     </p>
                 </div>
             </div>
@@ -280,7 +249,7 @@ function ItemGrid({
             <div
                 ref={scrollContainerRef}
                 className="overflow-y-auto"
-                style={{ maxHeight: "calc(100vh - 300px)" }}
+                style={{ maxHeight: "calc(100vh - 280px)" }}
             >
                 <div
                     style={{
@@ -319,17 +288,18 @@ function ItemGrid({
                                             title={item.title}
                                             createdAt={item.created_at}
                                             updatedAt={item.updated_at}
+                                            properties={item.properties}
+                                            attributes={attributes}
                                             collectionIcon={collectionIcon}
                                             cover={getCover(item.id)}
                                             resolveAssetUrl={resolveAssetUrlSync}
                                             showTitle={showTitleOnCard}
+                                            showProperties={showPropertiesOnCard}
+                                            showDate={showDateOnCard}
+                                            cardHeight={effectiveCardHeight}
                                             cardSize={cardSize}
-                                            onClick={() =>
-                                                selectItem(item.id)
-                                            }
-                                            onDelete={() =>
-                                                setDeleteTarget(item)
-                                            }
+                                            onClick={() => selectItem(item.id)}
+                                            onDelete={() => setDeleteTarget(item)}
                                         />
                                     ))}
                                 </div>
@@ -341,28 +311,23 @@ function ItemGrid({
                 {/* Loading more indicator */}
                 {isFetchingMore && (
                     <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
-                        <Loader2 className="size-3.5 animate-spin" />
+                        <Loader2 className="size-3.5 animate-spin text-primary" />
                         Loading more items...
                     </div>
                 )}
             </div>
 
-            {/* Delete Confirmation Dialog */}
+            {/* Delete confirmation dialog */}
             {deleteTarget && (
                 <DeleteItemDialog
-                    itemId={deleteTarget.id}
-                    itemTitle={deleteTarget.title}
+                    item={deleteTarget}
                     open={!!deleteTarget}
-                    onOpenChange={(open) => !open && setDeleteTarget(null)}
-                    onDeleted={() => {
-                        setDeleteTarget(null);
-                        reset();
-                    }}
+                    onOpenChange={(v) => !v && setDeleteTarget(null)}
                 />
             )}
         </div>
     );
 }
 
-export default ItemGrid;
 export { ItemGrid };
+export default ItemGrid;

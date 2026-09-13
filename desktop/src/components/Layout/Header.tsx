@@ -19,7 +19,6 @@ import type { SearchResult } from "@/core/api/searchService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { AttributeManager } from "@/components/Attribute/AttributeManager";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -40,9 +39,8 @@ function formatDate(timestamp: number): string {
 }
 
 function Header({ onAddItem }: HeaderProps) {
-    const { selectedCollection, collections } = useCollections();
+    const { selectedCollection, collections, activeSubView, setActiveSubView } = useCollections();
     const { selectedItem, clearItem, selectItem } = useItem();
-    const [attrManagerOpen, setAttrManagerOpen] = useState(false);
     const [searchFocused, setSearchFocused] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -208,9 +206,7 @@ function Header({ onAddItem }: HeaderProps) {
         [collections],
     );
 
-    const showManageFields = Boolean(selectedCollection && !selectedItem);
     const showAddItem = Boolean(selectedCollection && onAddItem);
-    const hasActions = showManageFields || showAddItem;
 
     return (
         <header
@@ -223,9 +219,12 @@ function Header({ onAddItem }: HeaderProps) {
                     <div className="flex min-w-0 items-center gap-1.5 text-[15px] font-semibold tracking-tight">
                         <button
                             type="button"
-                            onClick={clearItem}
-                            aria-label={selectedItem ? "Back to collection" : undefined}
-                            className="group/breadcrumb flex shrink-0 items-center gap-1.5 text-foreground transition-colors hover:text-primary"
+                            onClick={() => {
+                                if (selectedItem) clearItem();
+                                setActiveSubView("items");
+                            }}
+                            aria-label="Back to collection items"
+                            className="group/breadcrumb flex shrink-0 items-center gap-1.5 text-foreground transition-colors hover:text-primary cursor-pointer"
                         >
                             <span className="text-base leading-none transition-transform duration-200 group-hover/breadcrumb:scale-110">
                                 {selectedCollection.icon || "📁"}
@@ -236,14 +235,28 @@ function Header({ onAddItem }: HeaderProps) {
                             </span>
                         </button>
 
-                        {selectedItem && (
+                        {selectedItem ? (
                             <>
                                 <ChevronRight className="size-3.5 shrink-0 text-muted-foreground/50" />
                                 <span className="animate-fade-in-up truncate font-medium text-muted-foreground">
                                     {selectedItem.title}
                                 </span>
                             </>
-                        )}
+                        ) : activeSubView === "fields" ? (
+                            <>
+                                <ChevronRight className="size-3.5 shrink-0 text-muted-foreground/50" />
+                                <span className="animate-fade-in-up truncate font-medium text-muted-foreground">
+                                    Manage Fields
+                                </span>
+                            </>
+                        ) : activeSubView === "settings" ? (
+                            <>
+                                <ChevronRight className="size-3.5 shrink-0 text-muted-foreground/50" />
+                                <span className="animate-fade-in-up truncate font-medium text-muted-foreground">
+                                    Collection Settings
+                                </span>
+                            </>
+                        ) : null}
                     </div>
                 ) : (
                     <h2 className="text-sm font-medium text-muted-foreground">
@@ -370,21 +383,7 @@ function Header({ onAddItem }: HeaderProps) {
                     )}
                 </div>
 
-                {hasActions && <Separator orientation="vertical" className="h-5" />}
-
-                {/* Manage Fields Button (Settings) */}
-                {showManageFields && (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1.5 text-muted-foreground hover:text-foreground"
-                        onClick={() => setAttrManagerOpen(true)}
-                        title="Manage Custom Fields"
-                    >
-                        <Settings className="size-4" />
-                        Manage Fields
-                    </Button>
-                )}
+                {showAddItem && <Separator orientation="vertical" className="h-5" />}
 
                 {/* Add Item */}
                 {showAddItem && (
@@ -394,14 +393,6 @@ function Header({ onAddItem }: HeaderProps) {
                     </Button>
                 )}
             </div>
-
-            {/* Attribute Manager Modal */}
-            {selectedCollection && (
-                <AttributeManager
-                    open={attrManagerOpen}
-                    onOpenChange={setAttrManagerOpen}
-                />
-            )}
         </header>
     );
 }

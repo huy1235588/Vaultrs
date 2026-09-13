@@ -31,9 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { CreateCollectionDialog } from "@/components/Collection/CreateCollectionDialog";
-import { EditCollectionDialog } from "@/components/Collection/EditCollectionDialog";
 import { DeleteCollectionDialog } from "@/components/Collection/DeleteCollectionDialog";
-import { AttributeManager } from "@/components/Attribute/AttributeManager";
 import type { Collection } from "@/core/types/common";
 
 interface SidebarProps {
@@ -42,14 +40,12 @@ interface SidebarProps {
 }
 
 function Sidebar({ onOpenSettings }: SidebarProps) {
-    const { collections, selectedCollection, selectCollection, loading } =
+    const { collections, selectedCollection, selectCollection, setActiveSubView, loading } =
         useCollections();
 
     const [collapsed, setCollapsed] = useState(false);
     const [createOpen, setCreateOpen] = useState(false);
-    const [editTarget, setEditTarget] = useState<Collection | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Collection | null>(null);
-    const [attrManagerOpen, setAttrManagerOpen] = useState(false);
 
     return (
         <TooltipProvider delayDuration={300}>
@@ -192,34 +188,23 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
                                                             <MoreHorizontal className="size-3.5" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-40">
-                                                        <DropdownMenuItem
-                                                            onClick={() => setEditTarget(collection)}
-                                                        >
-                                                            <Pencil className="size-3.5" />
-                                                            Edit
-                                                        </DropdownMenuItem>
+                                                    <DropdownMenuContent align="end" className="w-44">
                                                         <DropdownMenuItem
                                                             onClick={() => {
-                                                                selectCollection(collection.id);
-                                                                setAttrManagerOpen(true);
+                                                                selectCollection(collection.id, "settings");
                                                             }}
                                                         >
                                                             <Settings className="size-3.5" />
+                                                            Collection settings
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() => {
+                                                                selectCollection(collection.id, "fields");
+                                                            }}
+                                                        >
+                                                            <Pencil className="size-3.5" />
                                                             Manage fields
                                                         </DropdownMenuItem>
-                                                        {onOpenSettings && (
-                                                            <DropdownMenuItem
-                                                                onClick={() => {
-                                                                    selectCollection(collection.id);
-                                                                    // Use setTimeout to ensure collection is selected before opening
-                                                                    setTimeout(() => onOpenSettings(), 0);
-                                                                }}
-                                                            >
-                                                                <Settings className="size-3.5" />
-                                                                Collection settings
-                                                            </DropdownMenuItem>
-                                                        )}
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem
                                                             className="text-destructive focus:bg-destructive/10 focus:text-destructive"
@@ -277,27 +262,11 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
                 {/* Dialogs */}
                 <CreateCollectionDialog open={createOpen} onOpenChange={setCreateOpen} />
 
-                {editTarget && (
-                    <EditCollectionDialog
-                        collection={editTarget}
-                        open={!!editTarget}
-                        onOpenChange={(open) => !open && setEditTarget(null)}
-                    />
-                )}
-
                 {deleteTarget && (
                     <DeleteCollectionDialog
                         collection={deleteTarget}
                         open={!!deleteTarget}
                         onOpenChange={(open) => !open && setDeleteTarget(null)}
-                    />
-                )}
-
-                {/* Attribute Manager */}
-                {selectedCollection && (
-                    <AttributeManager
-                        open={attrManagerOpen}
-                        onOpenChange={setAttrManagerOpen}
                     />
                 )}
             </aside>

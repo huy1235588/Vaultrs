@@ -13,15 +13,16 @@ import MainLayout from "@/components/Layout/MainLayout";
 import HomePage from "@/pages/HomePage";
 import CollectionPage from "@/pages/CollectionPage";
 import ItemDetailPage from "@/pages/ItemDetailPage";
+import ManageFieldsPage from "@/pages/ManageFieldsPage";
+import CollectionSettingsPage from "@/pages/CollectionSettingsPage";
 
 /**
  * Inner app content that has access to the collection and item contexts.
  */
 function AppContent() {
-    const { selectedCollection } = useCollections();
+    const { selectedCollection, activeSubView, setActiveSubView } = useCollections();
     const { selectedItem } = useItem();
     const addItemRef = useRef<(() => void) | null>(null);
-    const openSettingsRef = useRef<(() => void) | null>(null);
 
     // Initialize asset resolver on mount
     useEffect(() => {
@@ -33,11 +34,11 @@ function AppContent() {
     }, []);
 
     const handleOpenSettings = useCallback(() => {
-        openSettingsRef.current?.();
-    }, []);
+        setActiveSubView("settings");
+    }, [setActiveSubView]);
 
-    // Only show "Add Item" button in header if a collection is selected AND we are NOT in item detail view
-    const showAddAction = selectedCollection && !selectedItem;
+    // Only show "Add Item" button in header if a collection is selected AND we are in the items list view
+    const showAddAction = selectedCollection && !selectedItem && activeSubView === "items";
 
     return (
         <MainLayout
@@ -47,10 +48,13 @@ function AppContent() {
             {selectedItem ? (
                 <ItemDetailPage />
             ) : selectedCollection ? (
-                <CollectionPage
-                    onAddItemRef={addItemRef}
-                    onOpenSettingsRef={openSettingsRef}
-                />
+                activeSubView === "fields" ? (
+                    <ManageFieldsPage />
+                ) : activeSubView === "settings" ? (
+                    <CollectionSettingsPage />
+                ) : (
+                    <CollectionPage onAddItemRef={addItemRef} />
+                )
             ) : (
                 <HomePage />
             )}
