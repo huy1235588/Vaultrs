@@ -4,7 +4,7 @@
 //! making the entire vault portable between machines.
 //!
 //! Directory structure:
-//! ```
+//! ```text
 //! vault-storage/
 //! ├── originals/
 //! │   └── {uuid}.{ext}

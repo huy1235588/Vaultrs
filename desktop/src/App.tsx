@@ -64,11 +64,8 @@ function AppContent() {
     );
 }
 
-/**
- * Root routing component that checks whether a vault is configured.
- */
 function AppRoot() {
-    const { isVaultLoaded, loading } = useAppConfig();
+    const { isVaultLoaded, vaultRootPath, loading } = useAppConfig();
 
     if (loading) {
         return (
@@ -78,19 +75,19 @@ function AppRoot() {
         );
     }
 
-    if (!isVaultLoaded) {
-        return <FirstRunVaultPicker />;
-    }
-
     return (
-        <CollectionProvider>
-            <ItemProvider>
-                <TooltipProvider delayDuration={300}>
-                    <AppContent />
-                    <AppSettingsDialog />
-                </TooltipProvider>
-            </ItemProvider>
-        </CollectionProvider>
+        <TooltipProvider delayDuration={300}>
+            {!isVaultLoaded ? (
+                <FirstRunVaultPicker />
+            ) : (
+                <CollectionProvider key={vaultRootPath ?? "none"}>
+                    <ItemProvider key={vaultRootPath ?? "none"}>
+                        <AppContent />
+                    </ItemProvider>
+                </CollectionProvider>
+            )}
+            <AppSettingsDialog />
+        </TooltipProvider>
     );
 }
 

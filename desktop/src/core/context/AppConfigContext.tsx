@@ -11,7 +11,12 @@ import {
 } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import * as appSettingsService from "@/core/api/appSettingsService";
-import type { AppSettingsDto } from "@/core/api/appSettingsService";
+import type {
+    AppSettingsDto,
+    RecentVaultDto,
+    VaultDirectoryStatus,
+} from "@/core/api/appSettingsService";
+import { initAssetResolver } from "@/core/utils/assetResolver";
 
 interface AppConfigContextValue {
     /** Current configured root vault path (null if not yet set). */
@@ -22,6 +27,10 @@ interface AppConfigContextValue {
     dbPath: string | null;
     /** Path to the assets storage directory inside the vault. */
     storageDir: string | null;
+    /** List of recent vaults opened on this machine. */
+    recentVaults: RecentVaultDto[];
+    /** Path to unreachable vault if disconnected on startup. */
+    unreachableVaultPath: string | null;
     /** Loading state while fetching or switching vault configuration. */
     loading: boolean;
     /** Error message, if any occurred during vault operations. */
@@ -33,6 +42,10 @@ interface AppConfigContextValue {
     refreshSettings: () => Promise<void>;
     /** Initialize or switch to a specific vault directory path. */
     selectVault: (path: string) => Promise<void>;
+    /** Validate candidate folder status. */
+    validateFolder: (path: string) => Promise<VaultDirectoryStatus>;
+    /** Remove an entry from recent vaults. */
+    removeRecentVault: (path: string) => Promise<void>;
     /** Open native OS directory picker dialog and return selected path. */
     chooseFolder: () => Promise<string | null>;
     /** Open the active vault root directory in the OS file manager. */
@@ -47,6 +60,8 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
         is_vault_loaded: false,
         db_path: null,
         storage_dir: null,
+        recent_vaults: [],
+        unreachable_vault_path: null,
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -58,6 +73,9 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
             setError(null);
             const data = await appSettingsService.getAppSettings();
             setSettings(data);
+            if (data.is_vault_loaded) {
+                await initAssetResolver();
+            }
         } catch (err) {
             console.error("Failed to load app settings:", err);
             setError(err instanceof Error ? err.message : String(err));
@@ -88,6 +106,7 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
             setError(null);
             const updated = await appSettingsService.setVaultDirectory(path);
             setSettings(updated);
+            await initAssetResolver();
         } catch (err) {
             console.error("Failed to set vault directory:", err);
             const msg = err instanceof Error ? err.message : String(err);
@@ -95,6 +114,19 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
             throw err;
         } finally {
             setLoading(false);
+        }
+    }, []);
+
+    const validateFolder = useCallback(async (path: string): Promise<VaultDirectoryStatus> => {
+        return await appSettingsService.validateVaultDirectory(path);
+    }, []);
+
+    const removeRecentVault = useCallback(async (path: string) => {
+        try {
+            const updated = await appSettingsService.removeRecentVault(path);
+            setSettings(updated);
+        } catch (err) {
+            console.error("Failed to remove recent vault:", err);
         }
     }, []);
 
@@ -128,12 +160,16 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
         isVaultLoaded: settings.is_vault_loaded,
         dbPath: settings.db_path,
         storageDir: settings.storage_dir,
+        recentVaults: settings.recent_vaults,
+        unreachableVaultPath: settings.unreachable_vault_path,
         loading,
         error,
         settingsOpen,
         setSettingsOpen,
         refreshSettings,
         selectVault,
+        validateFolder,
+        removeRecentVault,
         chooseFolder,
         revealInExplorer,
     };

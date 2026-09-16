@@ -1,7 +1,7 @@
 /**
  * AppSettingsDialog — Global application settings modal.
  *
- * Allows viewing vault paths, switching vault directories, and opening in file manager.
+ * Allows viewing vault paths, switching vault directories, and managing recent vaults.
  */
 import { useState } from "react";
 import {
@@ -12,6 +12,9 @@ import {
     Loader2,
     Database,
     ImageIcon,
+    Clock,
+    Trash2,
+    ArrowRightLeft,
 } from "lucide-react";
 import {
     Dialog,
@@ -23,8 +26,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAppConfig } from "@/core/context/AppConfigContext";
-import { useCollections } from "@/core/context/CollectionContext";
-import { initAssetResolver } from "@/core/utils/assetResolver";
 
 export function AppSettingsDialog() {
     const {
@@ -33,27 +34,25 @@ export function AppSettingsDialog() {
         vaultRootPath,
         dbPath,
         storageDir,
+        recentVaults,
         chooseFolder,
         selectVault,
+        removeRecentVault,
         revealInExplorer,
     } = useAppConfig();
-
-    const { loadCollections } = useCollections();
 
     const [switching, setSwitching] = useState(false);
     const [switchError, setSwitchError] = useState<string | null>(null);
 
-    const handleSwitchDirectory = async () => {
+    const handleSwitchDirectory = async (targetPath?: string) => {
         try {
-            const chosen = await chooseFolder();
+            const chosen = targetPath ?? (await chooseFolder());
             if (!chosen || chosen === vaultRootPath) return;
 
             setSwitching(true);
             setSwitchError(null);
 
             await selectVault(chosen);
-            await initAssetResolver();
-            await loadCollections();
         } catch (err) {
             setSwitchError(err instanceof Error ? err.message : String(err));
         } finally {
@@ -101,7 +100,7 @@ export function AppSettingsDialog() {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={handleSwitchDirectory}
+                                onClick={() => handleSwitchDirectory()}
                                 disabled={switching}
                                 className="gap-1.5 text-xs"
                             >
@@ -131,6 +130,78 @@ export function AppSettingsDialog() {
                             </p>
                         )}
                     </div>
+
+                    {/* Recent Vaults History */}
+                    {recentVaults && recentVaults.length > 0 && (
+                        <div className="space-y-2">
+                            <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                                <Clock className="size-3.5" />
+                                Recent Vaults
+                            </span>
+                            <div className="space-y-1.5 rounded-lg border border-border/50 bg-card p-2 text-xs">
+                                {recentVaults.map((entry) => {
+                                    const isActive = entry.path === vaultRootPath;
+                                    return (
+                                        <div
+                                            key={entry.path}
+                                            className="flex items-center justify-between gap-2 rounded-md p-1.5 hover:bg-muted/40 transition-colors"
+                                        >
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="font-medium text-xs text-foreground truncate">
+                                                        {entry.display_name}
+                                                    </span>
+                                                    {isActive ? (
+                                                        <span className="inline-flex items-center rounded bg-primary/15 px-1.5 py-0.2 text-[10px] font-medium text-primary">
+                                                            Current
+                                                        </span>
+                                                    ) : entry.is_reachable ? (
+                                                        <span className="inline-flex items-center rounded bg-emerald-500/10 px-1.5 py-0.2 text-[10px] text-emerald-400">
+                                                            Available
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center rounded bg-amber-500/10 px-1.5 py-0.2 text-[10px] text-amber-400">
+                                                            Offline
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <span className="block font-mono text-[11px] text-muted-foreground truncate">
+                                                    {entry.path}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center gap-1">
+                                                {!isActive && (
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => handleSwitchDirectory(entry.path)}
+                                                        disabled={switching || !entry.is_reachable}
+                                                        className="h-6 px-2 text-[11px] gap-1 text-primary hover:text-primary hover:bg-primary/10"
+                                                    >
+                                                        <ArrowRightLeft className="size-3" />
+                                                        Switch
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    type="button"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    onClick={() => removeRecentVault(entry.path)}
+                                                    disabled={switching}
+                                                    className="size-6 text-muted-foreground hover:text-destructive"
+                                                    title="Remove from recents"
+                                                >
+                                                    <Trash2 className="size-3" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Co-located Storage Paths */}
                     <div className="space-y-2">

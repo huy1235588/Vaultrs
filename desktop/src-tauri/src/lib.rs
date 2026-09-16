@@ -3,15 +3,15 @@
 //! Registers all domain modules and sets up the Tauri application.
 
 // Domain modules
-mod assets;
-mod collection_settings;
-mod collections;
-mod core;
-mod custom_fields;
-mod db;
-mod items;
-mod relations;
-mod search;
+pub mod assets;
+pub mod collection_settings;
+pub mod collections;
+pub mod core;
+pub mod custom_fields;
+pub mod db;
+pub mod items;
+pub mod relations;
+pub mod search;
 
 use std::path::PathBuf;
 use tauri::Manager;
@@ -37,9 +37,16 @@ pub fn run() {
             let settings = core::config::load_app_settings(app.handle());
             if let Some(ref path_str) = settings.vault_root_path {
                 let path = PathBuf::from(path_str);
-                log::info!("Attempting auto-load configured vault at: {}", path.display());
-                if let Err(e) = tauri::async_runtime::block_on(vault_state.init_vault(&path)) {
-                    log::warn!("Failed to auto-load vault at {}: {e}", path.display());
+                if path.exists() {
+                    log::info!("Attempting auto-load configured vault at: {}", path.display());
+                    if let Err(e) = tauri::async_runtime::block_on(vault_state.init_vault(app.handle(), &path)) {
+                        log::warn!("Failed to auto-load vault at {}: {e}", path.display());
+                    }
+                } else {
+                    log::warn!(
+                        "Configured vault path '{}' is unreachable. Leaving unloaded for non-destructive recovery.",
+                        path.display()
+                    );
                 }
             } else {
                 log::info!("No vault configured yet. Awaiting first-run setup.");
@@ -56,6 +63,8 @@ pub fn run() {
             // Core app settings & vault lifecycle commands
             core::commands::get_app_settings,
             core::commands::set_vault_directory,
+            core::commands::validate_vault_directory,
+            core::commands::remove_recent_vault,
             core::commands::get_vault_storage_dir,
             core::commands::reveal_vault_in_explorer,
             // Collection commands
