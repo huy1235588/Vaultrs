@@ -1,10 +1,9 @@
 /**
- * App — Root component with collection context, item context, and conditional routing.
- *
- * Renders HomePage when no collection is selected, CollectionPage when a collection
- * is active, and ItemDetailPage when a specific item is selected.
+ * App — Root component with global AppConfig context, collection context, item context,
+ * and first-run vault directory onboarding.
  */
 import { useCallback, useEffect, useRef } from "react";
+import { AppConfigProvider, useAppConfig } from "@/core/context/AppConfigContext";
 import { CollectionProvider, useCollections } from "@/core/context/CollectionContext";
 import { ItemProvider, useItem } from "@/core/context/ItemContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +14,9 @@ import CollectionPage from "@/pages/CollectionPage";
 import ItemDetailPage from "@/pages/ItemDetailPage";
 import ManageFieldsPage from "@/pages/ManageFieldsPage";
 import CollectionSettingsPage from "@/pages/CollectionSettingsPage";
+import { FirstRunVaultPicker } from "@/components/Setup/FirstRunVaultPicker";
+import { AppSettingsDialog } from "@/components/Settings/AppSettingsDialog";
+import { Loader2 } from "lucide-react";
 
 /**
  * Inner app content that has access to the collection and item contexts.
@@ -62,17 +64,42 @@ function AppContent() {
     );
 }
 
-function App() {
+/**
+ * Root routing component that checks whether a vault is configured.
+ */
+function AppRoot() {
+    const { isVaultLoaded, loading } = useAppConfig();
+
+    if (loading) {
+        return (
+            <div className="flex h-screen w-screen items-center justify-center bg-background">
+                <Loader2 className="size-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    if (!isVaultLoaded) {
+        return <FirstRunVaultPicker />;
+    }
+
     return (
         <CollectionProvider>
             <ItemProvider>
                 <TooltipProvider delayDuration={300}>
                     <AppContent />
+                    <AppSettingsDialog />
                 </TooltipProvider>
             </ItemProvider>
         </CollectionProvider>
     );
 }
 
-export default App;
+function App() {
+    return (
+        <AppConfigProvider>
+            <AppRoot />
+        </AppConfigProvider>
+    );
+}
 
+export default App;

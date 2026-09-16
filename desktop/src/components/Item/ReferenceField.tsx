@@ -156,7 +156,7 @@ export function ReferenceField({
         [selectedIds, onChange],
     );
 
-    const handleNavigateToItem = useCallback(
+    const _handleNavigateToItem = useCallback(
         (itemId: number, collectionId: number) => {
             // TODO: Navigate to the referenced item (requires context integration)
             console.log("Navigate to item:", itemId, "in collection:", collectionId);

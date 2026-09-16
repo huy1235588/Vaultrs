@@ -5,19 +5,31 @@
  * URLs that the webview can render (asset:// protocol).
  */
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { appDataDir } from "@tauri-apps/api/path";
+import { getVaultStorageDir } from "@/core/api/appSettingsService";
 
 let cachedVaultRoot: string | null = null;
 
 /**
- * Get the absolute path to the vault-storage root directory.
- * Cached after first call.
+ * Get the absolute path to the active vault storage root directory.
+ * Cached after first call; refreshed whenever the vault directory changes.
  */
 async function getVaultRoot(): Promise<string> {
     if (cachedVaultRoot) return cachedVaultRoot;
-    const appData = await appDataDir();
-    cachedVaultRoot = `${appData}vault-storage`;
-    return cachedVaultRoot;
+    try {
+        const dir = await getVaultStorageDir();
+        cachedVaultRoot = dir.replace(/\\/g, "/");
+        return cachedVaultRoot;
+    } catch (e) {
+        console.warn("Could not retrieve vault storage dir:", e);
+        return "";
+    }
+}
+
+/**
+ * Manually update or clear the cached vault storage root.
+ */
+export function setCachedVaultRoot(root: string | null): void {
+    cachedVaultRoot = root ? root.replace(/\\/g, "/") : null;
 }
 
 /**
@@ -30,7 +42,7 @@ export async function resolveAssetUrl(
     relativePath: string,
 ): Promise<string> {
     const root = await getVaultRoot();
-    // Normalize path separators
+    if (!root) return "";
     const normalized = relativePath.replace(/\\/g, "/");
     const absolutePath = `${root}/${normalized}`;
     return convertFileSrc(absolutePath);
@@ -42,9 +54,6 @@ export async function resolveAssetUrl(
  */
 export function resolveAssetUrlSync(relativePath: string): string {
     if (!cachedVaultRoot) {
-        console.warn(
-            "Asset resolver not initialized. Call initAssetResolver() first.",
-        );
         return "";
     }
     const normalized = relativePath.replace(/\\/g, "/");
@@ -53,9 +62,10 @@ export function resolveAssetUrlSync(relativePath: string): string {
 }
 
 /**
- * Initialize the asset resolver by caching the vault root path.
- * Call this once during app startup.
+ * Initialize the asset resolver by caching the active vault storage path.
+ * Call this once during app startup or after switching vaults.
  */
 export async function initAssetResolver(): Promise<void> {
+    cachedVaultRoot = null;
     await getVaultRoot();
 }

@@ -43,8 +43,6 @@ export function ManageFieldsPage() {
     const [deleteTarget, setDeleteTarget] = useState<Attribute | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
-    if (!selectedCollection) return null;
-
     // Filter attributes by search query
     const filteredAttributes = useMemo(() => {
         if (!searchQuery.trim()) return attributes;
@@ -56,6 +54,8 @@ export function ManageFieldsPage() {
                 a.field_type.toLowerCase().includes(q),
         );
     }, [attributes, searchQuery]);
+
+    if (!selectedCollection) return null;
 
     // Handle reordering attributes
     async function handleMove(index: number, direction: "up" | "down") {

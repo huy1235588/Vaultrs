@@ -13,6 +13,7 @@ import {
     PanelLeftOpen,
 } from "lucide-react";
 import { useCollections } from "@/core/context/CollectionContext";
+import { useAppConfig } from "@/core/context/AppConfigContext";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -42,6 +43,7 @@ interface SidebarProps {
 function Sidebar({ onOpenSettings }: SidebarProps) {
     const { collections, selectedCollection, selectCollection, setActiveSubView, loading } =
         useCollections();
+    const { setSettingsOpen } = useAppConfig();
 
     const [collapsed, setCollapsed] = useState(false);
     const [createOpen, setCreateOpen] = useState(false);
@@ -235,21 +237,48 @@ function Sidebar({ onOpenSettings }: SidebarProps) {
                     </nav>
                 </ScrollArea>
 
-                {/* Collapse toggle — cleaner footer */}
-                <div className="relative z-10 shrink-0 border-t border-border/60 p-2">
+                {/* Footer with App Settings and Collapse toggle */}
+                <div className="relative z-10 shrink-0 border-t border-border/60 p-2 flex flex-col gap-1">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                aria-label="Global App Settings"
+                                className={cn(
+                                    "w-full text-muted-foreground hover:text-foreground transition-colors",
+                                    collapsed ? "justify-center" : "justify-start px-2 gap-2 text-xs"
+                                )}
+                                onClick={() => setSettingsOpen(true)}
+                            >
+                                <Settings className="size-4 shrink-0" />
+                                {!collapsed && <span>App Settings</span>}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                            App Settings (⌘,)
+                        </TooltipContent>
+                    </Tooltip>
+
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button
                                 variant="ghost"
                                 size="icon-xs"
                                 aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                                className="w-full justify-center text-muted-foreground hover:text-foreground transition-colors"
+                                className={cn(
+                                    "w-full text-muted-foreground hover:text-foreground transition-colors",
+                                    collapsed ? "justify-center" : "justify-start px-2 gap-2 text-xs"
+                                )}
                                 onClick={() => setCollapsed((c) => !c)}
                             >
                                 {collapsed ? (
                                     <PanelLeftOpen className="size-4" />
                                 ) : (
-                                    <PanelLeftClose className="size-4" />
+                                    <>
+                                        <PanelLeftClose className="size-4" />
+                                        <span>Collapse</span>
+                                    </>
                                 )}
                             </Button>
                         </TooltipTrigger>

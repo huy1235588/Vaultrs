@@ -13,6 +13,7 @@ mod items;
 mod relations;
 mod search;
 
+use std::path::PathBuf;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -29,29 +30,34 @@ pub fn run() {
                 )?;
             }
 
-            // Initialize database
-            let db_path = core::config::get_db_path(app.handle());
-            let db = tauri::async_runtime::block_on(async {
-                db::connection::init_database(&db_path).await
-            })
-            .expect("Failed to initialize database");
+            // Create dynamic AppVaultState
+            let vault_state = core::state::AppVaultState::new();
 
-            // Store database connection as managed state
-            app.manage(db);
+            // Check if machine bootstrap settings have a configured vault_root_path
+            let settings = core::config::load_app_settings(app.handle());
+            if let Some(ref path_str) = settings.vault_root_path {
+                let path = PathBuf::from(path_str);
+                log::info!("Attempting auto-load configured vault at: {}", path.display());
+                if let Err(e) = tauri::async_runtime::block_on(vault_state.init_vault(&path)) {
+                    log::warn!("Failed to auto-load vault at {}: {e}", path.display());
+                }
+            } else {
+                log::info!("No vault configured yet. Awaiting first-run setup.");
+            }
 
-            // Initialize vault storage
-            let app_data_dir = core::config::get_app_data_dir(app.handle());
-            let vault_storage = assets::storage::VaultStorage::new(&app_data_dir);
-            vault_storage
-                .ensure_dirs()
-                .expect("Failed to create vault storage directories");
-            app.manage(vault_storage);
+            // Store managed vault state
+            app.manage(vault_state);
 
-            log::info!("Vaultrs initialized successfully");
+            log::info!("Vaultrs bootstrap initialized successfully");
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            // Core app settings & vault lifecycle commands
+            core::commands::get_app_settings,
+            core::commands::set_vault_directory,
+            core::commands::get_vault_storage_dir,
+            core::commands::reveal_vault_in_explorer,
             // Collection commands
             collections::commands::get_collections,
             collections::commands::get_collection,
